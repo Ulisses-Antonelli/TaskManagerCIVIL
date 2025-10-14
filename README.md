@@ -21,7 +21,15 @@ O TaskManager CIVIL é uma aplicação multiplataforma para gestão completa de 
 
 **Projeto Interdisciplinar - 6º Semestre**
 
-- Ulisses da Silva Antonelli
+**Integrantes:**
+
+- 1º:
+- 2º:
+- 3º:
+- 4º:
+- 5º:
+- 6º:
+- 7º: Ulisses da Silva Antonelli
 
 ## 🛠️ Tecnologias Utilizadas
 
@@ -90,15 +98,6 @@ Os arquivos compilados estarão em: `composeApp/build/dist/wasmJs/productionExec
 ```
 
 Ou abra o projeto no Android Studio e execute diretamente.
-
-#### 🍎 iOS
-
-```bash
-# Abrir no Xcode
-open iosApp/iosApp.xcworkspace
-```
-
-No Xcode, selecione o target e execute no simulador ou dispositivo.
 
 #### 🖥️ Desktop (JVM)
 
@@ -204,4 +203,4 @@ Este é um projeto acadêmico. Para sugestões ou melhorias, entre em contato co
 
 ---
 
-**Desenvolvido com ❤️ pela equipe do 6º Semestre**
+**Desenvolvido pela equipe do 6º Semestre**
