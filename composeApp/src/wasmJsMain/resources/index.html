@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TaskManagerCivil</title>
+    <link type="text/css" rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <!-- Container esperado pelo Compose/Wasm - deve existir antes do carregamento do bundle -->
+    <div id="ComposeTarget"></div>
+
+    <!-- Script movido para o final do body para garantir que o DOM esteja pronto -->
+    <script type="application/javascript" src="composeApp.js"></script>
+</body>
+</html>

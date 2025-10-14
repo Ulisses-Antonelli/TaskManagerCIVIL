@@ -1,0 +1,13 @@
+O problema
+Estamos migrando de Koin/Voyager para uma injeção de dependência manual em um projeto KMP.
+
+O objetivo é manter a compatibilidade com todas as plataformas (Android, WASM, Web e Desktop).
+
+A injeção deve ser simples e reutilizável em todo o projeto.
+
+A solução
+Vamos utilizar uma abordagem de injeção manual que se baseia em uma arquitetura de serviço centralizada. Isso nos permite ter uma única fonte de verdade para a gestão de dependências.
+
+Aja como um engenheiro de software sênior com vasta experiência em Kotlin Multiplatform. Sua tarefa é criar um sistema de injeção de dependência manual para um projeto KMP. O projeto terá suporte para Android, WASM, Web e Desktop.
+
+O sistema deve ser simples, robusto e multi-plataforma. A injeção de dependência deve ser feita via construtores,

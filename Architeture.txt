@@ -1,0 +1,355 @@
+.\gradlew composeApp:run
+.\gradlew run
+.\gradlew wasmJsBrowserDevelopmentRun -t
+
+
+
+TaskManagerCivil/
+│
+├── build.gradle.kts                    # Configuração principal do projeto
+├── settings.gradle.kts                 # Configuração dos módulos
+├── gradle/
+│   └── libs.versions.toml             # Version catalog (dependências centralizadas)
+│
+├── shared/                            # Módulo compartilhado (lógica de negócio)
+│   ├── build.gradle.kts
+│   ├── src/
+│   │   ├── commonMain/
+│   │   │   ├── kotlin/com/taskmanager/shared/
+│   │   │   │   ├── App.kt                      # Aplicação principal compartilhada
+│   │   │   │   │
+│   │   │   │   ├── di/                         # Injeção de dependências (Koin)
+│   │   │   │   │   └── SharedModule.kt         # Configuração Koin
+│   │   │   │   │
+│   │   │   │   ├── domain/                     # Camada de domínio
+│   │   │   │   │   ├── models/                 # Modelos de dados
+│   │   │   │   │   │   ├── User.kt             # Modelo de usuário
+│   │   │   │   │   │   ├── Task.kt             # Modelo de tarefa
+│   │   │   │   │   │   ├── Project.kt          # Modelo de projeto/obra
+│   │   │   │   │   │   ├── Team.kt             # Modelo de time
+│   │   │   │   │   │   ├── Document.kt         # Modelo de documento
+│   │   │   │   │   │   └── Notification.kt     # Modelo de notificação
+│   │   │   │   │   │
+│   │   │   │   │   └── repository/             # Interfaces de repositórios
+│   │   │   │   │       ├── TaskRepository.kt
+│   │   │   │   │       ├── ProjectRepository.kt
+│   │   │   │   │       ├── UserRepository.kt
+│   │   │   │   │       ├── TeamRepository.kt
+│   │   │   │   │       ├── DocumentRepository.kt
+│   │   │   │   │       └── NotificationRepository.kt
+│   │   │   │   │
+│   │   │   │   ├── data/                       # Camada de dados
+│   │   │   │   │   ├── repository/             # Implementações dos repositórios
+│   │   │   │   │   │   ├── TaskRepositoryImpl.kt
+│   │   │   │   │   │   ├── ProjectRepositoryImpl.kt
+│   │   │   │   │   │   ├── UserRepositoryImpl.kt
+│   │   │   │   │   │   ├── TeamRepositoryImpl.kt
+│   │   │   │   │   │   ├── DocumentRepositoryImpl.kt
+│   │   │   │   │   │   └── NotificationRepositoryImpl.kt
+│   │   │   │   │   │
+│   │   │   │   │   ├── datasource/             # Fontes de dados (API, Database, etc.)
+│   │   │   │   │   │   ├── local/              # Dados locais (SQLDelight, DataStore)
+│   │   │   │   │   │   │   ├── Database.kt
+│   │   │   │   │   │   │   ├── TaskDao.kt
+│   │   │   │   │   │   │   ├── ProjectDao.kt
+│   │   │   │   │   │   │   └── UserDao.kt
+│   │   │   │   │   │   │
+│   │   │   │   │   │   └── remote/             # API remota (Ktor)
+│   │   │   │   │   │       ├── ApiClient.kt
+│   │   │   │   │   │       ├── TaskApi.kt
+│   │   │   │   │   │       ├── ProjectApi.kt
+│   │   │   │   │   │       └── UserApi.kt
+│   │   │   │   │   │
+│   │   │   │   │   └── preferences/            # Configurações do usuário
+│   │   │   │   │       └── UserPreferences.kt
+│   │   │   │   │
+│   │   │   │   ├── presentation/               # Camada de apresentação
+│   │   │   │   │   ├── components/             # Componentes Compose reutilizáveis
+│   │   │   │   │   │   ├── TaskCard.kt         # Card de tarefa
+│   │   │   │   │   │   ├── UserAvatar.kt       # Avatar do usuário
+│   │   │   │   │   │   ├── PriorityChip.kt     # Chip de prioridade
+│   │   │   │   │   │   ├── SearchBar.kt        # Barra de busca
+│   │   │   │   │   │   ├── FilterChips.kt      # Filtros em chip
+│   │   │   │   │   │   ├── LoadingIndicator.kt # Indicador de carregamento
+│   │   │   │   │   │   ├── EmptyState.kt       # Estado vazio
+│   │   │   │   │   │   ├── ErrorState.kt       # Estado de erro
+│   │   │   │   │   │   ├── ConfirmDialog.kt    # Diálogo de confirmação
+│   │   │   │   │   │   └── StatusBadge.kt      # Badge de status
+│   │   │   │   │   │
+│   │   │   │   │   ├── layout/                 # Layouts responsivos
+│   │   │   │   │   │   ├── ResponsiveLayout.kt # Layout principal adaptativo
+│   │   │   │   │   │   ├── NavigationSidebar.kt # Barra lateral de navegação
+│   │   │   │   │   │   ├── TopAppBar.kt        # Barra superior
+│   │   │   │   │   │   └── BottomNavigation.kt # Navegação inferior (mobile)
+│   │   │   │   │   │
+│   │   │   │   │   ├── screens/                # Telas da aplicação
+│   │   │   │   │   │   ├── dashboard/          # Dashboard principal
+│   │   │   │   │   │   │   ├── DashboardScreen.kt
+│   │   │   │   │   │   │   ├── DashboardViewModel.kt
+│   │   │   │   │   │   │   └── components/
+│   │   │   │   │   │   │       ├── SummaryCards.kt
+│   │   │   │   │   │   │       ├── ChartsSection.kt
+│   │   │   │   │   │   │       └── RecentNotifications.kt
+│   │   │   │   │   │   │
+│   │   │   │   │   │   ├── tasks/              # Gerenciamento de tarefas
+│   │   │   │   │   │   │   ├── TasksScreen.kt
+│   │   │   │   │   │   │   ├── TasksViewModel.kt
+│   │   │   │   │   │   │   ├── TaskDetailScreen.kt
+│   │   │   │   │   │   │   ├── CreateTaskScreen.kt
+│   │   │   │   │   │   │   ├── EditTaskScreen.kt
+│   │   │   │   │   │   │   └── components/
+│   │   │   │   │   │   │       ├── KanbanBoard.kt
+│   │   │   │   │   │   │       ├── KanbanColumn.kt
+│   │   │   │   │   │   │       ├── TaskListView.kt
+│   │   │   │   │   │   │       ├── TaskFilters.kt
+│   │   │   │   │   │   │       └── TaskForm.kt
+│   │   │   │   │   │   │
+│   │   │   │   │   │   ├── subtasks/           # Subtarefas
+│   │   │   │   │   │   │   ├── SubtasksScreen.kt
+│   │   │   │   │   │   │   ├── SubtasksViewModel.kt
+│   │   │   │   │   │   │   └── components/
+│   │   │   │   │   │   │       ├── SubtaskList.kt
+│   │   │   │   │   │   │       └── SubtaskItem.kt
+│   │   │   │   │   │   │
+│   │   │   │   │   │   ├── projects/           # Obras/Projetos
+│   │   │   │   │   │   │   ├── ProjectsScreen.kt
+│   │   │   │   │   │   │   ├── ProjectsViewModel.kt
+│   │   │   │   │   │   │   ├── ProjectDetailScreen.kt
+│   │   │   │   │   │   │   ├── CreateProjectScreen.kt
+│   │   │   │   │   │   │   ├── EditProjectScreen.kt
+│   │   │   │   │   │   │   └── components/
+│   │   │   │   │   │   │       ├── ProjectCard.kt
+│   │   │   │   │   │   │       ├── ProjectList.kt
+│   │   │   │   │   │   │       └── ProjectForm.kt
+│   │   │   │   │   │   │
+│   │   │   │   │   │   ├── users/              # Colaboradores/Usuários
+│   │   │   │   │   │   │   ├── UsersScreen.kt
+│   │   │   │   │   │   │   ├── UsersViewModel.kt
+│   │   │   │   │   │   │   ├── UserProfileScreen.kt
+│   │   │   │   │   │   │   ├── CreateUserScreen.kt
+│   │   │   │   │   │   │   ├── EditUserScreen.kt
+│   │   │   │   │   │   │   └── components/
+│   │   │   │   │   │   │       ├── UserCard.kt
+│   │   │   │   │   │   │       ├── UserList.kt
+│   │   │   │   │   │   │       ├── UserForm.kt
+│   │   │   │   │   │   │       └── UserRoleSelector.kt
+│   │   │   │   │   │   │
+│   │   │   │   │   │   ├── teams/              # Gestão de times
+│   │   │   │   │   │   │   ├── TeamsScreen.kt
+│   │   │   │   │   │   │   ├── TeamsViewModel.kt
+│   │   │   │   │   │   │   ├── TeamDetailScreen.kt
+│   │   │   │   │   │   │   ├── CreateTeamScreen.kt
+│   │   │   │   │   │   │   ├── EditTeamScreen.kt
+│   │   │   │   │   │   │   └── components/
+│   │   │   │   │   │   │       ├── TeamCard.kt
+│   │   │   │   │   │   │       ├── TeamList.kt
+│   │   │   │   │   │   │       ├── TeamForm.kt
+│   │   │   │   │   │   │       └── MemberSelector.kt
+│   │   │   │   │   │   │
+│   │   │   │   │   │   ├── documents/          # Gestão de documentos
+│   │   │   │   │   │   │   ├── DocumentsScreen.kt
+│   │   │   │   │   │   │   ├── DocumentsViewModel.kt
+│   │   │   │   │   │   │   ├── DocumentViewerScreen.kt
+│   │   │   │   │   │   │   ├── UploadDocumentScreen.kt
+│   │   │   │   │   │   │   └── components/
+│   │   │   │   │   │   │       ├── DocumentCard.kt
+│   │   │   │   │   │   │       ├── DocumentList.kt
+│   │   │   │   │   │   │       ├── DocumentFilters.kt
+│   │   │   │   │   │   │       ├── FileUploader.kt
+│   │   │   │   │   │   │       └── DocumentTypeIcon.kt
+│   │   │   │   │   │   │
+│   │   │   │   │   │   ├── reports/            # Relatórios
+│   │   │   │   │   │   │   ├── ReportsScreen.kt
+│   │   │   │   │   │   │   ├── ReportsViewModel.kt
+│   │   │   │   │   │   │   ├── ReportDetailScreen.kt
+│   │   │   │   │   │   │   └── components/
+│   │   │   │   │   │   │       ├── ReportCard.kt
+│   │   │   │   │   │   │       ├── ReportFilters.kt
+│   │   │   │   │   │   │       ├── ExportOptions.kt
+│   │   │   │   │   │   │       └── ReportCharts.kt
+│   │   │   │   │   │   │
+│   │   │   │   │   │   ├── notifications/      # Notificações
+│   │   │   │   │   │   │   ├── NotificationsScreen.kt
+│   │   │   │   │   │   │   ├── NotificationsViewModel.kt
+│   │   │   │   │   │   │   └── components/
+│   │   │   │   │   │   │       ├── NotificationCard.kt
+│   │   │   │   │   │   │       ├── NotificationList.kt
+│   │   │   │   │   │   │       └── NotificationBadge.kt
+│   │   │   │   │   │   │
+│   │   │   │   │   │   ├── settings/           # Configurações
+│   │   │   │   │   │   │   ├── SettingsScreen.kt
+│   │   │   │   │   │   │   ├── SettingsViewModel.kt
+│   │   │   │   │   │   │   ├── ProfileSettingsScreen.kt
+│   │   │   │   │   │   │   ├── AppSettingsScreen.kt
+│   │   │   │   │   │   │   └── components/
+│   │   │   │   │   │   │       ├── SettingsSection.kt
+│   │   │   │   │   │   │       ├── SettingsItem.kt
+│   │   │   │   │   │   │       └── ThemeSelector.kt
+│   │   │   │   │   │   │
+│   │   │   │   │   │   ├── auth/               # Autenticação (futuro)
+│   │   │   │   │   │   │   ├── LoginScreen.kt
+│   │   │   │   │   │   │   ├── AuthViewModel.kt
+│   │   │   │   │   │   │   ├── RegisterScreen.kt
+│   │   │   │   │   │   │   ├── ForgotPasswordScreen.kt
+│   │   │   │   │   │   │   └── components/
+│   │   │   │   │   │   │       ├── LoginForm.kt
+│   │   │   │   │   │   │       ├── RegisterForm.kt
+│   │   │   │   │   │   │       └── PasswordField.kt
+│   │   │   │   │   │   │
+│   │   │   │   │   │   └── revisions/          # Histórico de revisões
+│   │   │   │   │   │       ├── RevisionsScreen.kt
+│   │   │   │   │   │       ├── RevisionsViewModel.kt
+│   │   │   │   │   │       └── components/
+│   │   │   │   │   │           ├── RevisionCard.kt
+│   │   │   │   │   │           ├── RevisionList.kt
+│   │   │   │   │   │           └── RevisionFilters.kt
+│   │   │   │   │   │
+│   │   │   │   │   ├── navigation/             # Sistema de navegação
+│   │   │   │   │   │   ├── NavigationGraph.kt
+│   │   │   │   │   │   ├── NavigationRoutes.kt
+│   │   │   │   │   │   └── NavigationExtensions.kt
+│   │   │   │   │   │
+│   │   │   │   │   ├── theme/                  # Tema e estilos
+│   │   │   │   │   │   ├── Theme.kt
+│   │   │   │   │   │   ├── Colors.kt
+│   │   │   │   │   │   ├── Typography.kt
+│   │   │   │   │   │   ├── Shapes.kt
+│   │   │   │   │   │   └── Dimensions.kt
+│   │   │   │   │   │
+│   │   │   │   │   └── utils/                  # Utilitários
+│   │   │   │   │       ├── DateUtils.kt
+│   │   │   │   │       ├── FileUtils.kt
+│   │   │   │   │       ├── ValidationUtils.kt
+│   │   │   │   │       ├── Extensions.kt
+│   │   │   │   │       └── Constants.kt
+│   │   │   │   │
+│   │   │   │   └── resources/                  # Recursos compartilhados
+│   │   │   │       ├── strings/
+│   │   │   │       │   ├── Strings.kt
+│   │   │   │       │   ├── StringsEn.kt
+│   │   │   │       │   └── StringsPt.kt
+│   │   │   │       ├── images/
+│   │   │   │       └── icons/
+│   │   │   │
+│   │   │   └── resources/                      # Recursos nativos (imagens, strings)
+│   │   │       ├── drawable/
+│   │   │       ├── values/
+│   │   │       │   └── strings.xml
+│   │   │       └── MR/                         # Multiplatform Resources
+│   │   │
+│   │   ├── androidMain/                        # Código específico Android
+│   │   │   └── kotlin/com/taskmanager/shared/
+│   │   │       ├── platform/
+│   │   │       │   ├── PlatformUtils.kt
+│   │   │       │   ├── FileManager.kt
+│   │   │       │   └── NotificationManager.kt
+│   │   │       └── di/
+│   │   │           └── AndroidModule.kt
+│   │   │
+│   │   ├── iosMain/                           # Código específico iOS (futuro)
+│   │   │   └── kotlin/com/taskmanager/shared/
+│   │   │       ├── platform/
+│   │   │       └── di/
+│   │   │
+│   │   ├── desktopMain/                       # Código específico Desktop
+│   │   │   └── kotlin/com/taskmanager/shared/
+│   │   │       ├── platform/
+│   │   │       │   ├── PlatformUtils.kt
+│   │   │       │   ├── FileManager.kt
+│   │   │       │   └── WindowManager.kt
+│   │   │       └── di/
+│   │   │           └── DesktopModule.kt
+│   │   │
+│   │   └── jsMain/                            # Código específico Web
+│   │       └── kotlin/com/taskmanager/shared/
+│   │           ├── platform/
+│   │           │   ├── PlatformUtils.kt
+│   │           │   ├── FileManager.kt
+│   │           │   └── BrowserUtils.kt
+│   │           └── di/
+│   │               └── JsModule.kt
+│   │
+│   └── build/                                 # Arquivos de build (gerados)
+│
+├── androidApp/                               # Aplicação Android
+│   ├── build.gradle.kts
+│   ├── proguard-rules.pro
+│   ├── src/
+│   │   ├── main/
+│   │   │   ├── AndroidManifest.xml
+│   │   │   ├── java/com/taskmanager/android/
+│   │   │   │   ├── MainActivity.kt            # Activity principal
+│   │   │   │   ├── TaskManagerApplication.kt  # Application class
+│   │   │   │   └── di/
+│   │   │   │       └── AndroidAppModule.kt    # Módulos específicos Android
+│   │   │   └── res/                           # Recursos Android
+│   │   │       ├── drawable/
+│   │   │       │   ├── ic_launcher_background.xml
+│   │   │       │   └── ic_launcher_foreground.xml
+│   │   │       ├── mipmap/
+│   │   │       │   ├── ic_launcher.webp
+│   │   │       │   └── ic_launcher_round.webp
+│   │   │       ├── values/
+│   │   │       │   ├── colors.xml
+│   │   │       │   ├── strings.xml
+│   │   │       │   └── themes.xml
+│   │   │       ├── values-night/
+│   │   │       │   └── themes.xml
+│   │   │       └── xml/
+│   │   │           ├── data_extraction_rules.xml
+│   │   │           └── backup_rules.xml
+│   │   └── test/                              # Testes Android
+│   └── build/
+│
+├── desktopApp/                               # Aplicação Desktop
+│   ├── build.gradle.kts
+│   ├── src/
+│   │   ├── main/
+│   │   │   ├── kotlin/com/taskmanager/desktop/
+│   │   │   │   ├── Main.kt                   # Ponto de entrada
+│   │   │   │   ├── DesktopApp.kt            # Configuração da aplicação
+│   │   │   │   └── utils/
+│   │   │   │       ├── WindowUtils.kt
+│   │   │   │       └── FileSystemUtils.kt
+│   │   │   └── resources/                    # Recursos Desktop
+│   │   │       ├── icon.ico                  # Ícone Windows
+│   │   │       ├── icon.icns                 # Ícone macOS
+│   │   │       └── icon.png                  # Ícone Linux
+│   │   └── test/
+│   └── build/
+│
+├── webApp/                                   # Aplicação Web
+│   ├── build.gradle.kts
+│   ├── src/
+│   │   ├── main/
+│   │   │   ├── kotlin/com/taskmanager/web/
+│   │   │   │   ├── Main.kt                   # Ponto de entrada
+│   │   │   │   ├── WebApp.kt                # Aplicação principal
+│   │   │   │   ├── components/              # Componentes web específicos
+│   │   │   │   │   ├── WebHeader.kt
+│   │   │   │   │   ├── WebSidebar.kt
+│   │   │   │   │   ├── WebTaskCard.kt
+│   │   │   │   │   └── WebKanbanBoard.kt
+│   │   │   │   ├── styles/                  # Estilos CSS
+│   │   │   │   │   ├── AppStyleSheet.kt
+│   │   │   │   │   ├── ComponentStyles.kt
+│   │   │   │   │   └── ThemeStyles.kt
+│   │   │   │   └── utils/
+│   │   │   │       ├── WebUtils.kt
+│   │   │   │       └── BrowserDetection.kt
+│   │   │   └── resources/                    # Recursos Web
+│   │   │       ├── index.html
+│   │   │       ├── favicon.ico
+│   │   │       └── css/
+│   │   │           └── main.css
+│   │   └── test/
+│   └── build/
+│
+├── docs/                                     # Documentação
+│   ├── README.md
+│   ├── SETUP.md
+│   ├── ARCHITECTURE.md
+│   ├── API.md
+│   └── DEPLOYMENT.md
+│
+└── .gitignore                               # Arquivos ignorados pelo Git
