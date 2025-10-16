@@ -23,13 +23,12 @@ O TaskManager CIVIL é uma aplicação multiplataforma para gestão completa de 
 
 **Integrantes:**
 
-- 1º:
-- 2º:
-- 3º:
-- 4º:
-- 5º:
-- 6º:
-- 7º: Ulisses da Silva Antonelli
+- 1º: Breno Ribeiro Souza
+- 2º: Daniele Capristano Pereira
+- 3º: Gustavo dos Anjos Campos
+- 4º: Lucas Trindade de Andrade
+- 5º: Reryson Santos de Andrade
+- 6º: Ulisses da Silva Antonelli
 
 ## 🛠️ Tecnologias Utilizadas
 
