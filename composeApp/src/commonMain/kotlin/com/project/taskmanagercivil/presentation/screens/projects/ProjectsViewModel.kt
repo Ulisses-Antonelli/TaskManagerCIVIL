@@ -1,7 +1,13 @@
 package com.project.taskmanagercivil.presentation.screens.projects
 
 import com.project.taskmanagercivil.domain.models.Project
+import com.project.taskmanagercivil.domain.models.Task
+import com.project.taskmanagercivil.domain.models.TaskStatus
 import com.project.taskmanagercivil.domain.repository.ProjectRepository
+import com.project.taskmanagercivil.domain.repository.TaskRepository
+import com.project.taskmanagercivil.utils.ProjectStatusUtils
+import com.project.taskmanagercivil.utils.calculateDerivedStatus
+import com.project.taskmanagercivil.utils.calculateProgress
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -12,9 +18,12 @@ import kotlinx.coroutines.launch
 
 data class ProjectsUiState(
     val allProjects: List<Project> = emptyList(),
+    val allTasks: List<Task> = emptyList(),
     val filteredProjects: List<Project> = emptyList(),
     val searchQuery: String = "",
     val selectedLocation: String? = null,
+    val selectedProjectStatus: TaskStatus? = null,
+    val selectedTaskStatus: TaskStatus? = null,
     val sortBy: ProjectSortOption = ProjectSortOption.NAME,
     val isLoading: Boolean = false,
     val error: String? = null
@@ -25,11 +34,13 @@ enum class ProjectSortOption(val label: String) {
     START_DATE("Data de Início"),
     END_DATE("Prazo"),
     BUDGET("Orçamento"),
-    LOCATION("Localização")
+    LOCATION("Localização"),
+    PROGRESS("Progresso")
 }
 
 class ProjectsViewModel(
-    private val projectRepository: ProjectRepository
+    private val projectRepository: ProjectRepository,
+    private val taskRepository: TaskRepository
 ) {
     private val viewModelScope = CoroutineScope(SupervisorJob())
 
@@ -37,18 +48,20 @@ class ProjectsViewModel(
     val uiState: StateFlow<ProjectsUiState> = _uiState.asStateFlow()
 
     init {
-        loadProjects()
+        loadData()
     }
 
-    fun loadProjects() {
+    fun loadData() {
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true, error = null) }
             try {
                 val projects = projectRepository.getAllProjects()
+                val tasks = taskRepository.getAllTasks()
                 _uiState.update {
                     it.copy(
                         isLoading = false,
-                        allProjects = projects
+                        allProjects = projects,
+                        allTasks = tasks
                     )
                 }
                 applyFilters()
@@ -73,8 +86,30 @@ class ProjectsViewModel(
         applyFilters()
     }
 
+    fun onProjectStatusFilterChange(status: TaskStatus?) {
+        _uiState.update { it.copy(selectedProjectStatus = status) }
+        applyFilters()
+    }
+
+    fun onTaskStatusFilterChange(status: TaskStatus?) {
+        _uiState.update { it.copy(selectedTaskStatus = status) }
+        applyFilters()
+    }
+
     fun onSortByChange(sortBy: ProjectSortOption) {
         _uiState.update { it.copy(sortBy = sortBy) }
+        applyFilters()
+    }
+
+    fun clearFilters() {
+        _uiState.update {
+            it.copy(
+                searchQuery = "",
+                selectedLocation = null,
+                selectedProjectStatus = null,
+                selectedTaskStatus = null
+            )
+        }
         applyFilters()
     }
 
@@ -98,6 +133,26 @@ class ProjectsViewModel(
             }
         }
 
+        // Filtrar por status derivado do projeto
+        if (currentState.selectedProjectStatus != null) {
+            filtered = ProjectStatusUtils.filterProjectsByDerivedStatus(
+                filtered,
+                currentState.allTasks,
+                currentState.selectedProjectStatus!!
+            )
+        }
+
+        // Filtrar por status de tarefas internas
+        // "Se o usuário aplicar um filtro de 'tarefas em revisão', o sistema deve exibir
+        // todas as obras que possuam ao menos uma tarefa com esse status"
+        if (currentState.selectedTaskStatus != null) {
+            filtered = ProjectStatusUtils.filterProjectsByTaskStatus(
+                filtered,
+                currentState.allTasks,
+                currentState.selectedTaskStatus!!
+            )
+        }
+
         // Ordenar
         filtered = when (currentState.sortBy) {
             ProjectSortOption.NAME -> filtered.sortedBy { it.name }
@@ -105,6 +160,9 @@ class ProjectsViewModel(
             ProjectSortOption.END_DATE -> filtered.sortedBy { it.endDate }
             ProjectSortOption.BUDGET -> filtered.sortedByDescending { it.budget }
             ProjectSortOption.LOCATION -> filtered.sortedBy { it.location }
+            ProjectSortOption.PROGRESS -> filtered.sortedByDescending { project ->
+                project.calculateProgress(currentState.allTasks)
+            }
         }
 
         _uiState.update { it.copy(filteredProjects = filtered) }
@@ -115,7 +173,7 @@ class ProjectsViewModel(
             try {
                 val success = projectRepository.deleteProject(projectId)
                 if (success) {
-                    loadProjects()
+                    loadData()
                 }
             } catch (e: Exception) {
                 _uiState.update {
@@ -123,5 +181,12 @@ class ProjectsViewModel(
                 }
             }
         }
+    }
+
+    /**
+     * Define um filtro de status derivado do projeto (vindo do Dashboard)
+     */
+    fun setProjectStatusFilter(status: TaskStatus) {
+        onProjectStatusFilterChange(status)
     }
 }

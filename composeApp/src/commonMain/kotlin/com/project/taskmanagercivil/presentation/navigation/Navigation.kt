@@ -28,7 +28,11 @@ import com.project.taskmanagercivil.presentation.screens.teams.TeamsScreenConten
 sealed class Screen(val route: String) {
     object Dashboard : Screen("dashboard")
     object Tasks : Screen("tasks")
-    object Projects : Screen("projects")
+    object Projects : Screen("projects?statusFilter={statusFilter}") {
+        val baseRoute = "projects"
+        fun createRoute(statusFilter: String? = null) =
+            if (statusFilter != null) "projects?statusFilter=$statusFilter" else "projects"
+    }
     object ProjectDetail : Screen("project_detail/{projectId}") {
         fun createRoute(projectId: String) = "project_detail/$projectId"
     }
@@ -88,8 +92,8 @@ fun AppNavigation(
                     // TODO: Navegar para detalhes da tarefa quando implementado
                 },
                 onProjectsWithStatusClick = { status ->
-                    // Navega para tela de projetos (poderia filtrar por status)
-                    navController.navigate(Screen.Projects.route)
+                    // Navega para tela de projetos com filtro de status
+                    navController.navigate(Screen.Projects.createRoute(status.name))
                 }
             )
         }
@@ -109,9 +113,31 @@ fun AppNavigation(
             )
         }
 
-        
-        composable(Screen.Projects.route) {
+
+        composable(
+            route = Screen.Projects.route,
+            arguments = listOf(
+                navArgument("statusFilter") {
+                    type = NavType.StringType
+                    nullable = true
+                    defaultValue = null
+                }
+            )
+        ) { backStackEntry ->
             val viewModel = ViewModelFactory.createProjectsViewModel()
+
+            // Verifica se há um filtro de status vindo do Dashboard
+            val route = backStackEntry.destination.route ?: ""
+            val statusFilter = route.substringAfter("statusFilter=").substringBefore("&").ifEmpty { null }
+            if (!statusFilter.isNullOrEmpty() && statusFilter != "{statusFilter}") {
+                try {
+                    val status = com.project.taskmanagercivil.domain.models.TaskStatus.valueOf(statusFilter)
+                    viewModel.setProjectStatusFilter(status)
+                } catch (e: Exception) {
+                    // Ignora se o status for inválido
+                }
+            }
+
             ProjectsScreenContent(
                 viewModel = viewModel,
                 onProjectClick = { projectId ->

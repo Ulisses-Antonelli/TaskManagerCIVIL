@@ -47,7 +47,7 @@ object ViewModelFactory {
     }
 
     fun createProjectsViewModel(): ProjectsViewModel {
-        return ProjectsViewModel(projectRepository)
+        return ProjectsViewModel(projectRepository, taskRepository)
     }
 
     fun createProjectDetailViewModel(projectId: String): ProjectDetailViewModel {

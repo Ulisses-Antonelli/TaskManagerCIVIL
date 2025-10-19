@@ -65,13 +65,10 @@ fun ProjectsScreenContent(
                             .padding(horizontal = 16.dp, vertical = 8.dp)
                     )
 
-                    
+
                     FiltersRow(
-                        allProjects = uiState.allProjects,
-                        selectedLocation = uiState.selectedLocation,
-                        sortBy = uiState.sortBy,
-                        onLocationChange = viewModel::onLocationFilterChange,
-                        onSortByChange = viewModel::onSortByChange,
+                        uiState = uiState,
+                        viewModel = viewModel,
                         modifier = Modifier.padding(horizontal = 16.dp)
                     )
 
@@ -102,7 +99,7 @@ fun ProjectsScreenContent(
                                         color = MaterialTheme.colorScheme.error
                                     )
                                     Spacer(modifier = Modifier.height(16.dp))
-                                    Button(onClick = { viewModel.loadProjects() }) {
+                                    Button(onClick = { viewModel.loadData() }) {
                                         Text("Tentar novamente")
                                     }
                                 }
@@ -168,11 +165,8 @@ private fun SearchBar(
 
 @Composable
 private fun FiltersRow(
-    allProjects: List<com.project.taskmanagercivil.domain.models.Project>,
-    selectedLocation: String?,
-    sortBy: ProjectSortOption,
-    onLocationChange: (String?) -> Unit,
-    onSortByChange: (ProjectSortOption) -> Unit,
+    uiState: ProjectsUiState,
+    viewModel: ProjectsViewModel,
     modifier: Modifier = Modifier
 ) {
     Column(modifier = modifier) {
@@ -189,17 +183,73 @@ private fun FiltersRow(
         ) {
             item {
                 FilterChip(
-                    selected = selectedLocation == null,
-                    onClick = { onLocationChange(null) },
+                    selected = uiState.selectedLocation == null,
+                    onClick = { viewModel.onLocationFilterChange(null) },
                     label = { Text("Todas") }
                 )
             }
 
-            items(allProjects.map { it.location }.distinct().sorted()) { location ->
+            items(uiState.allProjects.map { it.location }.distinct().sorted()) { location ->
                 FilterChip(
-                    selected = selectedLocation == location,
-                    onClick = { onLocationChange(location) },
+                    selected = uiState.selectedLocation == location,
+                    onClick = { viewModel.onLocationFilterChange(location) },
                     label = { Text(location) }
+                )
+            }
+        }
+
+        // Filtro por status derivado do projeto
+        Text(
+            text = "Status da Obra",
+            style = MaterialTheme.typography.labelMedium,
+            modifier = Modifier.padding(bottom = 4.dp, top = 8.dp)
+        )
+
+        LazyRow(
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            modifier = Modifier.padding(bottom = 8.dp)
+        ) {
+            item {
+                FilterChip(
+                    selected = uiState.selectedProjectStatus == null,
+                    onClick = { viewModel.onProjectStatusFilterChange(null) },
+                    label = { Text("Todos") }
+                )
+            }
+
+            items(com.project.taskmanagercivil.domain.models.TaskStatus.entries.toList()) { status ->
+                FilterChip(
+                    selected = uiState.selectedProjectStatus == status,
+                    onClick = { viewModel.onProjectStatusFilterChange(status) },
+                    label = { Text(status.label) }
+                )
+            }
+        }
+
+        // Filtro por status de tarefas internas
+        Text(
+            text = "Tarefas Internas",
+            style = MaterialTheme.typography.labelMedium,
+            modifier = Modifier.padding(bottom = 4.dp, top = 8.dp)
+        )
+
+        LazyRow(
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            modifier = Modifier.padding(bottom = 8.dp)
+        ) {
+            item {
+                FilterChip(
+                    selected = uiState.selectedTaskStatus == null,
+                    onClick = { viewModel.onTaskStatusFilterChange(null) },
+                    label = { Text("Todas") }
+                )
+            }
+
+            items(com.project.taskmanagercivil.domain.models.TaskStatus.entries.toList()) { status ->
+                FilterChip(
+                    selected = uiState.selectedTaskStatus == status,
+                    onClick = { viewModel.onTaskStatusFilterChange(status) },
+                    label = { Text(status.label) }
                 )
             }
         }
@@ -208,7 +258,7 @@ private fun FiltersRow(
         Text(
             text = "Ordenar por",
             style = MaterialTheme.typography.labelMedium,
-            modifier = Modifier.padding(bottom = 4.dp)
+            modifier = Modifier.padding(bottom = 4.dp, top = 8.dp)
         )
 
         LazyRow(
@@ -216,10 +266,21 @@ private fun FiltersRow(
         ) {
             items(ProjectSortOption.entries) { option ->
                 FilterChip(
-                    selected = sortBy == option,
-                    onClick = { onSortByChange(option) },
+                    selected = uiState.sortBy == option,
+                    onClick = { viewModel.onSortByChange(option) },
                     label = { Text(option.label) }
                 )
+            }
+        }
+
+        // Botão para limpar filtros
+        if (uiState.selectedLocation != null || uiState.selectedProjectStatus != null || uiState.selectedTaskStatus != null) {
+            Spacer(modifier = Modifier.height(8.dp))
+            Button(
+                onClick = { viewModel.clearFilters() },
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text("Limpar Filtros")
             }
         }
     }

@@ -3,6 +3,7 @@ package com.project.taskmanagercivil.data.repository
 import com.project.taskmanagercivil.data.MockData
 import com.project.taskmanagercivil.domain.models.*
 import com.project.taskmanagercivil.domain.repository.DashboardRepository
+import com.project.taskmanagercivil.utils.ProjectStatusUtils
 import kotlinx.coroutines.delay
 import kotlinx.datetime.*
 
@@ -25,56 +26,18 @@ class DashboardRepositoryImpl : DashboardRepository {
 
     /**
      * Calcula o resumo quantitativo de obras por status baseado nas tarefas
-     * Uma obra é considerada de determinado status baseado no status predominante de suas tarefas
+     * Usa as regras de negócio para derivar status automaticamente das tarefas
      */
     private fun calculateProjectStatusSummary(): ProjectStatusSummary {
-        val projectStatusMap = mutableMapOf<String, MutableMap<TaskStatus, Int>>()
-
-        // Conta as tarefas por status para cada projeto
-        tasks.forEach { task ->
-            val projectId = task.project.id
-            val statusMap = projectStatusMap.getOrPut(projectId) { mutableMapOf() }
-            statusMap[task.status] = (statusMap[task.status] ?: 0) + 1
-        }
-
-        // Determina o status de cada projeto baseado no status predominante
-        var todoCount = 0
-        var inProgressCount = 0
-        var inReviewCount = 0
-        var completedCount = 0
-        var blockedCount = 0
-
-        projects.forEach { project ->
-            val statusMap = projectStatusMap[project.id] ?: emptyMap()
-
-            // Se há alguma tarefa bloqueada, o projeto é bloqueado
-            if ((statusMap[TaskStatus.BLOCKED] ?: 0) > 0) {
-                blockedCount++
-            }
-            // Se todas as tarefas estão concluídas, o projeto está concluído
-            else if (statusMap.size == 1 && statusMap.containsKey(TaskStatus.COMPLETED)) {
-                completedCount++
-            }
-            // Se há tarefas em revisão, o projeto está em revisão
-            else if ((statusMap[TaskStatus.IN_REVIEW] ?: 0) > 0) {
-                inReviewCount++
-            }
-            // Se há tarefas em andamento, o projeto está em andamento
-            else if ((statusMap[TaskStatus.IN_PROGRESS] ?: 0) > 0) {
-                inProgressCount++
-            }
-            // Se todas as tarefas estão a fazer ou não há tarefas, o projeto está a fazer
-            else {
-                todoCount++
-            }
-        }
+        // Usa a função utilitária para contar projetos por status derivado
+        val statusCounts = ProjectStatusUtils.countProjectsByDerivedStatus(projects, tasks)
 
         return ProjectStatusSummary(
-            todoCount = todoCount,
-            inProgressCount = inProgressCount,
-            inReviewCount = inReviewCount,
-            completedCount = completedCount,
-            blockedCount = blockedCount
+            todoCount = statusCounts[TaskStatus.TODO] ?: 0,
+            inProgressCount = statusCounts[TaskStatus.IN_PROGRESS] ?: 0,
+            inReviewCount = statusCounts[TaskStatus.IN_REVIEW] ?: 0,
+            completedCount = statusCounts[TaskStatus.COMPLETED] ?: 0,
+            blockedCount = statusCounts[TaskStatus.BLOCKED] ?: 0
         )
     }
 
