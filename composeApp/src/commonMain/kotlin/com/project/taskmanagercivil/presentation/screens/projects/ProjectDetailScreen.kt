@@ -15,8 +15,14 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.project.taskmanagercivil.domain.models.TaskPriority
 import com.project.taskmanagercivil.domain.models.TaskStatus
+import com.project.taskmanagercivil.presentation.components.EmployeeTasksTable
 import com.project.taskmanagercivil.presentation.components.TaskCard
+import com.project.taskmanagercivil.utils.calculateDerivedStatus
+import com.project.taskmanagercivil.utils.calculateProgress
 import com.project.taskmanagercivil.utils.formatCurrency
+import kotlinx.datetime.Clock
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.todayIn
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -25,7 +31,9 @@ fun ProjectDetailScreen(
     onBack: () -> Unit,
     onEdit: (String) -> Unit = {},
     onDelete: (String) -> Unit = {},
-    onTaskClick: (String) -> Unit = {}
+    onTaskClick: (String) -> Unit = {},
+    onEmployeeClick: (String) -> Unit = {},
+    onTeamClick: (String) -> Unit = {}
 ) {
     val uiState by viewModel.uiState.collectAsState()
     var showDeleteDialog by remember { mutableStateOf(false) }
@@ -112,6 +120,8 @@ fun ProjectDetailScreen(
                     project = uiState.project!!,
                     tasks = uiState.tasks,
                     onTaskClick = onTaskClick,
+                    onEmployeeClick = onEmployeeClick,
+                    onTeamClick = onTeamClick,
                     modifier = Modifier
                         .fillMaxSize()
                         .padding(paddingValues)
@@ -162,8 +172,15 @@ private fun ProjectDetailContent(
     project: com.project.taskmanagercivil.domain.models.Project,
     tasks: List<com.project.taskmanagercivil.domain.models.Task>,
     onTaskClick: (String) -> Unit,
+    onEmployeeClick: (String) -> Unit,
+    onTeamClick: (String) -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val derivedStatus = project.calculateDerivedStatus(tasks)
+    val progress = project.calculateProgress(tasks)
+    val today = Clock.System.todayIn(TimeZone.currentSystemDefault())
+    val daysOverdue = (today.toEpochDays() - project.endDate.toEpochDays()).toInt()
+        .coerceAtLeast(0)
     LazyColumn(
         modifier = modifier,
         contentPadding = PaddingValues(16.dp),
@@ -176,7 +193,13 @@ private fun ProjectDetailContent(
 
         // Informações Gerais
         item {
-            GeneralInfoCard(project = project)
+            GeneralInfoCard(
+                project = project,
+                derivedStatus = derivedStatus,
+                progress = progress,
+                daysOverdue = daysOverdue,
+                totalTasks = tasks.size
+            )
         }
 
         // Estatísticas do Projeto
@@ -186,7 +209,18 @@ private fun ProjectDetailContent(
 
         // Datas
         item {
-            DatesCard(project = project)
+            DatesCard(project = project, daysOverdue = daysOverdue)
+        }
+
+        // Tabela de Colaboradores e Tarefas
+        if (tasks.isNotEmpty()) {
+            item {
+                EmployeeTasksTable(
+                    tasks = tasks,
+                    onEmployeeClick = onEmployeeClick,
+                    onTeamClick = onTeamClick
+                )
+            }
         }
 
         // Lista de Tarefas
@@ -248,7 +282,13 @@ private fun ProjectHeader(project: com.project.taskmanagercivil.domain.models.Pr
 }
 
 @Composable
-private fun GeneralInfoCard(project: com.project.taskmanagercivil.domain.models.Project) {
+private fun GeneralInfoCard(
+    project: com.project.taskmanagercivil.domain.models.Project,
+    derivedStatus: TaskStatus,
+    progress: Float,
+    daysOverdue: Int,
+    totalTasks: Int
+) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(8.dp)
@@ -267,8 +307,14 @@ private fun GeneralInfoCard(project: com.project.taskmanagercivil.domain.models.
 
             InfoRow(
                 icon = Icons.Default.Person,
-                label = "Cliente",
+                label = "Cliente/Executor",
                 value = project.client
+            )
+
+            InfoRow(
+                icon = Icons.Default.Build,
+                label = "Tipo de Projeto",
+                value = project.description.take(50) // Placeholder - em produção seria um campo específico
             )
 
             InfoRow(
@@ -279,9 +325,35 @@ private fun GeneralInfoCard(project: com.project.taskmanagercivil.domain.models.
 
             InfoRow(
                 icon = Icons.Default.AccountBalance,
-                label = "Orçamento",
+                label = "Orçamento Estimado",
                 value = formatCurrency(project.budget)
             )
+
+            InfoRow(
+                icon = Icons.Default.Assessment,
+                label = "Progresso Geral",
+                value = "${progress.toInt()}%"
+            )
+
+            InfoRow(
+                icon = Icons.Default.Assignment,
+                label = "Status Derivado",
+                value = derivedStatus.label
+            )
+
+            InfoRow(
+                icon = Icons.Default.Task,
+                label = "Total de Tarefas",
+                value = totalTasks.toString()
+            )
+
+            if (daysOverdue > 0) {
+                InfoRow(
+                    icon = Icons.Default.Warning,
+                    label = "Dias de Atraso",
+                    value = "$daysOverdue dias"
+                )
+            }
         }
     }
 }
@@ -332,7 +404,10 @@ private fun ProjectStatsCard(tasks: List<com.project.taskmanagercivil.domain.mod
 }
 
 @Composable
-private fun DatesCard(project: com.project.taskmanagercivil.domain.models.Project) {
+private fun DatesCard(
+    project: com.project.taskmanagercivil.domain.models.Project,
+    daysOverdue: Int
+) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(8.dp)
@@ -351,15 +426,44 @@ private fun DatesCard(project: com.project.taskmanagercivil.domain.models.Projec
 
             InfoRow(
                 icon = Icons.Default.PlayArrow,
-                label = "Início",
+                label = "Data de Início",
                 value = project.startDate.toString()
             )
 
             InfoRow(
                 icon = Icons.Default.Flag,
-                label = "Prazo Final",
+                label = "Previsão de Término",
                 value = project.endDate.toString()
             )
+
+            if (daysOverdue > 0) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Warning,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.error,
+                        modifier = Modifier.size(20.dp)
+                    )
+
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(
+                            text = "Dias de Atraso",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                        Text(
+                            text = "$daysOverdue dias",
+                            style = MaterialTheme.typography.bodyMedium,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.error
+                        )
+                    }
+                }
+            }
         }
     }
 }

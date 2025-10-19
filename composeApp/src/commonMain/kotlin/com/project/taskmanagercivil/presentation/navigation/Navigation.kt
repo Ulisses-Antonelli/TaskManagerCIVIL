@@ -181,6 +181,12 @@ fun AppNavigation(
                 },
                 onTaskClick = { taskId ->
                     // TODO: Navegar para detalhes da tarefa
+                },
+                onEmployeeClick = { employeeId ->
+                    navController.navigate(Screen.EmployeeDetail.createRoute(employeeId))
+                },
+                onTeamClick = { teamId ->
+                    navController.navigate(Screen.TeamDetail.createRoute(teamId))
                 }
             )
         }
