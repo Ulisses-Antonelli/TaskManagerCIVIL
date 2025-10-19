@@ -1,5 +1,6 @@
 package com.project.taskmanagercivil.presentation.components
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -10,6 +11,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.unit.dp
+import org.jetbrains.compose.resources.painterResource
+import taskmanagercivil.composeapp.generated.resources.Logo_TMC
+import taskmanagercivil.composeapp.generated.resources.Res
 
 
 val menuItems = listOf(
@@ -49,6 +53,23 @@ private fun SidebarContent(
             .padding(horizontal = 12.dp, vertical = 24.dp),
         verticalArrangement = Arrangement.spacedBy(4.dp)
     ) {
+        // Logo
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(bottom = 24.dp),
+            contentAlignment = Alignment.Center
+        ) {
+            Image(
+                painter = painterResource(Res.drawable.Logo_TMC),
+                contentDescription = "Logo TMC",
+                modifier = Modifier
+                    .fillMaxWidth(0.8f)
+                    .height(80.dp)
+            )
+        }
+
+        // Menu items
         for ((route, label) in menuItems) {
             ModernNavigationItem(
                 label = label,
