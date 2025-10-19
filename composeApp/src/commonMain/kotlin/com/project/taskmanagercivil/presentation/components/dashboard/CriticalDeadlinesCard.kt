@@ -30,6 +30,7 @@ fun CriticalDeadlinesCard(
     Surface(
         modifier = modifier
             .fillMaxWidth()
+            .height(400.dp)
             .clip(RoundedCornerShape(12.dp)),
         tonalElevation = 2.dp,
         shadowElevation = 4.dp,
@@ -37,7 +38,7 @@ fun CriticalDeadlinesCard(
     ) {
         Column(
             modifier = Modifier
-                .fillMaxWidth()
+                .fillMaxSize()
                 .padding(20.dp)
         ) {
             Row(
