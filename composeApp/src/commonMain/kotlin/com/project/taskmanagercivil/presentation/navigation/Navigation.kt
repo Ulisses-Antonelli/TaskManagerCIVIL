@@ -9,6 +9,7 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import androidx.navigation.toRoute
 import com.project.taskmanagercivil.presentation.ViewModelFactory
+import com.project.taskmanagercivil.presentation.screens.dashboard.DashboardScreenContent
 import com.project.taskmanagercivil.presentation.screens.documents.DocumentDetailScreen
 import com.project.taskmanagercivil.presentation.screens.documents.DocumentFormScreen
 import com.project.taskmanagercivil.presentation.screens.documents.DocumentsScreenContent
@@ -25,6 +26,7 @@ import com.project.taskmanagercivil.presentation.screens.teams.TeamsScreenConten
 
 
 sealed class Screen(val route: String) {
+    object Dashboard : Screen("dashboard")
     object Tasks : Screen("tasks")
     object Projects : Screen("projects")
     object ProjectDetail : Screen("project_detail/{projectId}") {
@@ -66,9 +68,32 @@ fun AppNavigation(
 ) {
     NavHost(
         navController = navController,
-        startDestination = Screen.Tasks.route
+        startDestination = Screen.Dashboard.route
     ) {
-        
+
+        // Tela de Dashboard
+        composable(Screen.Dashboard.route) {
+            val viewModel = ViewModelFactory.createDashboardViewModel()
+            DashboardScreenContent(
+                viewModel = viewModel,
+                onNavigate = { route ->
+                    navController.navigate(route) {
+                        launchSingleTop = true
+                    }
+                },
+                onProjectClick = { projectId ->
+                    navController.navigate(Screen.ProjectDetail.createRoute(projectId))
+                },
+                onTaskClick = { taskId ->
+                    // TODO: Navegar para detalhes da tarefa quando implementado
+                },
+                onProjectsWithStatusClick = { status ->
+                    // Navega para tela de projetos (poderia filtrar por status)
+                    navController.navigate(Screen.Projects.route)
+                }
+            )
+        }
+
         composable(Screen.Tasks.route) {
             val viewModel = ViewModelFactory.createTasksViewModel()
             TasksScreenContent(

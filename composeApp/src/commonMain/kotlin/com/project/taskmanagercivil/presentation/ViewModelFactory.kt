@@ -1,15 +1,18 @@
 package com.project.taskmanagercivil.presentation
 
+import com.project.taskmanagercivil.data.repository.DashboardRepositoryImpl
 import com.project.taskmanagercivil.data.repository.DocumentRepositoryImpl
 import com.project.taskmanagercivil.data.repository.EmployeeRepositoryImpl
 import com.project.taskmanagercivil.data.repository.ProjectRepositoryImpl
 import com.project.taskmanagercivil.data.repository.TaskRepositoryImpl
 import com.project.taskmanagercivil.data.repository.TeamRepositoryImpl
+import com.project.taskmanagercivil.domain.repository.DashboardRepository
 import com.project.taskmanagercivil.domain.repository.DocumentRepository
 import com.project.taskmanagercivil.domain.repository.EmployeeRepository
 import com.project.taskmanagercivil.domain.repository.ProjectRepository
 import com.project.taskmanagercivil.domain.repository.TaskRepository
 import com.project.taskmanagercivil.domain.repository.TeamRepository
+import com.project.taskmanagercivil.presentation.screens.dashboard.DashboardViewModel
 import com.project.taskmanagercivil.presentation.screens.documents.DocumentDetailViewModel
 import com.project.taskmanagercivil.presentation.screens.documents.DocumentFormViewModel
 import com.project.taskmanagercivil.presentation.screens.documents.DocumentsViewModel
@@ -28,11 +31,16 @@ import com.project.taskmanagercivil.presentation.screens.teams.TeamsViewModel
  * Factory simples para criação de ViewModels com injeção de dependência por construtor
  */
 object ViewModelFactory {
+    private val dashboardRepository: DashboardRepository = DashboardRepositoryImpl()
     private val taskRepository: TaskRepository = TaskRepositoryImpl()
     private val projectRepository: ProjectRepository = ProjectRepositoryImpl()
     private val employeeRepository: EmployeeRepository = EmployeeRepositoryImpl()
     private val teamRepository: TeamRepository = TeamRepositoryImpl()
     private val documentRepository: DocumentRepository = DocumentRepositoryImpl()
+
+    fun createDashboardViewModel(): DashboardViewModel {
+        return DashboardViewModel(dashboardRepository)
+    }
 
     fun createTasksViewModel(): TasksViewModel {
         return TasksViewModel(taskRepository)

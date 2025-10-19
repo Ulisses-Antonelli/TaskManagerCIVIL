@@ -56,7 +56,6 @@ class TeamFormViewModel(
             _uiState.update { it.copy(isLoading = true) }
 
             try {
-                s
                 val employees: List<Employee> = employeeRepository.getAllEmployees().first()
                 _uiState.update { it.copy(availableEmployees = employees) }
 

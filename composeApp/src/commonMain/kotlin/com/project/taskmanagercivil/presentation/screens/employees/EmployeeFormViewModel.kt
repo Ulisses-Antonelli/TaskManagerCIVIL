@@ -50,7 +50,6 @@ class EmployeeFormViewModel(
             _uiState.update { it.copy(isLoading = true) }
 
             try {
-                s
                 val projects: List<Project> = projectRepository.getAllProjects()
                 _uiState.update { it.copy(availableProjects = projects) }
 

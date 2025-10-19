@@ -31,3 +31,4 @@ object FormatUtils {
 
 // Funções de extensão para manter compatibilidade com código existente
 fun formatCurrency(value: Double): String = FormatUtils.formatCurrency(value)
+fun formatDate(date: LocalDate): String = FormatUtils.formatDate(date)
