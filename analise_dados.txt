@@ -1,0 +1,54 @@
+Análise da Composição dos Dados Mocados:
+
+PROJETOS E SUAS TAREFAS:
+
+1. Vista Verde (ID: 1)
+   - Task 1: COMPLETED (Fundação - Bloco A)
+   - Task 2: IN_PROGRESS (Estrutura - 1º ao 5º Andar)
+   - Task 3: IN_PROGRESS (Instalações Elétricas - Torre Sul)
+   - Task 4: IN_REVIEW (Aprovação do Projeto de PPCI)
+   Status Derivado: IN_REVIEW (tem tarefa em revisão)
+   Tarefas por status: TODO=0, IN_PROGRESS=2, IN_REVIEW=1, COMPLETED=1, BLOCKED=0
+
+2. Centro Comercial Plaza (ID: 2)
+   - Task 5: COMPLETED (Demolição - Área Antiga)
+   - Task 6: IN_PROGRESS (Reforço Estrutural - Pilares)
+   - Task 7: TODO (Nova Fachada - Design)
+   - Task 8: BLOCKED (Sistema de Ar Condicionado)
+   - Task 20: TODO (Acabamento - Áreas Comuns Plaza)
+   Status Derivado: BLOCKED (tem tarefa bloqueada)
+   Tarefas por status: TODO=2, IN_PROGRESS=1, IN_REVIEW=0, COMPLETED=1, BLOCKED=1
+
+3. Ponte Metropolitana Norte (ID: 3)
+   - Task 9: IN_PROGRESS (Fundação - Pilares Centrais)
+   - Task 17: IN_REVIEW (Aprovação Ambiental - Ponte)
+   Status Derivado: IN_REVIEW (tem tarefa em revisão)
+   Tarefas por status: TODO=0, IN_PROGRESS=1, IN_REVIEW=1, COMPLETED=0, BLOCKED=0
+
+4. Hospital Regional Sul (ID: 4)
+   - Task 10: TODO (Instalações Hidráulicas - Ala Norte)
+   - Task 14: COMPLETED (Fundação - Hospital)
+   - Task 15: IN_PROGRESS (Estrutura - Hospital Ala Sul)
+   - Task 18: IN_REVIEW (Estudo Geotécnico - Hospital)
+   Status Derivado: IN_REVIEW (tem tarefa em revisão)
+   Tarefas por status: TODO=1, IN_PROGRESS=1, IN_REVIEW=1, COMPLETED=1, BLOCKED=0
+
+5. Condomínio Parque das Flores (ID: 5)
+   - Task 11: IN_PROGRESS (Estrutura - Torres 1 e 2)
+   - Task 16: TODO (Instalações - Torres 3 e 4)
+   - Task 19: BLOCKED (Alvenaria - Torres 5 e 6)
+   Status Derivado: BLOCKED (tem tarefa bloqueada)
+   Tarefas por status: TODO=1, IN_PROGRESS=1, IN_REVIEW=0, COMPLETED=0, BLOCKED=1
+
+6. Viaduto Interligação Leste (ID: 6)
+   - Task 12: COMPLETED (Terraplenagem - Área do Viaduto)
+   - Task 13: IN_PROGRESS (Estrutura - Pilares do Viaduto)
+   Status Derivado: IN_PROGRESS (tem tarefas completas e em andamento)
+   Tarefas por status: TODO=0, IN_PROGRESS=1, IN_REVIEW=0, COMPLETED=1, BLOCKED=0
+
+RESUMO ESPERADO NO DASHBOARD (contando obras que possuem pelo menos uma tarefa com cada status):
+- TODO: 3 obras (Plaza, Hospital, Condomínio)
+- IN_PROGRESS: 5 obras (Vista Verde, Plaza, Ponte, Hospital, Condomínio, Viaduto)
+- IN_REVIEW: 3 obras (Vista Verde, Ponte, Hospital)
+- COMPLETED: 4 obras (Vista Verde, Plaza, Hospital, Viaduto)
+- BLOCKED: 2 obras (Plaza, Condomínio)

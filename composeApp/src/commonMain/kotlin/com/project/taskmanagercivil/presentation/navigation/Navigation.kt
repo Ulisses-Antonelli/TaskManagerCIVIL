@@ -28,10 +28,11 @@ import com.project.taskmanagercivil.presentation.screens.teams.TeamsScreenConten
 sealed class Screen(val route: String) {
     object Dashboard : Screen("dashboard")
     object Tasks : Screen("tasks")
-    object Projects : Screen("projects?statusFilter={statusFilter}") {
+    object Projects : Screen("projects/{statusFilter}") {
         val baseRoute = "projects"
+        // Rota com filtro: projects/TODO ou projects/IN_PROGRESS
         fun createRoute(statusFilter: String? = null) =
-            if (statusFilter != null) "projects?statusFilter=$statusFilter" else "projects"
+            if (statusFilter != null) "projects/$statusFilter" else "projects/NONE"
     }
     object ProjectDetail : Screen("project_detail/{projectId}") {
         fun createRoute(projectId: String) = "project_detail/$projectId"
@@ -114,13 +115,14 @@ fun AppNavigation(
         }
 
 
+        // Rota Projects - aceita filtro opcional via path parameter
         composable(
             route = Screen.Projects.route,
             arguments = listOf(
                 navArgument("statusFilter") {
                     type = NavType.StringType
-                    nullable = true
-                    defaultValue = null
+                    defaultValue = "NONE"
+                    nullable = false
                 }
             )
         ) { backStackEntry ->
@@ -129,32 +131,20 @@ fun AppNavigation(
                 ViewModelFactory.createProjectsViewModel()
             }
 
-            // Extrai o parâmetro statusFilter da URL navegada
-            // Ex: "projects?statusFilter=TODO" -> "TODO"
+            // Extrai o statusFilter do path parameter
+            // Ex: "projects/TODO" -> "TODO"
             androidx.compose.runtime.LaunchedEffect(Unit) {
-                // Tenta extrair de diferentes formas
-                val args = backStackEntry.arguments
-                val route = args?.toString() ?: ""
-
-                println("DEBUG - Route completa: $route")
-                println("DEBUG - Arguments: $args")
-
-                val statusFilter = when {
-                    route.contains("statusFilter=") -> {
-                        route.substringAfter("statusFilter=")
-                            .substringBefore(",")
-                            .substringBefore("}")
-                            .trim()
-                            .takeIf { it.isNotEmpty() && it != "null" }
-                    }
-                    else -> null
+                val currentRoute = navController.currentBackStackEntry?.destination?.route ?: ""
+                val statusFilterParam = currentRoute.removePrefix("projects/").takeIf {
+                    it.isNotEmpty() && it != "NONE" && it != "{statusFilter}"
                 }
 
-                println("DEBUG - statusFilter extraído: $statusFilter")
+                println("DEBUG - Route completa: $currentRoute")
+                println("DEBUG - statusFilter extraído: $statusFilterParam")
 
-                if (statusFilter != null) {
+                if (statusFilterParam != null) {
                     try {
-                        val status = com.project.taskmanagercivil.domain.models.TaskStatus.valueOf(statusFilter)
+                        val status = com.project.taskmanagercivil.domain.models.TaskStatus.valueOf(statusFilterParam)
                         println("DEBUG - Aplicando filtro: $status")
                         // Quando vem do Dashboard, aplica filtro de tarefas internas
                         // (mostra todas as obras que possuem pelo menos uma tarefa com esse status)

@@ -18,7 +18,7 @@ import taskmanagercivil.composeapp.generated.resources.Res
 
 val menuItems = listOf(
     "dashboard" to "Dashboard",
-    "projects" to "Obras/Projetos",
+    "projects/NONE" to "Obras/Projetos",  // Navegação sem filtro
     "tasks" to "Tarefas",
     "users" to "Colaboradores",
     "teams" to "Times",
