@@ -71,9 +71,17 @@ private fun SidebarContent(
 
         // Menu items
         for ((route, label) in menuItems) {
+            // Para Projects, verifica se a rota atual começa com "projects/"
+            // Isso permite destacar o item mesmo com filtros diferentes (projects/TODO, projects/NONE, etc)
+            val isSelected = if (route.startsWith("projects/")) {
+                currentRoute?.startsWith("projects/") == true
+            } else {
+                currentRoute == route
+            }
+
             ModernNavigationItem(
                 label = label,
-                selected = currentRoute == route,
+                selected = isSelected,
                 onClick = { onMenuClick(route) }
             )
         }
