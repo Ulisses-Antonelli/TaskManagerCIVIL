@@ -25,6 +25,14 @@ import com.project.taskmanagercivil.presentation.screens.teams.TeamFormScreen
 import com.project.taskmanagercivil.presentation.screens.teams.TeamsScreenContent
 
 
+/**
+ * Objeto singleton para compartilhar estado de navegação entre telas
+ * Necessário porque o Navigation Compose para Web não expõe os path parameters facilmente
+ */
+object NavigationState {
+    var pendingProjectFilter: String? = null
+}
+
 sealed class Screen(val route: String) {
     object Dashboard : Screen("dashboard")
     object Tasks : Screen("tasks")
@@ -93,6 +101,8 @@ fun AppNavigation(
                     // TODO: Navegar para detalhes da tarefa quando implementado
                 },
                 onProjectsWithStatusClick = { status ->
+                    // Guarda o filtro pendente no singleton antes de navegar
+                    NavigationState.pendingProjectFilter = status.name
                     // Navega para tela de projetos com filtro de status
                     navController.navigate(Screen.Projects.createRoute(status.name))
                 }
@@ -131,24 +141,39 @@ fun AppNavigation(
                 ViewModelFactory.createProjectsViewModel()
             }
 
-            // Extrai o statusFilter do path parameter
-            // Ex: "projects/TODO" -> "TODO"
-            androidx.compose.runtime.LaunchedEffect(Unit) {
-                val currentRoute = navController.currentBackStackEntry?.destination?.route ?: ""
-                val statusFilterParam = currentRoute.removePrefix("projects/").takeIf {
-                    it.isNotEmpty() && it != "NONE" && it != "{statusFilter}"
-                }
+            // Extrai o statusFilter do path parameter analisando a URL atual
+            // Ex: se navegou para "projects/TODO", extrai "TODO"
+            val currentDestination = navController.currentBackStackEntry?.destination
+            val currentRoute = currentDestination?.route ?: ""
 
-                println("DEBUG - Route completa: $currentRoute")
-                println("DEBUG - statusFilter extraído: $statusFilterParam")
+            // Pega todas as entries do backstack e procura pela rota atual
+            val allEntries = navController.currentBackStack.value
+            val currentEntry = allEntries.lastOrNull()
+            val actualRoute = currentEntry?.destination?.route ?: ""
 
-                if (statusFilterParam != null) {
+            println("DEBUG - Current route template: $currentRoute")
+            println("DEBUG - Actual route from backstack: $actualRoute")
+            println("DEBUG - All backstack entries: ${allEntries.map { it.destination.route }}")
+
+            // Como o navigation não expõe o valor real facilmente, vou precisar
+            // interceptar na navegação e guardar em um estado global
+            // Por enquanto, vou tentar pegar via ID da entrada
+            val entryId = backStackEntry.id
+            println("DEBUG - BackStack Entry ID: $entryId")
+
+            // Solução temporária: vou armazenar o filtro em um objeto singleton
+            // e aplicar aqui
+            val filterToApply = NavigationState.pendingProjectFilter
+            println("DEBUG - Pending filter from singleton: $filterToApply")
+
+            androidx.compose.runtime.LaunchedEffect(filterToApply) {
+                if (filterToApply != null && filterToApply != "NONE") {
                     try {
-                        val status = com.project.taskmanagercivil.domain.models.TaskStatus.valueOf(statusFilterParam)
+                        val status = com.project.taskmanagercivil.domain.models.TaskStatus.valueOf(filterToApply)
                         println("DEBUG - Aplicando filtro: $status")
-                        // Quando vem do Dashboard, aplica filtro de tarefas internas
-                        // (mostra todas as obras que possuem pelo menos uma tarefa com esse status)
                         viewModel.onTaskStatusFilterChange(status)
+                        // Limpa o filtro pendente
+                        NavigationState.pendingProjectFilter = null
                     } catch (e: Exception) {
                         println("DEBUG - Erro ao converter status: ${e.message}")
                     }
