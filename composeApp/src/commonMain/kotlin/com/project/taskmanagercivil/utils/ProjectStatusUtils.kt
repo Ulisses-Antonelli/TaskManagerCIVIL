@@ -118,6 +118,37 @@ object ProjectStatusUtils {
 
         return counts
     }
+
+    /**
+     * Conta quantas obras possuem pelo menos uma tarefa com cada status
+     * Este é o critério usado no Dashboard para os cards de resumo
+     *
+     * Exemplo: Se uma obra tem tarefas com status [TODO, IN_PROGRESS, BLOCKED],
+     * ela será contada nos 3 contadores (todoCount, inProgressCount, blockedCount)
+     */
+    fun countProjectsByTaskStatus(
+        projects: List<Project>,
+        tasks: List<Task>
+    ): Map<TaskStatus, Int> {
+        val counts = mutableMapOf<TaskStatus, Int>()
+
+        TaskStatus.entries.forEach { status ->
+            counts[status] = 0
+        }
+
+        projects.forEach { project ->
+            val projectTasks = tasks.filter { it.project.id == project.id }
+
+            // Para cada status, verifica se o projeto tem pelo menos uma tarefa com esse status
+            TaskStatus.entries.forEach { status ->
+                if (projectTasks.any { it.status == status }) {
+                    counts[status] = (counts[status] ?: 0) + 1
+                }
+            }
+        }
+
+        return counts
+    }
 }
 
 /**

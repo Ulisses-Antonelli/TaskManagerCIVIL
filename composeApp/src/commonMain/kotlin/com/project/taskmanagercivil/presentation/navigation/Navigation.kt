@@ -135,7 +135,9 @@ fun AppNavigation(
             if (statusFilter != null && statusFilter.isNotEmpty()) {
                 try {
                     val status = com.project.taskmanagercivil.domain.models.TaskStatus.valueOf(statusFilter)
-                    viewModel.setProjectStatusFilter(status)
+                    // Quando vem do Dashboard, aplica filtro de tarefas internas
+                    // (mostra todas as obras que possuem pelo menos uma tarefa com esse status)
+                    viewModel.onTaskStatusFilterChange(status)
                 } catch (e: Exception) {
                     // Ignora se o status for inválido
                 }

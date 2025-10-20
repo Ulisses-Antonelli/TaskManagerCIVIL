@@ -26,11 +26,18 @@ class DashboardRepositoryImpl : DashboardRepository {
 
     /**
      * Calcula o resumo quantitativo de obras por status baseado nas tarefas
-     * Usa as regras de negócio para derivar status automaticamente das tarefas
+     *
+     * IMPORTANTE: Este resumo conta quantas obras possuem pelo menos UMA tarefa com cada status.
+     * Uma obra pode ser contada múltiplas vezes se tiver tarefas com diferentes status.
+     *
+     * Exemplo: Se "Centro Comercial Plaza" tem tarefas com status [TODO, IN_PROGRESS, BLOCKED],
+     * ela será contada em todoCount, inProgressCount e blockedCount.
+     *
+     * Este critério é diferente do "status derivado" usado nos filtros de Obras/Projetos.
      */
     private fun calculateProjectStatusSummary(): ProjectStatusSummary {
-        // Usa a função utilitária para contar projetos por status derivado
-        val statusCounts = ProjectStatusUtils.countProjectsByDerivedStatus(projects, tasks)
+        // Usa a função que conta obras por tarefas internas (não por status derivado)
+        val statusCounts = ProjectStatusUtils.countProjectsByTaskStatus(projects, tasks)
 
         return ProjectStatusSummary(
             todoCount = statusCounts[TaskStatus.TODO] ?: 0,
