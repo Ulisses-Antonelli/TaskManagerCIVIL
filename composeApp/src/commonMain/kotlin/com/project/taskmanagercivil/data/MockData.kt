@@ -402,6 +402,112 @@ class MockData {
             LocalDate(2024, 6, 15),
             1.0f,
             listOf("terraplenagem", "preparação")
+        ),
+        // Tarefas adicionais para garantir variedade de status nos projetos
+        Task(
+            "13",
+            "Estrutura - Pilares do Viaduto",
+            "Execução dos pilares principais do viaduto",
+            TaskStatus.IN_PROGRESS,
+            TaskPriority.CRITICAL,
+            users[0],
+            projects[5],
+            LocalDate(2024, 6, 20),
+            LocalDate(2024, 10, 30),
+            0.35f,
+            listOf("estrutura", "pilares", "viaduto")
+        ),
+        Task(
+            "14",
+            "Fundação - Hospital",
+            "Fundação da ala principal do hospital",
+            TaskStatus.COMPLETED,
+            TaskPriority.CRITICAL,
+            users[2],
+            projects[3],
+            LocalDate(2024, 4, 5),
+            LocalDate(2024, 5, 20),
+            1.0f,
+            listOf("fundação", "hospital")
+        ),
+        Task(
+            "15",
+            "Estrutura - Hospital Ala Sul",
+            "Concretagem da estrutura da ala sul",
+            TaskStatus.IN_PROGRESS,
+            TaskPriority.HIGH,
+            users[0],
+            projects[3],
+            LocalDate(2024, 5, 25),
+            LocalDate(2024, 8, 15),
+            0.42f,
+            listOf("estrutura", "hospital")
+        ),
+        Task(
+            "16",
+            "Instalações - Torres 3 e 4",
+            "Instalações hidráulicas e elétricas das torres 3 e 4",
+            TaskStatus.TODO,
+            TaskPriority.MEDIUM,
+            users[4],
+            projects[4],
+            LocalDate(2024, 7, 20),
+            LocalDate(2024, 10, 30),
+            0.0f,
+            listOf("instalações", "torres")
+        ),
+        Task(
+            "17",
+            "Aprovação Ambiental - Ponte",
+            "Licença ambiental para construção da ponte",
+            TaskStatus.IN_REVIEW,
+            TaskPriority.CRITICAL,
+            users[3],
+            projects[2],
+            LocalDate(2024, 2, 1),
+            LocalDate(2024, 4, 30),
+            0.9f,
+            listOf("documentação", "licença", "ambiental")
+        ),
+        Task(
+            "18",
+            "Estudo Geotécnico - Hospital",
+            "Estudo complementar do solo para ampliação",
+            TaskStatus.IN_REVIEW,
+            TaskPriority.HIGH,
+            users[3],
+            projects[3],
+            LocalDate(2024, 4, 10),
+            LocalDate(2024, 5, 15),
+            0.85f,
+            listOf("geotecnia", "estudo", "solo")
+        ),
+        Task(
+            "19",
+            "Alvenaria - Torres 5 e 6",
+            "Execução de alvenaria das torres 5 e 6",
+            TaskStatus.BLOCKED,
+            TaskPriority.HIGH,
+            users[2],
+            projects[4],
+            LocalDate(2024, 8, 1),
+            LocalDate(2024, 11, 30),
+            0.05f,
+            listOf("alvenaria", "torres"),
+            listOf("16")
+        ),
+        Task(
+            "20",
+            "Acabamento - Áreas Comuns Plaza",
+            "Acabamento final das áreas comuns do shopping",
+            TaskStatus.TODO,
+            TaskPriority.LOW,
+            users[1],
+            projects[1],
+            LocalDate(2024, 9, 1),
+            LocalDate(2024, 11, 30),
+            0.0f,
+            listOf("acabamento", "áreas-comuns")
         )
     )
 

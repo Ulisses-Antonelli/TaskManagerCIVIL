@@ -127,9 +127,12 @@ fun AppNavigation(
             val viewModel = ViewModelFactory.createProjectsViewModel()
 
             // Verifica se há um filtro de status vindo do Dashboard
-            val route = backStackEntry.destination.route ?: ""
-            val statusFilter = route.substringAfter("statusFilter=").substringBefore("&").ifEmpty { null }
-            if (!statusFilter.isNullOrEmpty() && statusFilter != "{statusFilter}") {
+            val currentRoute = navController.currentBackStackEntry?.destination?.route ?: ""
+            val statusFilter = if (currentRoute.contains("statusFilter=")) {
+                currentRoute.substringAfter("statusFilter=").substringBefore("&").takeIf { it != "{statusFilter}" }
+            } else null
+
+            if (statusFilter != null && statusFilter.isNotEmpty()) {
                 try {
                     val status = com.project.taskmanagercivil.domain.models.TaskStatus.valueOf(statusFilter)
                     viewModel.setProjectStatusFilter(status)
@@ -161,11 +164,8 @@ fun AppNavigation(
                 navArgument("projectId") { type = NavType.StringType }
             )
         ) { backStackEntry ->
-            // Extrai projectId diretamente da rota usando regex
-            val route = backStackEntry.destination.route ?: ""
-            val projectId = route.substringAfter("project_detail/").substringBefore("/").ifEmpty {
-                backStackEntry.arguments?.toString()?.substringAfter("projectId=")?.substringBefore(",")?.substringBefore("}")?.trim() ?: "1"
-            }
+            val currentRoute = navController.currentBackStackEntry?.destination?.route ?: ""
+            val projectId = currentRoute.removePrefix("project_detail/").takeIf { it.isNotBlank() } ?: "1"
 
             val viewModel = ViewModelFactory.createProjectDetailViewModel(projectId)
             ProjectDetailScreen(
@@ -210,10 +210,8 @@ fun AppNavigation(
                 navArgument("projectId") { type = NavType.StringType }
             )
         ) { backStackEntry ->
-            val route = backStackEntry.destination.route ?: ""
-            val projectId = route.substringAfter("project_edit/").substringBefore("/").ifEmpty {
-                backStackEntry.arguments?.toString()?.substringAfter("projectId=")?.substringBefore(",")?.substringBefore("}")?.trim() ?: "1"
-            }
+            val currentRoute = navController.currentBackStackEntry?.destination?.route ?: ""
+            val projectId = currentRoute.removePrefix("project_edit/").takeIf { it.isNotBlank() } ?: "1"
 
             val viewModel = ViewModelFactory.createProjectFormViewModel(projectId)
             ProjectFormScreen(
@@ -251,10 +249,8 @@ fun AppNavigation(
                 navArgument("employeeId") { type = NavType.StringType }
             )
         ) { backStackEntry ->
-            val route = backStackEntry.destination.route ?: ""
-            val employeeId = route.substringAfter("employee_detail/").substringBefore("/").ifEmpty {
-                backStackEntry.arguments?.toString()?.substringAfter("employeeId=")?.substringBefore(",")?.substringBefore("}")?.trim() ?: "1"
-            }
+            val currentRoute = navController.currentBackStackEntry?.destination?.route ?: ""
+            val employeeId = currentRoute.removePrefix("employee_detail/").takeIf { it.isNotBlank() } ?: "1"
 
             val viewModel = ViewModelFactory.createEmployeeDetailViewModel(employeeId)
             EmployeeDetailScreen(
@@ -292,10 +288,8 @@ fun AppNavigation(
                 navArgument("employeeId") { type = NavType.StringType }
             )
         ) { backStackEntry ->
-            val route = backStackEntry.destination.route ?: ""
-            val employeeId = route.substringAfter("employee_edit/").substringBefore("/").ifEmpty {
-                backStackEntry.arguments?.toString()?.substringAfter("employeeId=")?.substringBefore(",")?.substringBefore("}")?.trim() ?: "1"
-            }
+            val currentRoute = navController.currentBackStackEntry?.destination?.route ?: ""
+            val employeeId = currentRoute.removePrefix("employee_edit/").takeIf { it.isNotBlank() } ?: "1"
 
             val viewModel = ViewModelFactory.createEmployeeFormViewModel(employeeId)
             EmployeeFormScreen(
@@ -333,10 +327,8 @@ fun AppNavigation(
                 navArgument("teamId") { type = NavType.StringType }
             )
         ) { backStackEntry ->
-            val route = backStackEntry.destination.route ?: ""
-            val teamId = route.substringAfter("team_detail/").substringBefore("/").ifEmpty {
-                backStackEntry.arguments?.toString()?.substringAfter("teamId=")?.substringBefore(",")?.substringBefore("}")?.trim() ?: "1"
-            }
+            val currentRoute = navController.currentBackStackEntry?.destination?.route ?: ""
+            val teamId = currentRoute.removePrefix("team_detail/").takeIf { it.isNotBlank() } ?: "1"
 
             val viewModel = ViewModelFactory.createTeamDetailViewModel(teamId)
             TeamDetailScreen(
@@ -377,10 +369,8 @@ fun AppNavigation(
                 navArgument("teamId") { type = NavType.StringType }
             )
         ) { backStackEntry ->
-            val route = backStackEntry.destination.route ?: ""
-            val teamId = route.substringAfter("team_edit/").substringBefore("/").ifEmpty {
-                backStackEntry.arguments?.toString()?.substringAfter("teamId=")?.substringBefore(",")?.substringBefore("}")?.trim() ?: "1"
-            }
+            val currentRoute = navController.currentBackStackEntry?.destination?.route ?: ""
+            val teamId = currentRoute.removePrefix("team_edit/").takeIf { it.isNotBlank() } ?: "1"
 
             val viewModel = ViewModelFactory.createTeamFormViewModel(teamId)
             TeamFormScreen(
@@ -418,10 +408,8 @@ fun AppNavigation(
                 navArgument("documentId") { type = NavType.StringType }
             )
         ) { backStackEntry ->
-            val route = backStackEntry.destination.route ?: ""
-            val documentId = route.substringAfter("document_detail/").substringBefore("/").ifEmpty {
-                backStackEntry.arguments?.toString()?.substringAfter("documentId=")?.substringBefore(",")?.substringBefore("}")?.trim() ?: "1"
-            }
+            val currentRoute = navController.currentBackStackEntry?.destination?.route ?: ""
+            val documentId = currentRoute.removePrefix("document_detail/").takeIf { it.isNotBlank() } ?: "1"
 
             val viewModel = ViewModelFactory.createDocumentDetailViewModel(documentId)
             DocumentDetailScreen(
@@ -459,10 +447,8 @@ fun AppNavigation(
                 navArgument("documentId") { type = NavType.StringType }
             )
         ) { backStackEntry ->
-            val route = backStackEntry.destination.route ?: ""
-            val documentId = route.substringAfter("document_edit/").substringBefore("/").ifEmpty {
-                backStackEntry.arguments?.toString()?.substringAfter("documentId=")?.substringBefore(",")?.substringBefore("}")?.trim() ?: "1"
-            }
+            val currentRoute = navController.currentBackStackEntry?.destination?.route ?: ""
+            val documentId = currentRoute.removePrefix("document_edit/").takeIf { it.isNotBlank() } ?: "1"
 
             val viewModel = ViewModelFactory.createDocumentFormViewModel(documentId)
             DocumentFormScreen(
