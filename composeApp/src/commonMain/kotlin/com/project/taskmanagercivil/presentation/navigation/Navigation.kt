@@ -124,28 +124,43 @@ fun AppNavigation(
                 }
             )
         ) { backStackEntry ->
-            val viewModel = ViewModelFactory.createProjectsViewModel()
+            // IMPORTANTE: Usa remember para manter a mesma instância do ViewModel
+            val viewModel = androidx.compose.runtime.remember {
+                ViewModelFactory.createProjectsViewModel()
+            }
 
             // Extrai o parâmetro statusFilter da URL navegada
             // Ex: "projects?statusFilter=TODO" -> "TODO"
-            androidx.compose.runtime.LaunchedEffect(backStackEntry) {
-                val route = backStackEntry.arguments?.toString() ?: ""
-                val statusFilter = if (route.contains("statusFilter=")) {
-                    route.substringAfter("statusFilter=")
-                        .substringBefore(",")
-                        .substringBefore("}")
-                        .trim()
-                        .takeIf { it.isNotEmpty() && it != "null" }
-                } else null
+            androidx.compose.runtime.LaunchedEffect(Unit) {
+                // Tenta extrair de diferentes formas
+                val args = backStackEntry.arguments
+                val route = args?.toString() ?: ""
+
+                println("DEBUG - Route completa: $route")
+                println("DEBUG - Arguments: $args")
+
+                val statusFilter = when {
+                    route.contains("statusFilter=") -> {
+                        route.substringAfter("statusFilter=")
+                            .substringBefore(",")
+                            .substringBefore("}")
+                            .trim()
+                            .takeIf { it.isNotEmpty() && it != "null" }
+                    }
+                    else -> null
+                }
+
+                println("DEBUG - statusFilter extraído: $statusFilter")
 
                 if (statusFilter != null) {
                     try {
                         val status = com.project.taskmanagercivil.domain.models.TaskStatus.valueOf(statusFilter)
+                        println("DEBUG - Aplicando filtro: $status")
                         // Quando vem do Dashboard, aplica filtro de tarefas internas
                         // (mostra todas as obras que possuem pelo menos uma tarefa com esse status)
                         viewModel.onTaskStatusFilterChange(status)
                     } catch (e: Exception) {
-                        // Ignora se o status for inválido
+                        println("DEBUG - Erro ao converter status: ${e.message}")
                     }
                 }
             }
