@@ -257,6 +257,82 @@ composeApp/src/commonMain/kotlin/com/project/taskmanagercivil/
 
 ---
 
+---
+
+## Solução: Passagem de Parâmetros de Navegação no Compose Navigation Web
+
+### Problema
+No Compose Navigation para Web/Wasm, **path parameters não são acessíveis facilmente** através de `backStackEntry.arguments`.
+
+Ao tentar navegar com parâmetros (ex: `projects/TODO`), o `backStackEntry.arguments` retorna apenas um objeto `SavedState@...` sem acesso direto aos valores.
+
+### Tentativas que NÃO Funcionaram
+1. ❌ Query parameters (`projects?statusFilter=TODO`) - arguments retorna SavedState sem acesso aos valores
+2. ❌ `backStackEntry.arguments?.getString("statusFilter")` - método não existe em common code
+3. ❌ `backStackEntry.arguments?.get("statusFilter")` - retorna null
+4. ❌ `navController.currentBackStackEntry?.destination?.route` - retorna apenas o template `projects/{statusFilter}`
+5. ❌ Reflexão/dynamic access - não disponível em common code
+
+### ✅ Solução Implementada: Singleton NavigationState
+
+Criar um objeto singleton para compartilhar estado entre telas:
+
+```kotlin
+/**
+ * Objeto singleton para compartilhar estado de navegação entre telas
+ * Necessário porque o Navigation Compose para Web não expõe path parameters facilmente
+ */
+object NavigationState {
+    var pendingProjectFilter: String? = null
+}
+```
+
+**Na tela de origem (Dashboard):**
+```kotlin
+onProjectsWithStatusClick = { status ->
+    // 1. Seta o filtro pendente ANTES de navegar
+    NavigationState.pendingProjectFilter = status.name
+
+    // 2. Navega normalmente
+    navController.navigate(Screen.Projects.createRoute(status.name))
+}
+```
+
+**Na tela de destino (Projects):**
+```kotlin
+val viewModel = remember { ViewModelFactory.createProjectsViewModel() }
+
+LaunchedEffect(Unit) {
+    // 3. Lê o filtro pendente quando a tela carrega
+    val filterToApply = NavigationState.pendingProjectFilter
+
+    if (filterToApply != null && filterToApply != "NONE") {
+        try {
+            val status = TaskStatus.valueOf(filterToApply)
+            viewModel.onTaskStatusFilterChange(status)
+
+            // 4. Limpa o filtro pendente
+            NavigationState.pendingProjectFilter = null
+        } catch (e: Exception) {
+            // Ignora status inválido
+        }
+    }
+}
+```
+
+### Quando Usar Esta Solução
+- ✅ Navegação com filtros/parâmetros entre telas
+- ✅ Quando precisa passar dados complexos entre telas
+- ✅ Workaround até que Navigation Compose Web melhore suporte a parâmetros
+- ⚠️ Não é ideal para deep linking (URL direta)
+
+### Observações Importantes
+- Use `remember` para manter a mesma instância do ViewModel
+- Limpe o estado pendente após aplicar para evitar reprocessamento
+- Esta é uma solução temporária/workaround para Web/Wasm
+
+---
+
 ## Histórico de Implementações
 
 ### Dashboard (2024-10-18)
@@ -265,3 +341,10 @@ composeApp/src/commonMain/kotlin/com/project/taskmanagercivil/
 - Integração com dados mock existentes
 - Navegação contextual implementada
 - **Erros corrigidos:** getOrDefault, String.format, imports, ExtendedColors API
+
+### Filtros e Navegação (2024-10-20)
+- Implementado sistema de filtros para Obras/Projetos
+- Filtro por tarefas internas (obras que possuem pelo menos uma tarefa com status X)
+- Navegação contextual do Dashboard para Projects com filtro aplicado
+- **Solução implementada:** NavigationState singleton para passar parâmetros entre telas
+- Removido filtro redundante "Status da Obra" da tela de Projects

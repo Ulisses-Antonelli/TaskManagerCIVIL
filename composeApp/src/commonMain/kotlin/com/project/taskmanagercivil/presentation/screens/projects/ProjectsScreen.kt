@@ -198,34 +198,6 @@ private fun FiltersRow(
             }
         }
 
-        // Filtro por status derivado do projeto
-        Text(
-            text = "Status da Obra",
-            style = MaterialTheme.typography.labelMedium,
-            modifier = Modifier.padding(bottom = 4.dp, top = 8.dp)
-        )
-
-        LazyRow(
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
-            modifier = Modifier.padding(bottom = 8.dp)
-        ) {
-            item {
-                FilterChip(
-                    selected = uiState.selectedProjectStatus == null,
-                    onClick = { viewModel.onProjectStatusFilterChange(null) },
-                    label = { Text("Todos") }
-                )
-            }
-
-            items(com.project.taskmanagercivil.domain.models.TaskStatus.entries.toList()) { status ->
-                FilterChip(
-                    selected = uiState.selectedProjectStatus == status,
-                    onClick = { viewModel.onProjectStatusFilterChange(status) },
-                    label = { Text(status.label) }
-                )
-            }
-        }
-
         // Filtro por status de tarefas internas
         Text(
             text = "Tarefas Internas",
@@ -274,7 +246,7 @@ private fun FiltersRow(
         }
 
         // Botão para limpar filtros
-        if (uiState.selectedLocation != null || uiState.selectedProjectStatus != null || uiState.selectedTaskStatus != null) {
+        if (uiState.selectedLocation != null || uiState.selectedTaskStatus != null) {
             Spacer(modifier = Modifier.height(8.dp))
             Button(
                 onClick = { viewModel.clearFilters() },
