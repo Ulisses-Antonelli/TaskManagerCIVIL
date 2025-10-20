@@ -126,20 +126,27 @@ fun AppNavigation(
         ) { backStackEntry ->
             val viewModel = ViewModelFactory.createProjectsViewModel()
 
-            // Verifica se há um filtro de status vindo do Dashboard
-            val currentRoute = navController.currentBackStackEntry?.destination?.route ?: ""
-            val statusFilter = if (currentRoute.contains("statusFilter=")) {
-                currentRoute.substringAfter("statusFilter=").substringBefore("&").takeIf { it != "{statusFilter}" }
-            } else null
+            // Extrai o parâmetro statusFilter da URL navegada
+            // Ex: "projects?statusFilter=TODO" -> "TODO"
+            androidx.compose.runtime.LaunchedEffect(backStackEntry) {
+                val route = backStackEntry.arguments?.toString() ?: ""
+                val statusFilter = if (route.contains("statusFilter=")) {
+                    route.substringAfter("statusFilter=")
+                        .substringBefore(",")
+                        .substringBefore("}")
+                        .trim()
+                        .takeIf { it.isNotEmpty() && it != "null" }
+                } else null
 
-            if (statusFilter != null && statusFilter.isNotEmpty()) {
-                try {
-                    val status = com.project.taskmanagercivil.domain.models.TaskStatus.valueOf(statusFilter)
-                    // Quando vem do Dashboard, aplica filtro de tarefas internas
-                    // (mostra todas as obras que possuem pelo menos uma tarefa com esse status)
-                    viewModel.onTaskStatusFilterChange(status)
-                } catch (e: Exception) {
-                    // Ignora se o status for inválido
+                if (statusFilter != null) {
+                    try {
+                        val status = com.project.taskmanagercivil.domain.models.TaskStatus.valueOf(statusFilter)
+                        // Quando vem do Dashboard, aplica filtro de tarefas internas
+                        // (mostra todas as obras que possuem pelo menos uma tarefa com esse status)
+                        viewModel.onTaskStatusFilterChange(status)
+                    } catch (e: Exception) {
+                        // Ignora se o status for inválido
+                    }
                 }
             }
 
