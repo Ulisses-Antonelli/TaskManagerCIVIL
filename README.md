@@ -2,6 +2,10 @@
 
 Sistema de gerenciamento de projetos de construção civil desenvolvido com Kotlin Multiplatform (KMP) e Compose Multiplatform.
 
+## 🔗 Acesse o Projeto
+
+**[https://ulisses-antonelli.github.io/TaskManagerCIVIL/](https://ulisses-antonelli.github.io/TaskManagerCIVIL/)**
+
 ## 📋 Sobre o Projeto
 
 O TaskManager CIVIL é uma aplicação multiplataforma para gestão completa de projetos de construção civil, oferecendo funcionalidades para gerenciamento de:
