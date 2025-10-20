@@ -27,7 +27,7 @@ fun ProjectsScreenContent(
 
     Row(modifier = Modifier.fillMaxSize()) {
         NavigationSidebar(
-            currentRoute = "projects",
+            currentRoute = "projects/NONE",
             onMenuClick = onNavigate,
             modifier = Modifier
         )
