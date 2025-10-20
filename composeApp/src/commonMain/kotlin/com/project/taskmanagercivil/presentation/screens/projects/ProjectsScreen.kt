@@ -163,94 +163,149 @@ private fun SearchBar(
     )
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun FiltersRow(
     uiState: ProjectsUiState,
     viewModel: ProjectsViewModel,
     modifier: Modifier = Modifier
 ) {
+    // Estados para controlar abertura dos dropdowns
+    var locationExpanded by remember { mutableStateOf(false) }
+    var statusExpanded by remember { mutableStateOf(false) }
+    var sortExpanded by remember { mutableStateOf(false) }
+
     Column(modifier = modifier) {
-        // Filtro de localização
-        Text(
-            text = "Localização",
-            style = MaterialTheme.typography.labelMedium,
-            modifier = Modifier.padding(bottom = 4.dp)
-        )
-
-        LazyRow(
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
-            modifier = Modifier.padding(bottom = 8.dp)
-        ) {
-            item {
-                FilterChip(
-                    selected = uiState.selectedLocation == null,
-                    onClick = { viewModel.onLocationFilterChange(null) },
-                    label = { Text("Todas") }
-                )
-            }
-
-            items(uiState.allProjects.map { it.location }.distinct().sorted()) { location ->
-                FilterChip(
-                    selected = uiState.selectedLocation == location,
-                    onClick = { viewModel.onLocationFilterChange(location) },
-                    label = { Text(location) }
-                )
-            }
-        }
-
-        // Filtro por status de tarefas internas
-        Text(
-            text = "Tarefas Internas",
-            style = MaterialTheme.typography.labelMedium,
-            modifier = Modifier.padding(bottom = 4.dp, top = 8.dp)
-        )
-
-        LazyRow(
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
-            modifier = Modifier.padding(bottom = 8.dp)
-        ) {
-            item {
-                FilterChip(
-                    selected = uiState.selectedTaskStatus == null,
-                    onClick = { viewModel.onTaskStatusFilterChange(null) },
-                    label = { Text("Todas") }
-                )
-            }
-
-            items(com.project.taskmanagercivil.domain.models.TaskStatus.entries.toList()) { status ->
-                FilterChip(
-                    selected = uiState.selectedTaskStatus == status,
-                    onClick = { viewModel.onTaskStatusFilterChange(status) },
-                    label = { Text(status.label) }
-                )
-            }
-        }
-
-        // Ordenação
-        Text(
-            text = "Ordenar por",
-            style = MaterialTheme.typography.labelMedium,
-            modifier = Modifier.padding(bottom = 4.dp, top = 8.dp)
-        )
-
-        LazyRow(
+        // Linha com os 3 dropdowns
+        Row(
+            modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            items(ProjectSortOption.entries) { option ->
-                FilterChip(
-                    selected = uiState.sortBy == option,
-                    onClick = { viewModel.onSortByChange(option) },
-                    label = { Text(option.label) }
+            // Dropdown 1: Localização
+            ExposedDropdownMenuBox(
+                expanded = locationExpanded,
+                onExpandedChange = { locationExpanded = it },
+                modifier = Modifier.weight(1f)
+            ) {
+                OutlinedTextField(
+                    value = uiState.selectedLocation ?: "Todas",
+                    onValueChange = {},
+                    readOnly = true,
+                    label = { Text("Localização") },
+                    trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = locationExpanded) },
+                    colors = ExposedDropdownMenuDefaults.outlinedTextFieldColors(),
+                    modifier = Modifier
+                        .menuAnchor()
+                        .fillMaxWidth()
                 )
+
+                ExposedDropdownMenu(
+                    expanded = locationExpanded,
+                    onDismissRequest = { locationExpanded = false }
+                ) {
+                    DropdownMenuItem(
+                        text = { Text("Todas") },
+                        onClick = {
+                            viewModel.onLocationFilterChange(null)
+                            locationExpanded = false
+                        }
+                    )
+
+                    uiState.allProjects.map { it.location }.distinct().sorted().forEach { location ->
+                        DropdownMenuItem(
+                            text = { Text(location) },
+                            onClick = {
+                                viewModel.onLocationFilterChange(location)
+                                locationExpanded = false
+                            }
+                        )
+                    }
+                }
+            }
+
+            // Dropdown 2: Status (Tarefas Internas)
+            ExposedDropdownMenuBox(
+                expanded = statusExpanded,
+                onExpandedChange = { statusExpanded = it },
+                modifier = Modifier.weight(1f)
+            ) {
+                OutlinedTextField(
+                    value = uiState.selectedTaskStatus?.label ?: "Todas",
+                    onValueChange = {},
+                    readOnly = true,
+                    label = { Text("Status") },
+                    trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = statusExpanded) },
+                    colors = ExposedDropdownMenuDefaults.outlinedTextFieldColors(),
+                    modifier = Modifier
+                        .menuAnchor()
+                        .fillMaxWidth()
+                )
+
+                ExposedDropdownMenu(
+                    expanded = statusExpanded,
+                    onDismissRequest = { statusExpanded = false }
+                ) {
+                    DropdownMenuItem(
+                        text = { Text("Todas") },
+                        onClick = {
+                            viewModel.onTaskStatusFilterChange(null)
+                            statusExpanded = false
+                        }
+                    )
+
+                    com.project.taskmanagercivil.domain.models.TaskStatus.entries.forEach { status ->
+                        DropdownMenuItem(
+                            text = { Text(status.label) },
+                            onClick = {
+                                viewModel.onTaskStatusFilterChange(status)
+                                statusExpanded = false
+                            }
+                        )
+                    }
+                }
+            }
+
+            // Dropdown 3: Ordenar por
+            ExposedDropdownMenuBox(
+                expanded = sortExpanded,
+                onExpandedChange = { sortExpanded = it },
+                modifier = Modifier.weight(1f)
+            ) {
+                OutlinedTextField(
+                    value = uiState.sortBy.label,
+                    onValueChange = {},
+                    readOnly = true,
+                    label = { Text("Ordenar por") },
+                    trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = sortExpanded) },
+                    colors = ExposedDropdownMenuDefaults.outlinedTextFieldColors(),
+                    modifier = Modifier
+                        .menuAnchor()
+                        .fillMaxWidth()
+                )
+
+                ExposedDropdownMenu(
+                    expanded = sortExpanded,
+                    onDismissRequest = { sortExpanded = false }
+                ) {
+                    ProjectSortOption.entries.forEach { option ->
+                        DropdownMenuItem(
+                            text = { Text(option.label) },
+                            onClick = {
+                                viewModel.onSortByChange(option)
+                                sortExpanded = false
+                            }
+                        )
+                    }
+                }
             }
         }
 
-        // Botão para limpar filtros
+        // Botão para limpar filtros (se houver filtros ativos)
         if (uiState.selectedLocation != null || uiState.selectedTaskStatus != null) {
             Spacer(modifier = Modifier.height(8.dp))
-            Button(
+            TextButton(
                 onClick = { viewModel.clearFilters() },
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.align(Alignment.End)
             ) {
                 Text("Limpar Filtros")
             }
