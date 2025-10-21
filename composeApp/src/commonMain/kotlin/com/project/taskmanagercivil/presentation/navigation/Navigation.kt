@@ -31,6 +31,7 @@ import com.project.taskmanagercivil.presentation.screens.teams.TeamsScreenConten
  */
 object NavigationState {
     var pendingProjectFilter: String? = null
+    var pendingProjectId: String? = null
 }
 
 sealed class Screen(val route: String) {
@@ -95,6 +96,7 @@ fun AppNavigation(
                     }
                 },
                 onProjectClick = { projectId ->
+                    NavigationState.pendingProjectId = projectId
                     navController.navigate(Screen.ProjectDetail.createRoute(projectId))
                 },
                 onTaskClick = { taskId ->
@@ -183,6 +185,7 @@ fun AppNavigation(
             ProjectsScreenContent(
                 viewModel = viewModel,
                 onProjectClick = { projectId ->
+                    NavigationState.pendingProjectId = projectId
                     navController.navigate(Screen.ProjectDetail.createRoute(projectId))
                 },
                 onCreateProject = {
@@ -203,10 +206,17 @@ fun AppNavigation(
                 navArgument("projectId") { type = NavType.StringType }
             )
         ) { backStackEntry ->
-            val currentRoute = navController.currentBackStackEntry?.destination?.route ?: ""
-            val projectId = currentRoute.removePrefix("project_detail/").takeIf { it.isNotBlank() } ?: "1"
+            // Usa o singleton para obter o projectId, similar à solução do filtro de status
+            val projectId = androidx.compose.runtime.remember {
+                NavigationState.pendingProjectId?.also {
+                    NavigationState.pendingProjectId = null
+                } ?: "1"
+            }
 
-            val viewModel = ViewModelFactory.createProjectDetailViewModel(projectId)
+            val viewModel = androidx.compose.runtime.remember(projectId) {
+                ViewModelFactory.createProjectDetailViewModel(projectId)
+            }
+
             ProjectDetailScreen(
                 viewModel = viewModel,
                 onBack = { navController.popBackStack() },
