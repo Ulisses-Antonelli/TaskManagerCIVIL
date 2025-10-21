@@ -57,7 +57,7 @@ fun EmployeeTasksTable(
             taskId = task.id,
             taskTitle = task.title,
             taskStatus = task.status,
-            teamName = "Equipe ${task.project.name.take(10)}", // Placeholder - em produção viria do modelo
+            teamName = task.assignedTo.role, // Disciplina do colaborador
             startDate = task.startDate.toString(),
             dueDate = task.dueDate.toString(),
             daysOverdue = calculateDaysOverdue(task),
@@ -76,7 +76,7 @@ fun EmployeeTasksTable(
         ) {
             Text(
                 text = "Colaboradores e Tarefas",
-                style = MaterialTheme.typography.titleMedium,
+                style = MaterialTheme.typography.titleLarge,
                 fontWeight = FontWeight.Bold
             )
 
@@ -119,14 +119,63 @@ private fun TableHeader() {
         horizontalArrangement = Arrangement.spacedBy(8.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        HeaderCell("Colaborador", Modifier.weight(1.5f))
-        HeaderCell("Tarefa", Modifier.weight(1.5f))
+        HeaderCell("Colaborador", Modifier.weight(1f))
+
+        VerticalDivider(
+            modifier = Modifier
+                .height(20.dp)
+                .padding(horizontal = 4.dp)
+        )
+
+        HeaderCell("Tarefa", Modifier.weight(2f))
+
+        VerticalDivider(
+            modifier = Modifier
+                .height(20.dp)
+                .padding(horizontal = 4.dp)
+        )
+
         HeaderCell("Status", Modifier.weight(1f))
+
+        VerticalDivider(
+            modifier = Modifier
+                .height(20.dp)
+                .padding(horizontal = 4.dp)
+        )
+
         HeaderCell("Time", Modifier.weight(1f))
+
+        VerticalDivider(
+            modifier = Modifier
+                .height(20.dp)
+                .padding(horizontal = 4.dp)
+        )
+
         HeaderCell("Início", Modifier.weight(0.8f))
+
+        VerticalDivider(
+            modifier = Modifier
+                .height(20.dp)
+                .padding(horizontal = 4.dp)
+        )
+
         HeaderCell("Entrega", Modifier.weight(0.8f))
+
+        VerticalDivider(
+            modifier = Modifier
+                .height(20.dp)
+                .padding(horizontal = 4.dp)
+        )
+
         HeaderCell("Atraso", Modifier.weight(0.6f))
-        HeaderCell("Progresso", Modifier.weight(0.8f))
+
+        VerticalDivider(
+            modifier = Modifier
+                .height(20.dp)
+                .padding(horizontal = 4.dp)
+        )
+
+        HeaderCell("Progresso", Modifier.weight(0.5f))
     }
 }
 
@@ -134,7 +183,7 @@ private fun TableHeader() {
 private fun HeaderCell(text: String, modifier: Modifier = Modifier) {
     Text(
         text = text,
-        style = MaterialTheme.typography.labelSmall,
+        style = MaterialTheme.typography.labelLarge,
         fontWeight = FontWeight.Bold,
         color = MaterialTheme.colorScheme.onSurfaceVariant,
         modifier = modifier
@@ -161,7 +210,7 @@ private fun TableRow(
         // Colaborador (clicável)
         Row(
             modifier = Modifier
-                .weight(1.5f)
+                .weight(1f)
                 .clip(RoundedCornerShape(4.dp))
                 .clickable { onEmployeeClick(row.employeeId) }
                 .padding(4.dp),
@@ -198,7 +247,7 @@ private fun TableRow(
             style = MaterialTheme.typography.bodySmall,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
-            modifier = Modifier.weight(1.5f)
+            modifier = Modifier.weight(2f)
         )
 
         // Status
@@ -249,7 +298,7 @@ private fun TableRow(
             text = "${row.progress.toInt()}%",
             style = MaterialTheme.typography.bodySmall,
             fontWeight = FontWeight.Medium,
-            modifier = Modifier.weight(0.8f)
+            modifier = Modifier.weight(0.5f)
         )
     }
 }

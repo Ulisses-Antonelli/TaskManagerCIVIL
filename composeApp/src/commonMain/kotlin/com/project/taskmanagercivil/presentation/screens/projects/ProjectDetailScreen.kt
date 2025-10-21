@@ -1,5 +1,6 @@
 package com.project.taskmanagercivil.presentation.screens.projects
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -12,6 +13,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.project.taskmanagercivil.domain.models.TaskPriority
 import com.project.taskmanagercivil.domain.models.TaskStatus
@@ -266,19 +268,11 @@ private fun ProjectDetailContent(
 
 @Composable
 private fun ProjectHeader(project: com.project.taskmanagercivil.domain.models.Project) {
-    Column {
-        Text(
-            text = project.name,
-            style = MaterialTheme.typography.headlineMedium,
-            fontWeight = FontWeight.Bold
-        )
-        Spacer(modifier = Modifier.height(8.dp))
-        Text(
-            text = project.description,
-            style = MaterialTheme.typography.bodyLarge,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
-        )
-    }
+    Text(
+        text = project.name,
+        style = MaterialTheme.typography.headlineMedium,
+        fontWeight = FontWeight.Bold
+    )
 }
 
 @Composable
@@ -299,59 +293,60 @@ private fun GeneralInfoCard(
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
+            // Título alinhado à esquerda
             Text(
                 text = "Informações Gerais",
-                style = MaterialTheme.typography.titleMedium,
+                style = MaterialTheme.typography.titleLarge,
                 fontWeight = FontWeight.Bold
             )
 
-            InfoRow(
-                icon = Icons.Default.Person,
-                label = "Cliente/Executor",
-                value = project.client
+            // Linha 1: Obra
+            StampRow(
+                label = "Obra:",
+                value = project.name
             )
 
-            InfoRow(
-                icon = Icons.Default.Build,
-                label = "Tipo de Projeto",
-                value = project.description.take(50) // Placeholder - em produção seria um campo específico
+            HorizontalDivider()
+
+            // Linha 2: Tipo
+            StampRow(
+                label = "Tipo:",
+                value = project.description.take(50)
             )
 
-            InfoRow(
-                icon = Icons.Default.LocationOn,
-                label = "Localização",
+            HorizontalDivider()
+
+            // Linha 3: Endereço
+            StampRow(
+                label = "Endereço:",
                 value = project.location
             )
 
-            InfoRow(
-                icon = Icons.Default.AccountBalance,
-                label = "Orçamento Estimado",
-                value = formatCurrency(project.budget)
-            )
+            HorizontalDivider()
 
-            InfoRow(
-                icon = Icons.Default.Assessment,
-                label = "Progresso Geral",
-                value = "${progress.toInt()}%"
-            )
+            // Linha 4: Grid com 2 colunas
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                // Coluna 1: Orçamento
+                StampCell(
+                    label = "Orçamento",
+                    value = formatCurrency(project.budget),
+                    modifier = Modifier.weight(1f)
+                )
 
-            InfoRow(
-                icon = Icons.Default.Assignment,
-                label = "Status Derivado",
-                value = derivedStatus.label
-            )
+                VerticalDivider(
+                    modifier = Modifier
+                        .height(56.dp)
+                        .padding(horizontal = 8.dp)
+                )
 
-            InfoRow(
-                icon = Icons.Default.Task,
-                label = "Total de Tarefas",
-                value = totalTasks.toString()
-            )
-
-            if (daysOverdue > 0) {
-                InfoRow(
-                    icon = Icons.Default.Warning,
-                    label = "Dias de Atraso",
-                    value = "$daysOverdue dias"
+                // Coluna 2: Progresso geral
+                StampCell(
+                    label = "Progresso geral",
+                    value = "${progress.toInt()}%",
+                    modifier = Modifier.weight(1f)
                 )
             }
         }
@@ -359,12 +354,76 @@ private fun GeneralInfoCard(
 }
 
 @Composable
+private fun StampRow(
+    label: String,
+    value: String
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(48.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.Start
+    ) {
+        Text(
+            text = label,
+            style = MaterialTheme.typography.titleMedium,
+            fontWeight = FontWeight.Bold,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.padding(end = 12.dp)
+        )
+        Text(
+            text = value,
+            style = MaterialTheme.typography.bodyLarge,
+            fontWeight = FontWeight.Medium,
+            color = MaterialTheme.colorScheme.onSurface,
+            modifier = Modifier.fillMaxWidth(),
+            textAlign = TextAlign.Center
+        )
+    }
+}
+
+@Composable
+private fun StampCell(
+    label: String,
+    value: String,
+    modifier: Modifier = Modifier
+) {
+    Column(
+        modifier = modifier
+            .height(48.dp)
+            .padding(horizontal = 4.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center
+    ) {
+        Text(
+            text = label,
+            style = MaterialTheme.typography.titleSmall,
+            fontWeight = FontWeight.Bold,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            textAlign = TextAlign.Center,
+            maxLines = 1
+        )
+        Spacer(modifier = Modifier.height(4.dp))
+        Text(
+            text = value,
+            style = MaterialTheme.typography.titleLarge,
+            fontWeight = FontWeight.Bold,
+            color = MaterialTheme.colorScheme.primary,
+            textAlign = TextAlign.Center,
+            maxLines = 1
+        )
+    }
+}
+
+@Composable
 private fun ProjectStatsCard(tasks: List<com.project.taskmanagercivil.domain.models.Task>) {
     val totalTasks = tasks.size
-    val completedTasks = tasks.count { it.status == TaskStatus.COMPLETED }
+    val todoTasks = tasks.count { it.status == TaskStatus.TODO }
     val inProgressTasks = tasks.count { it.status == TaskStatus.IN_PROGRESS }
+    val inReviewTasks = tasks.count { it.status == TaskStatus.IN_REVIEW }
+    val completedTasks = tasks.count { it.status == TaskStatus.COMPLETED }
     val blockedTasks = tasks.count { it.status == TaskStatus.BLOCKED }
-    val criticalTasks = tasks.count { it.priority == TaskPriority.CRITICAL }
 
     Card(
         modifier = Modifier.fillMaxWidth(),
@@ -378,7 +437,7 @@ private fun ProjectStatsCard(tasks: List<com.project.taskmanagercivil.domain.mod
         ) {
             Text(
                 text = "Estatísticas",
-                style = MaterialTheme.typography.titleMedium,
+                style = MaterialTheme.typography.titleLarge,
                 fontWeight = FontWeight.Bold
             )
 
@@ -386,18 +445,47 @@ private fun ProjectStatsCard(tasks: List<com.project.taskmanagercivil.domain.mod
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                StatItem(label = "Total", value = totalTasks.toString())
-                StatItem(label = "Concluídas", value = completedTasks.toString())
-                StatItem(label = "Em Andamento", value = inProgressTasks.toString())
-            }
+                StatItem(label = "Total", value = totalTasks.toString(), modifier = Modifier.weight(1f))
 
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                StatItem(label = "Bloqueadas", value = blockedTasks.toString())
-                StatItem(label = "Críticas", value = criticalTasks.toString())
-                Spacer(modifier = Modifier.weight(1f))
+                VerticalDivider(
+                    modifier = Modifier
+                        .height(56.dp)
+                        .padding(horizontal = 8.dp)
+                )
+
+                StatItem(label = "A Fazer", value = todoTasks.toString(), modifier = Modifier.weight(1f))
+
+                VerticalDivider(
+                    modifier = Modifier
+                        .height(56.dp)
+                        .padding(horizontal = 8.dp)
+                )
+
+                StatItem(label = "Em Andamento", value = inProgressTasks.toString(), modifier = Modifier.weight(1f))
+
+                VerticalDivider(
+                    modifier = Modifier
+                        .height(56.dp)
+                        .padding(horizontal = 8.dp)
+                )
+
+                StatItem(label = "Em Revisão", value = inReviewTasks.toString(), modifier = Modifier.weight(1f))
+
+                VerticalDivider(
+                    modifier = Modifier
+                        .height(56.dp)
+                        .padding(horizontal = 8.dp)
+                )
+
+                StatItem(label = "Concluídas", value = completedTasks.toString(), modifier = Modifier.weight(1f))
+
+                VerticalDivider(
+                    modifier = Modifier
+                        .height(56.dp)
+                        .padding(horizontal = 8.dp)
+                )
+
+                StatItem(label = "Bloqueadas", value = blockedTasks.toString(), modifier = Modifier.weight(1f))
             }
         }
     }
@@ -420,48 +508,51 @@ private fun DatesCard(
         ) {
             Text(
                 text = "Cronograma",
-                style = MaterialTheme.typography.titleMedium,
+                style = MaterialTheme.typography.titleLarge,
                 fontWeight = FontWeight.Bold
             )
 
-            InfoRow(
-                icon = Icons.Default.PlayArrow,
-                label = "Data de Início",
-                value = project.startDate.toString()
-            )
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                DateItem(
+                    icon = Icons.Default.PlayArrow,
+                    label = "Data de Início",
+                    value = project.startDate.toString(),
+                    iconColor = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.weight(1f)
+                )
 
-            InfoRow(
-                icon = Icons.Default.Flag,
-                label = "Previsão de Término",
-                value = project.endDate.toString()
-            )
+                VerticalDivider(
+                    modifier = Modifier
+                        .height(56.dp)
+                        .padding(horizontal = 8.dp)
+                )
 
-            if (daysOverdue > 0) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Warning,
-                        contentDescription = null,
-                        tint = MaterialTheme.colorScheme.error,
-                        modifier = Modifier.size(20.dp)
+                DateItem(
+                    icon = Icons.Default.Flag,
+                    label = "Previsão de Término",
+                    value = project.endDate.toString(),
+                    iconColor = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.weight(1f)
+                )
+
+                if (daysOverdue > 0) {
+                    VerticalDivider(
+                        modifier = Modifier
+                            .height(56.dp)
+                            .padding(horizontal = 8.dp)
                     )
 
-                    Column(modifier = Modifier.weight(1f)) {
-                        Text(
-                            text = "Dias de Atraso",
-                            style = MaterialTheme.typography.labelSmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                        Text(
-                            text = "$daysOverdue dias",
-                            style = MaterialTheme.typography.bodyMedium,
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.error
-                        )
-                    }
+                    DateItem(
+                        icon = Icons.Default.Warning,
+                        label = "Dias de Atraso",
+                        value = "$daysOverdue dias",
+                        iconColor = MaterialTheme.colorScheme.error,
+                        valueColor = MaterialTheme.colorScheme.error,
+                        modifier = Modifier.weight(1f)
+                    )
                 }
             }
         }
@@ -469,51 +560,72 @@ private fun DatesCard(
 }
 
 @Composable
-private fun InfoRow(
+private fun DateItem(
     icon: androidx.compose.ui.graphics.vector.ImageVector,
     label: String,
-    value: String
+    value: String,
+    iconColor: androidx.compose.ui.graphics.Color,
+    valueColor: androidx.compose.ui.graphics.Color = MaterialTheme.colorScheme.onSurface,
+    modifier: Modifier = Modifier
 ) {
     Row(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = modifier,
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(12.dp)
+        horizontalArrangement = Arrangement.Center
     ) {
         Icon(
             imageVector = icon,
             contentDescription = null,
-            tint = MaterialTheme.colorScheme.primary,
-            modifier = Modifier.size(20.dp)
+            tint = iconColor,
+            modifier = Modifier.size(32.dp)
         )
 
-        Column(modifier = Modifier.weight(1f)) {
+        Spacer(modifier = Modifier.width(16.dp))
+
+        Column(
+            horizontalAlignment = Alignment.Start
+        ) {
             Text(
                 text = label,
-                style = MaterialTheme.typography.labelSmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
+                style = MaterialTheme.typography.titleSmall,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                maxLines = 1
             )
+            Spacer(modifier = Modifier.height(4.dp))
             Text(
                 text = value,
                 style = MaterialTheme.typography.bodyMedium,
-                fontWeight = FontWeight.Medium
+                fontWeight = FontWeight.Bold,
+                color = valueColor,
+                maxLines = 1
             )
         }
     }
 }
 
 @Composable
-private fun StatItem(label: String, value: String) {
-    Column {
-        Text(
-            text = value,
-            style = MaterialTheme.typography.headlineSmall,
-            fontWeight = FontWeight.Bold,
-            color = MaterialTheme.colorScheme.primary
-        )
+private fun StatItem(label: String, value: String, modifier: Modifier = Modifier) {
+    Column(
+        modifier = modifier,
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center
+    ) {
         Text(
             text = label,
-            style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
+            style = MaterialTheme.typography.titleSmall,
+            fontWeight = FontWeight.Bold,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            textAlign = TextAlign.Center,
+            maxLines = 1
+        )
+        Spacer(modifier = Modifier.height(4.dp))
+        Text(
+            text = value,
+            style = MaterialTheme.typography.titleLarge,
+            fontWeight = FontWeight.Bold,
+            color = MaterialTheme.colorScheme.primary,
+            textAlign = TextAlign.Center
         )
     }
 }
