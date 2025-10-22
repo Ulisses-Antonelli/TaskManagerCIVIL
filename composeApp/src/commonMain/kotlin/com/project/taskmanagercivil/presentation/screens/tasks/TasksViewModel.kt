@@ -1,8 +1,11 @@
 package com.project.taskmanagercivil.presentation.screens.tasks
 
+import com.project.taskmanagercivil.data.MockData
+import com.project.taskmanagercivil.domain.models.Project
 import com.project.taskmanagercivil.domain.models.Task
 import com.project.taskmanagercivil.domain.models.TaskPriority
 import com.project.taskmanagercivil.domain.models.TaskStatus
+import com.project.taskmanagercivil.domain.models.User
 import com.project.taskmanagercivil.domain.repository.TaskRepository
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.SupervisorJob
@@ -33,13 +36,46 @@ class TasksViewModel(
     private val taskRepository: TaskRepository
 ) {
     private val viewModelScope = CoroutineScope(SupervisorJob())
-
+    private val mockData = MockData()
 
     private val _uiState = MutableStateFlow(TasksUiState())
     val uiState: StateFlow<TasksUiState> = _uiState.asStateFlow()
 
     init {
         loadTasks()
+    }
+
+    fun getProjects(): List<Project> {
+        return mockData.projects
+    }
+
+    fun getUsers(): List<User> {
+        return mockData.users
+    }
+
+    fun saveTask(task: Task, checklistItems: List<ChecklistItemData>) {
+        viewModelScope.launch {
+            try {
+                if (task.id.isEmpty()) {
+                    // Create new task with generated ID
+                    val newTask = task.copy(id = generateTaskId())
+                    taskRepository.createTask(newTask)
+                } else {
+                    // Update existing task
+                    taskRepository.updateTask(task)
+                }
+                // Reload tasks to refresh the UI
+                loadTasks()
+            } catch (e: Exception) {
+                _uiState.update { it.copy(error = "Falha ao salvar tarefa: ${e.message}") }
+            }
+        }
+    }
+
+    private fun generateTaskId(): String {
+        val currentTasks = _uiState.value.allTasks
+        val maxId = currentTasks.mapNotNull { it.id.toIntOrNull() }.maxOrNull() ?: 0
+        return (maxId + 1).toString()
     }
 
     fun loadTasks() {
