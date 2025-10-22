@@ -51,7 +51,6 @@ fun TaskDetailScreen(
     onRelatedTaskClick: (String) -> Unit = {}
 ) {
     val uiState by viewModel.uiState.collectAsState()
-    var showDeleteDialog by remember { mutableStateOf(false) }
     var showDescriptionDialog by remember { mutableStateOf(false) }
     var showChecklistDialog by remember { mutableStateOf(false) }
     var selectedDescription by remember { mutableStateOf("") }
@@ -69,25 +68,6 @@ fun TaskDetailScreen(
                     }
                 },
                 actions = {
-                    if (uiState.task != null) {
-                        IconButton(onClick = { onEdit(uiState.task!!.id) }) {
-                            Icon(
-                                imageVector = Icons.Default.Edit,
-                                contentDescription = "Editar"
-                            )
-                        }
-                    }
-
-                    if (uiState.task != null) {
-                        IconButton(onClick = { showDeleteDialog = true }) {
-                            Icon(
-                                imageVector = Icons.Default.Delete,
-                                contentDescription = "Deletar",
-                                tint = MaterialTheme.colorScheme.error
-                            )
-                        }
-                    }
-
                     IconButton(onClick = { viewModel.refresh() }) {
                         Icon(
                             imageVector = Icons.Default.Refresh,
@@ -148,42 +128,6 @@ fun TaskDetailScreen(
                         .padding(paddingValues)
                 )
             }
-        }
-
-        // Dialog de confirmação de exclusão
-        if (showDeleteDialog && uiState.task != null) {
-            AlertDialog(
-                onDismissRequest = { showDeleteDialog = false },
-                icon = {
-                    Icon(
-                        Icons.Default.Warning,
-                        contentDescription = null,
-                        tint = MaterialTheme.colorScheme.error
-                    )
-                },
-                title = { Text("Deletar Tarefa?") },
-                text = {
-                    Text("Tem certeza que deseja deletar a tarefa \"${uiState.task!!.title}\"? Esta ação não pode ser desfeita.")
-                },
-                confirmButton = {
-                    Button(
-                        onClick = {
-                            onDelete(uiState.task!!.id)
-                            showDeleteDialog = false
-                        },
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = MaterialTheme.colorScheme.error
-                        )
-                    ) {
-                        Text("Deletar")
-                    }
-                },
-                dismissButton = {
-                    TextButton(onClick = { showDeleteDialog = false }) {
-                        Text("Cancelar")
-                    }
-                }
-            )
         }
 
         // Modal lateral para descrição
