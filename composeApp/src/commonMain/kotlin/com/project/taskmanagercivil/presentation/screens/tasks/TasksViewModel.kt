@@ -58,7 +58,10 @@ class TasksViewModel(
             try {
                 if (task.id.isEmpty()) {
                     // Create new task with generated ID
-                    val newTask = task.copy(id = generateTaskId())
+                    val allTasks = taskRepository.getAllTasks()
+                    val maxId = allTasks.mapNotNull { it.id.toIntOrNull() }.maxOrNull() ?: 0
+                    val newTaskId = (maxId + 1).toString()
+                    val newTask = task.copy(id = newTaskId)
                     taskRepository.createTask(newTask)
                 } else {
                     // Update existing task
@@ -70,12 +73,6 @@ class TasksViewModel(
                 _uiState.update { it.copy(error = "Falha ao salvar tarefa: ${e.message}") }
             }
         }
-    }
-
-    private fun generateTaskId(): String {
-        val currentTasks = _uiState.value.allTasks
-        val maxId = currentTasks.mapNotNull { it.id.toIntOrNull() }.maxOrNull() ?: 0
-        return (maxId + 1).toString()
     }
 
     fun loadTasks() {
