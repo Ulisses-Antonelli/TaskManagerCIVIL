@@ -9,6 +9,7 @@ import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ViewList
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.ViewModule
 import androidx.compose.material3.*
@@ -146,12 +147,46 @@ fun TasksScreenContent(
                         }
 
                         else -> {
+                            var showTaskFormModal by remember { mutableStateOf(false) }
+                            var taskToEdit by remember { mutableStateOf<com.project.taskmanagercivil.domain.models.Task?>(null) }
+                            var initialStatus by remember { mutableStateOf<TaskStatus?>(null) }
+
                             TasksList(
                                 tasks = uiState.filteredTasks,
                                 viewMode = uiState.viewMode,
                                 onTaskClick = onTaskClick,
+                                onCreateTask = { status ->
+                                    taskToEdit = null
+                                    initialStatus = status
+                                    showTaskFormModal = true
+                                },
+                                onEditTask = { task ->
+                                    taskToEdit = task
+                                    initialStatus = null
+                                    showTaskFormModal = true
+                                },
                                 modifier = Modifier.fillMaxSize()
                             )
+
+                            if (showTaskFormModal) {
+                                TaskFormModal(
+                                    task = taskToEdit,
+                                    initialStatus = initialStatus,
+                                    projects = viewModel.getProjects(),
+                                    users = viewModel.getUsers(),
+                                    onDismiss = {
+                                        showTaskFormModal = false
+                                        taskToEdit = null
+                                        initialStatus = null
+                                    },
+                                    onSave = { task, checklistItems ->
+                                        viewModel.saveTask(task, checklistItems)
+                                        showTaskFormModal = false
+                                        taskToEdit = null
+                                        initialStatus = null
+                                    }
+                                )
+                            }
                         }
                     }
                 }
@@ -243,6 +278,8 @@ private fun TasksList(
     tasks: List<com.project.taskmanagercivil.domain.models.Task>,
     viewMode: ViewMode,
     onTaskClick: (com.project.taskmanagercivil.domain.models.Task) -> Unit,
+    onCreateTask: (TaskStatus) -> Unit,
+    onEditTask: (com.project.taskmanagercivil.domain.models.Task) -> Unit,
     modifier: Modifier = Modifier
 ) {
     when (viewMode) {
@@ -255,7 +292,8 @@ private fun TasksList(
                 items(tasks, key = { it.id }) { task ->
                     TaskCard(
                         task = task,
-                        onClick = { onTaskClick(task) }
+                        onClick = { onTaskClick(task) },
+                        onEdit = { onEditTask(it) }
                     )
                 }
             }
@@ -265,6 +303,8 @@ private fun TasksList(
             KanbanBoard(
                 tasks = tasks,
                 onTaskClick = onTaskClick,
+                onCreateTask = onCreateTask,
+                onEditTask = onEditTask,
                 modifier = modifier
             )
         }
@@ -275,6 +315,8 @@ private fun TasksList(
 private fun KanbanBoard(
     tasks: List<com.project.taskmanagercivil.domain.models.Task>,
     onTaskClick: (com.project.taskmanagercivil.domain.models.Task) -> Unit,
+    onCreateTask: (TaskStatus) -> Unit,
+    onEditTask: (com.project.taskmanagercivil.domain.models.Task) -> Unit,
     modifier: Modifier = Modifier
 ) {
     Row(
@@ -289,6 +331,8 @@ private fun KanbanBoard(
                 status = status,
                 tasks = tasksForStatus,
                 onTaskClick = onTaskClick,
+                onCreateTask = onCreateTask,
+                onEditTask = onEditTask,
                 modifier = Modifier.weight(1f)
             )
         }
@@ -300,6 +344,8 @@ private fun KanbanColumn(
     status: TaskStatus,
     tasks: List<com.project.taskmanagercivil.domain.models.Task>,
     onTaskClick: (com.project.taskmanagercivil.domain.models.Task) -> Unit,
+    onCreateTask: (TaskStatus) -> Unit,
+    onEditTask: (com.project.taskmanagercivil.domain.models.Task) -> Unit,
     modifier: Modifier = Modifier
 ) {
     Card(
@@ -311,11 +357,28 @@ private fun KanbanColumn(
         Column(
             modifier = Modifier.padding(8.dp)
         ) {
-            Text(
-                text = status.label,
-                style = MaterialTheme.typography.titleMedium,
-                color = MaterialTheme.colorScheme.primary
-            )
+            // Header with title and add button
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = status.label,
+                    style = MaterialTheme.typography.titleMedium,
+                    color = MaterialTheme.colorScheme.primary
+                )
+                IconButton(
+                    onClick = { onCreateTask(status) },
+                    modifier = Modifier.size(32.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Add,
+                        contentDescription = "Criar tarefa",
+                        tint = MaterialTheme.colorScheme.primary
+                    )
+                }
+            }
             Spacer(modifier = Modifier.height(8.dp))
             if (tasks.isEmpty()) {
                 Box(
@@ -336,7 +399,8 @@ private fun KanbanColumn(
                     items(tasks, key = { it.id }) { task ->
                         TaskCard(
                             task = task,
-                            onClick = { onTaskClick(task) }
+                            onClick = { onTaskClick(task) },
+                            onEdit = { onEditTask(it) }
                         )
                     }
                 }
