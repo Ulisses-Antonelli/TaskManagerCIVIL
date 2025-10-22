@@ -284,17 +284,39 @@ private fun TasksList(
 ) {
     when (viewMode) {
         ViewMode.LIST -> {
-            LazyColumn(
-                modifier = modifier,
-                contentPadding = PaddingValues(16.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                items(tasks, key = { it.id }) { task ->
-                    TaskCard(
-                        task = task,
-                        onClick = { onTaskClick(task) },
-                        onEdit = { onEditTask(it) }
-                    )
+            Column(modifier = modifier) {
+                // Botão de adicionar tarefa acima da lista
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp, vertical = 8.dp),
+                    horizontalArrangement = Arrangement.End
+                ) {
+                    FloatingActionButton(
+                        onClick = { onCreateTask(TaskStatus.TODO) },
+                        modifier = Modifier.size(56.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Add,
+                            contentDescription = "Criar nova tarefa",
+                            modifier = Modifier.size(28.dp)
+                        )
+                    }
+                }
+
+                // Lista de tarefas
+                LazyColumn(
+                    modifier = Modifier.weight(1f),
+                    contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    items(tasks, key = { it.id }) { task ->
+                        TaskCard(
+                            task = task,
+                            onClick = { onTaskClick(task) },
+                            onEdit = { onEditTask(it) }
+                        )
+                    }
                 }
             }
         }
