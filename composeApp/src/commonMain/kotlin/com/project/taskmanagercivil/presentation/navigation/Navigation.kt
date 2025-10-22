@@ -32,11 +32,15 @@ import com.project.taskmanagercivil.presentation.screens.teams.TeamsScreenConten
 object NavigationState {
     var pendingProjectFilter: String? = null
     var pendingProjectId: String? = null
+    var pendingTaskId: String? = null
 }
 
 sealed class Screen(val route: String) {
     object Dashboard : Screen("dashboard")
     object Tasks : Screen("tasks")
+    object TaskDetail : Screen("task_detail/{taskId}") {
+        fun createRoute(taskId: String) = "task_detail/$taskId"
+    }
     object Projects : Screen("projects/{statusFilter}") {
         val baseRoute = "projects"
         // Rota com filtro: projects/TODO ou projects/IN_PROGRESS
@@ -100,7 +104,8 @@ fun AppNavigation(
                     navController.navigate(Screen.ProjectDetail.createRoute(projectId))
                 },
                 onTaskClick = { taskId ->
-                    // TODO: Navegar para detalhes da tarefa quando implementado
+                    NavigationState.pendingTaskId = taskId
+                    navController.navigate(Screen.TaskDetail.createRoute(taskId))
                 },
                 onProjectsWithStatusClick = { status ->
                     // Guarda o filtro pendente no singleton antes de navegar
@@ -116,12 +121,55 @@ fun AppNavigation(
             TasksScreenContent(
                 viewModel = viewModel,
                 onTaskClick = { task ->
-                    // TODO: Navegar para detalhes da tarefa quando implementado
+                    NavigationState.pendingTaskId = task.id
+                    navController.navigate(Screen.TaskDetail.createRoute(task.id))
                 },
                 onNavigate = { route ->
                     navController.navigate(route) {
                         launchSingleTop = true
                     }
+                }
+            )
+        }
+
+        // Tela de Detalhes da Tarefa
+        composable(
+            route = Screen.TaskDetail.route,
+            arguments = listOf(
+                navArgument("taskId") { type = NavType.StringType }
+            )
+        ) { backStackEntry ->
+            // Usa o singleton para obter o taskId, similar à solução do projectId
+            val taskId = androidx.compose.runtime.remember {
+                NavigationState.pendingTaskId?.also {
+                    NavigationState.pendingTaskId = null
+                } ?: "1"
+            }
+
+            val viewModel = androidx.compose.runtime.remember(taskId) {
+                ViewModelFactory.createTaskDetailViewModel(taskId)
+            }
+
+            com.project.taskmanagercivil.presentation.screens.tasks.TaskDetailScreen(
+                viewModel = viewModel,
+                onBack = { navController.popBackStack() },
+                onEdit = { taskId ->
+                    // TODO: Implementar tela de edição de tarefa quando necessário
+                },
+                onDelete = { taskId ->
+                    // TODO: Implementar deleteTask no TaskRepository quando necessário
+                    navController.popBackStack()
+                },
+                onProjectClick = { projectId ->
+                    NavigationState.pendingProjectId = projectId
+                    navController.navigate(Screen.ProjectDetail.createRoute(projectId))
+                },
+                onEmployeeClick = { employeeId ->
+                    navController.navigate(Screen.EmployeeDetail.createRoute(employeeId))
+                },
+                onRelatedTaskClick = { relatedTaskId ->
+                    NavigationState.pendingTaskId = relatedTaskId
+                    navController.navigate(Screen.TaskDetail.createRoute(relatedTaskId))
                 }
             )
         }
@@ -229,7 +277,8 @@ fun AppNavigation(
                     navController.popBackStack()
                 },
                 onTaskClick = { taskId ->
-                    // TODO: Navegar para detalhes da tarefa
+                    NavigationState.pendingTaskId = taskId
+                    navController.navigate(Screen.TaskDetail.createRoute(taskId))
                 },
                 onEmployeeClick = { employeeId ->
                     navController.navigate(Screen.EmployeeDetail.createRoute(employeeId))
