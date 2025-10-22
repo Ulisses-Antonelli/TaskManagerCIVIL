@@ -22,6 +22,7 @@ import com.project.taskmanagercivil.presentation.screens.employees.EmployeesView
 import com.project.taskmanagercivil.presentation.screens.projects.ProjectDetailViewModel
 import com.project.taskmanagercivil.presentation.screens.projects.ProjectFormViewModel
 import com.project.taskmanagercivil.presentation.screens.projects.ProjectsViewModel
+import com.project.taskmanagercivil.presentation.screens.tasks.TaskDetailViewModel
 import com.project.taskmanagercivil.presentation.screens.tasks.TasksViewModel
 import com.project.taskmanagercivil.presentation.screens.teams.TeamDetailViewModel
 import com.project.taskmanagercivil.presentation.screens.teams.TeamFormViewModel
@@ -44,6 +45,10 @@ object ViewModelFactory {
 
     fun createTasksViewModel(): TasksViewModel {
         return TasksViewModel(taskRepository)
+    }
+
+    fun createTaskDetailViewModel(taskId: String): TaskDetailViewModel {
+        return TaskDetailViewModel(taskId, taskRepository)
     }
 
     fun createProjectsViewModel(): ProjectsViewModel {
