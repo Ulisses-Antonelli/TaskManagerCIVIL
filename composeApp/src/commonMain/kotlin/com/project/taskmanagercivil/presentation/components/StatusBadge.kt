@@ -31,7 +31,7 @@ fun StatusBadge (
         style = MaterialTheme.typography.labelSmall,
         color = Color.White,
         modifier = modifier
-            .clip(RoundedCornerShape(12.dp))
+            .clip(RoundedCornerShape(4.dp))
             .background(backgroundColor)
             .padding(horizontal = 8.dp, vertical = 4.dp)
     )
