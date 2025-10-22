@@ -83,12 +83,50 @@ fun TasksScreenContent(
                         modifier = Modifier.padding(horizontal = 16.dp)
                     )
 
-                    // Filtros de Prioridade
-                    PriorityFilters(
-                        selectedPriority = uiState.selectedPriority,
-                        onPriorityChange = viewModel::onPriorityFilterChange,
-                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
-                    )
+                    // Estados do modal (fora do Row para serem acessíveis em qualquer lugar)
+                    var showTaskFormModal by remember { mutableStateOf(false) }
+                    var taskToEdit by remember { mutableStateOf<com.project.taskmanagercivil.domain.models.Task?>(null) }
+                    var initialStatus by remember { mutableStateOf<TaskStatus?>(null) }
+
+                    // Filtros de Prioridade + Botão Adicionar (quando em modo LIST)
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 16.dp, vertical = 8.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        PriorityFilters(
+                            selectedPriority = uiState.selectedPriority,
+                            onPriorityChange = viewModel::onPriorityFilterChange,
+                            modifier = Modifier.weight(1f)
+                        )
+
+                        // Botão adicionar apenas no modo lista
+                        if (uiState.viewMode == ViewMode.LIST) {
+                            Spacer(modifier = Modifier.width(8.dp))
+
+                            IconButton(
+                                onClick = {
+                                    taskToEdit = null
+                                    initialStatus = TaskStatus.TODO
+                                    showTaskFormModal = true
+                                },
+                                modifier = Modifier
+                                    .size(40.dp),
+                                colors = IconButtonDefaults.iconButtonColors(
+                                    containerColor = MaterialTheme.colorScheme.surfaceVariant,
+                                    contentColor = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.Add,
+                                    contentDescription = "Criar nova tarefa",
+                                    modifier = Modifier.size(24.dp)
+                                )
+                            }
+                        }
+                    }
 
                     // Conteúdo principal
                     when {
@@ -147,10 +185,6 @@ fun TasksScreenContent(
                         }
 
                         else -> {
-                            var showTaskFormModal by remember { mutableStateOf(false) }
-                            var taskToEdit by remember { mutableStateOf<com.project.taskmanagercivil.domain.models.Task?>(null) }
-                            var initialStatus by remember { mutableStateOf<TaskStatus?>(null) }
-
                             TasksList(
                                 tasks = uiState.filteredTasks,
                                 viewMode = uiState.viewMode,
@@ -167,27 +201,28 @@ fun TasksScreenContent(
                                 },
                                 modifier = Modifier.fillMaxSize()
                             )
-
-                            if (showTaskFormModal) {
-                                TaskFormModal(
-                                    task = taskToEdit,
-                                    initialStatus = initialStatus,
-                                    projects = viewModel.getProjects(),
-                                    users = viewModel.getUsers(),
-                                    onDismiss = {
-                                        showTaskFormModal = false
-                                        taskToEdit = null
-                                        initialStatus = null
-                                    },
-                                    onSave = { task, checklistItems ->
-                                        viewModel.saveTask(task, checklistItems)
-                                        showTaskFormModal = false
-                                        taskToEdit = null
-                                        initialStatus = null
-                                    }
-                                )
-                            }
                         }
+                    }
+
+                    // Modal de formulário (usado tanto no LIST quanto no KANBAN)
+                    if (showTaskFormModal) {
+                        TaskFormModal(
+                            task = taskToEdit,
+                            initialStatus = initialStatus,
+                            projects = viewModel.getProjects(),
+                            users = viewModel.getUsers(),
+                            onDismiss = {
+                                showTaskFormModal = false
+                                taskToEdit = null
+                                initialStatus = null
+                            },
+                            onSave = { task, checklistItems ->
+                                viewModel.saveTask(task, checklistItems)
+                                showTaskFormModal = false
+                                taskToEdit = null
+                                initialStatus = null
+                            }
+                        )
                     }
                 }
             }
@@ -284,39 +319,17 @@ private fun TasksList(
 ) {
     when (viewMode) {
         ViewMode.LIST -> {
-            Column(modifier = modifier) {
-                // Botão de adicionar tarefa acima da lista
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 16.dp, vertical = 8.dp),
-                    horizontalArrangement = Arrangement.End
-                ) {
-                    FloatingActionButton(
-                        onClick = { onCreateTask(TaskStatus.TODO) },
-                        modifier = Modifier.size(56.dp)
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Add,
-                            contentDescription = "Criar nova tarefa",
-                            modifier = Modifier.size(28.dp)
-                        )
-                    }
-                }
-
-                // Lista de tarefas
-                LazyColumn(
-                    modifier = Modifier.weight(1f),
-                    contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
-                    verticalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    items(tasks, key = { it.id }) { task ->
-                        TaskCard(
-                            task = task,
-                            onClick = { onTaskClick(task) },
-                            onEdit = { onEditTask(it) }
-                        )
-                    }
+            LazyColumn(
+                modifier = modifier,
+                contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                items(tasks, key = { it.id }) { task ->
+                    TaskCard(
+                        task = task,
+                        onClick = { onTaskClick(task) },
+                        onEdit = { onEditTask(it) }
+                    )
                 }
             }
         }
