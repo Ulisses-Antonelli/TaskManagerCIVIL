@@ -502,7 +502,7 @@ fun TaskFormModal(
                         onClick = {
                             if (selectedProject != null && selectedUser != null && taskName.isNotBlank()) {
                                 val newTask = Task(
-                                    id = task?.id ?: Random.nextInt(1000, 9999).toString(),
+                                    id = task?.id ?: "", // String vazia para novas tarefas, ViewModel gera o ID
                                     title = taskName,
                                     description = description,
                                     status = selectedStatus,
