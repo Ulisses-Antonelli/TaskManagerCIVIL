@@ -4,8 +4,14 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -17,6 +23,7 @@ import com.project.taskmanagercivil.domain.models.Task
 fun TaskCard (
     task: Task,
     onClick: () -> Unit,
+    onEdit: ((Task) -> Unit)? = null,
     modifier: Modifier = Modifier
 ) {
     // Card customizado com cantos menos arredondados
@@ -58,7 +65,38 @@ fun TaskCard (
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
-                StatusBadge(status = task.status)
+                Row(
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    StatusBadge(status = task.status)
+                    if (onEdit != null) {
+                        var showMenu by remember { mutableStateOf(false) }
+                        Box {
+                            IconButton(
+                                onClick = { showMenu = true },
+                                modifier = Modifier.size(32.dp)
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.MoreVert,
+                                    contentDescription = "Mais opções",
+                                    tint = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
+                            DropdownMenu(
+                                expanded = showMenu,
+                                onDismissRequest = { showMenu = false }
+                            ) {
+                                DropdownMenuItem(
+                                    text = { Text("Editar") },
+                                    onClick = {
+                                        showMenu = false
+                                        onEdit(task)
+                                    }
+                                )
+                            }
+                        }
+                    }
+                }
             }
             Spacer(modifier = Modifier.height(8.dp))
             Text(
