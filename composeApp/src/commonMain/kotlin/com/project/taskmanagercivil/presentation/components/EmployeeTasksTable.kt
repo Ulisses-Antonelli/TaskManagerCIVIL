@@ -241,6 +241,12 @@ private fun TableRow(
             )
         }
 
+        VerticalDivider(
+            modifier = Modifier
+                .height(32.dp)
+                .padding(horizontal = 4.dp)
+        )
+
         // Tarefa
         Text(
             text = row.taskTitle,
@@ -250,10 +256,22 @@ private fun TableRow(
             modifier = Modifier.weight(2f)
         )
 
+        VerticalDivider(
+            modifier = Modifier
+                .height(32.dp)
+                .padding(horizontal = 4.dp)
+        )
+
         // Status
         StatusChip(
             status = row.taskStatus,
             modifier = Modifier.weight(1f)
+        )
+
+        VerticalDivider(
+            modifier = Modifier
+                .height(32.dp)
+                .padding(horizontal = 4.dp)
         )
 
         // Time (clicável)
@@ -270,11 +288,23 @@ private fun TableRow(
                 .padding(4.dp)
         )
 
+        VerticalDivider(
+            modifier = Modifier
+                .height(32.dp)
+                .padding(horizontal = 4.dp)
+        )
+
         // Data Início
         Text(
             text = row.startDate.take(10),
             style = MaterialTheme.typography.bodySmall,
             modifier = Modifier.weight(0.8f)
+        )
+
+        VerticalDivider(
+            modifier = Modifier
+                .height(32.dp)
+                .padding(horizontal = 4.dp)
         )
 
         // Data Entrega
@@ -284,6 +314,12 @@ private fun TableRow(
             modifier = Modifier.weight(0.8f)
         )
 
+        VerticalDivider(
+            modifier = Modifier
+                .height(32.dp)
+                .padding(horizontal = 4.dp)
+        )
+
         // Dias de Atraso
         Text(
             text = if (row.daysOverdue > 0) "+${row.daysOverdue}" else "0",
@@ -291,6 +327,12 @@ private fun TableRow(
             fontWeight = if (row.daysOverdue > 0) FontWeight.Bold else FontWeight.Normal,
             color = if (row.daysOverdue > 0) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurface,
             modifier = Modifier.weight(0.6f)
+        )
+
+        VerticalDivider(
+            modifier = Modifier
+                .height(32.dp)
+                .padding(horizontal = 4.dp)
         )
 
         // Progresso
@@ -319,13 +361,13 @@ private fun StatusChip(
 
     Surface(
         modifier = modifier,
-        shape = RoundedCornerShape(8.dp),
+        shape = RoundedCornerShape(4.dp),
         color = statusColor.copy(alpha = 0.15f)
     ) {
         Text(
             text = status.label,
-            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
-            style = MaterialTheme.typography.labelSmall,
+            modifier = Modifier.padding(horizontal = 4.dp, vertical = 4.dp),
+            style = MaterialTheme.typography.bodySmall,
             fontWeight = FontWeight.Medium,
             color = statusColor,
             maxLines = 1,
