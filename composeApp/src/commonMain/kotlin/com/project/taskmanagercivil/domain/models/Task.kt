@@ -15,7 +15,8 @@ data class Task(
     val progress: Float,
     val tags: List<String> = emptyList(),
     val dependencies: List<String> = emptyList(),
-    val revisions: List<TaskRevision> = emptyList()
+    val revisions: List<TaskRevision> = emptyList(),
+    val partialDeliveries: List<PartialDelivery> = emptyList()
 )
 
 data class TaskRevision(
@@ -24,6 +25,15 @@ data class TaskRevision(
     val description: String,
     val startDate: LocalDate,
     val deliveryDate: LocalDate
+)
+
+data class PartialDelivery(
+    val deliveryNumber: Int,
+    val author: String,
+    val description: String,
+    val deliveryDate: LocalDate,
+    val completedItems: Int,
+    val totalItems: Int
 )
 
 enum class TaskStatus(val label: String) {

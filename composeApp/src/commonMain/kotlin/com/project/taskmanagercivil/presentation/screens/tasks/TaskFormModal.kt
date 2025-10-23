@@ -508,21 +508,6 @@ fun TaskFormModal(
                     Button(
                         onClick = {
                             if (selectedProject != null && selectedUser != null && taskName.isNotBlank()) {
-                                // Se for nova tarefa, cria revisão inicial (Rev. 00)
-                                val revisions = if (task == null) {
-                                    listOf(
-                                        TaskRevision(
-                                            revisionNumber = 0,
-                                            author = selectedUser!!.name,
-                                            description = "Emissão inicial",
-                                            startDate = startDate,
-                                            deliveryDate = dueDate
-                                        )
-                                    )
-                                } else {
-                                    task.revisions // Mantém revisões existentes ao editar
-                                }
-
                                 val newTask = Task(
                                     id = task?.id ?: "", // String vazia para novas tarefas, ViewModel gera o ID
                                     title = taskName,
@@ -538,7 +523,8 @@ fun TaskFormModal(
                                     },
                                     tags = emptyList(),
                                     dependencies = emptyList(),
-                                    revisions = revisions
+                                    revisions = task?.revisions ?: emptyList(), // Mantém revisões ao editar, vazio ao criar
+                                    partialDeliveries = task?.partialDeliveries ?: emptyList()
                                 )
                                 onSave(newTask, checklistItems.toList())
                             }
