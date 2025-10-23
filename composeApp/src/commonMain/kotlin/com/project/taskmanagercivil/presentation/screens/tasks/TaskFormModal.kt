@@ -53,6 +53,8 @@ fun TaskFormModal(
     var showUserPicker by remember { mutableStateOf(false) }
     var showStatusPicker by remember { mutableStateOf(false) }
     var showPriorityPicker by remember { mutableStateOf(false) }
+    var showStartDatePicker by remember { mutableStateOf(false) }
+    var showDueDatePicker by remember { mutableStateOf(false) }
 
     // Estados para datas (mockado - futuramente usar DatePicker)
     var startDate by remember { mutableStateOf(task?.startDate ?: LocalDate(2024, 1, 15)) }
@@ -317,8 +319,10 @@ fun TaskFormModal(
                                 )
                                 Spacer(modifier = Modifier.height(4.dp))
                                 OutlinedCard(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    shape = RoundedCornerShape(8.dp)
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .clickable { showStartDatePicker = true },
+                                    shape = RoundedCornerShape(4.dp)
                                 ) {
                                     Row(
                                         modifier = Modifier
@@ -328,7 +332,7 @@ fun TaskFormModal(
                                         verticalAlignment = Alignment.CenterVertically
                                     ) {
                                         Text(
-                                            text = startDate.toString(),
+                                            text = "${startDate.dayOfMonth.toString().padStart(2, '0')}/${startDate.monthNumber.toString().padStart(2, '0')}/${startDate.year}",
                                             style = MaterialTheme.typography.bodyLarge
                                         )
                                         Icon(
@@ -348,8 +352,10 @@ fun TaskFormModal(
                                 )
                                 Spacer(modifier = Modifier.height(4.dp))
                                 OutlinedCard(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    shape = RoundedCornerShape(8.dp)
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .clickable { showDueDatePicker = true },
+                                    shape = RoundedCornerShape(4.dp)
                                 ) {
                                     Row(
                                         modifier = Modifier
@@ -359,7 +365,7 @@ fun TaskFormModal(
                                         verticalAlignment = Alignment.CenterVertically
                                     ) {
                                         Text(
-                                            text = dueDate.toString(),
+                                            text = "${dueDate.dayOfMonth.toString().padStart(2, '0')}/${dueDate.monthNumber.toString().padStart(2, '0')}/${dueDate.year}",
                                             style = MaterialTheme.typography.bodyLarge
                                         )
                                         Icon(
@@ -583,6 +589,31 @@ fun TaskFormModal(
             onDismiss = { showPriorityPicker = false }
         )
     }
+
+    // Date Pickers
+    if (showStartDatePicker) {
+        DatePickerDialog(
+            title = "Data de Início",
+            initialDate = startDate,
+            onDateSelected = {
+                startDate = it
+                showStartDatePicker = false
+            },
+            onDismiss = { showStartDatePicker = false }
+        )
+    }
+
+    if (showDueDatePicker) {
+        DatePickerDialog(
+            title = "Previsão de Término",
+            initialDate = dueDate,
+            onDateSelected = {
+                dueDate = it
+                showDueDatePicker = false
+            },
+            onDismiss = { showDueDatePicker = false }
+        )
+    }
 }
 
 @Composable
@@ -625,6 +656,95 @@ private fun <T> SelectionDialog(
             }
         },
         confirmButton = {
+            TextButton(onClick = onDismiss) {
+                Text("Cancelar")
+            }
+        }
+    )
+}
+
+@Composable
+private fun DatePickerDialog(
+    title: String,
+    initialDate: LocalDate,
+    onDateSelected: (LocalDate) -> Unit,
+    onDismiss: () -> Unit
+) {
+    var day by remember { mutableStateOf(initialDate.dayOfMonth.toString()) }
+    var month by remember { mutableStateOf(initialDate.monthNumber.toString()) }
+    var year by remember { mutableStateOf(initialDate.year.toString()) }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        shape = RoundedCornerShape(8.dp),
+        title = {
+            Text(
+                text = title,
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.Bold
+            )
+        },
+        text = {
+            Column(
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    OutlinedTextField(
+                        value = day,
+                        onValueChange = { if (it.length <= 2 && (it.toIntOrNull() != null || it.isEmpty())) day = it },
+                        label = { Text("Dia") },
+                        modifier = Modifier.weight(1f),
+                        singleLine = true
+                    )
+                    OutlinedTextField(
+                        value = month,
+                        onValueChange = { if (it.length <= 2 && (it.toIntOrNull() != null || it.isEmpty())) month = it },
+                        label = { Text("Mês") },
+                        modifier = Modifier.weight(1f),
+                        singleLine = true
+                    )
+                    OutlinedTextField(
+                        value = year,
+                        onValueChange = { if (it.length <= 4 && (it.toIntOrNull() != null || it.isEmpty())) year = it },
+                        label = { Text("Ano") },
+                        modifier = Modifier.weight(1.5f),
+                        singleLine = true
+                    )
+                }
+                Text(
+                    text = "Formato: DD / MM / AAAA",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+        },
+        confirmButton = {
+            TextButton(
+                onClick = {
+                    try {
+                        val dayInt = day.toIntOrNull() ?: initialDate.dayOfMonth
+                        val monthInt = month.toIntOrNull() ?: initialDate.monthNumber
+                        val yearInt = year.toIntOrNull() ?: initialDate.year
+
+                        // Validação básica
+                        if (dayInt in 1..31 && monthInt in 1..12 && yearInt in 2000..2100) {
+                            val newDate = LocalDate(yearInt, monthInt, dayInt)
+                            onDateSelected(newDate)
+                        } else {
+                            onDismiss()
+                        }
+                    } catch (e: Exception) {
+                        onDismiss()
+                    }
+                }
+            ) {
+                Text("Confirmar")
+            }
+        },
+        dismissButton = {
             TextButton(onClick = onDismiss) {
                 Text("Cancelar")
             }
