@@ -21,6 +21,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
+import com.project.taskmanagercivil.domain.models.PartialDelivery
 import com.project.taskmanagercivil.domain.models.Task
 import com.project.taskmanagercivil.domain.models.TaskPriority
 import com.project.taskmanagercivil.domain.models.TaskRevision
@@ -306,6 +307,14 @@ private fun TaskDetailContent(
                 onDescriptionClick = onDescriptionClick
             )
         }
+
+        // Painel 4: Entregas Parciais
+        item {
+            PartialDeliveriesCard(
+                partialDeliveries = task.partialDeliveries,
+                onDescriptionClick = onDescriptionClick
+            )
+        }
     }
 }
 
@@ -576,6 +585,171 @@ private fun RevisionHistoryCard(
                 }
             }
         }
+    }
+}
+
+@Composable
+private fun PartialDeliveriesCard(
+    partialDeliveries: List<PartialDelivery>,
+    onDescriptionClick: (String) -> Unit
+) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(8.dp)
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp)
+        ) {
+            Text(
+                text = "Entregas Parciais",
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.Bold
+            )
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            if (partialDeliveries.isEmpty()) {
+                Text(
+                    text = "Nenhuma entrega parcial registrada",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(vertical = 16.dp)
+                )
+            } else {
+                // Header da tabela
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .background(
+                            MaterialTheme.colorScheme.surfaceVariant,
+                            RoundedCornerShape(4.dp)
+                        )
+                        .padding(horizontal = 8.dp, vertical = 12.dp),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    HeaderCell("Entrega", Modifier.weight(0.6f))
+                    VerticalDivider(modifier = Modifier.height(20.dp).padding(horizontal = 4.dp))
+
+                    HeaderCell("Autor", Modifier.weight(1.2f))
+                    VerticalDivider(modifier = Modifier.height(20.dp).padding(horizontal = 4.dp))
+
+                    HeaderCell("Descrição", Modifier.weight(2f))
+                    VerticalDivider(modifier = Modifier.height(20.dp).padding(horizontal = 4.dp))
+
+                    HeaderCell("Data Entrega", Modifier.weight(1f))
+                    VerticalDivider(modifier = Modifier.height(20.dp).padding(horizontal = 4.dp))
+
+                    HeaderCell("Progresso", Modifier.weight(0.8f))
+                }
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                // Linhas da tabela
+                Column(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalArrangement = Arrangement.spacedBy(4.dp)
+                ) {
+                    partialDeliveries.forEach { delivery ->
+                        PartialDeliveryRow(
+                            delivery = delivery,
+                            onDescriptionClick = { onDescriptionClick(delivery.description) }
+                        )
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun PartialDeliveryRow(
+    delivery: PartialDelivery,
+    onDescriptionClick: () -> Unit
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(
+                MaterialTheme.colorScheme.surface,
+                RoundedCornerShape(4.dp)
+            )
+            .padding(horizontal = 8.dp, vertical = 12.dp),
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        // Número da entrega
+        Text(
+            text = "Entrega ${delivery.deliveryNumber.toString().padStart(2, '0')}",
+            style = MaterialTheme.typography.bodySmall,
+            fontWeight = FontWeight.Bold,
+            modifier = Modifier.weight(0.6f)
+        )
+
+        VerticalDivider(
+            modifier = Modifier
+                .height(32.dp)
+                .padding(horizontal = 4.dp)
+        )
+
+        // Autor
+        Text(
+            text = delivery.author,
+            style = MaterialTheme.typography.bodySmall,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+            modifier = Modifier.weight(1.2f)
+        )
+
+        VerticalDivider(
+            modifier = Modifier
+                .height(32.dp)
+                .padding(horizontal = 4.dp)
+        )
+
+        // Descrição (clicável)
+        Text(
+            text = delivery.description,
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.primary,
+            maxLines = 2,
+            overflow = TextOverflow.Ellipsis,
+            modifier = Modifier
+                .weight(2f)
+                .clip(RoundedCornerShape(4.dp))
+                .clickable(onClick = onDescriptionClick)
+                .padding(4.dp)
+        )
+
+        VerticalDivider(
+            modifier = Modifier
+                .height(32.dp)
+                .padding(horizontal = 4.dp)
+        )
+
+        // Data de Entrega
+        Text(
+            text = delivery.deliveryDate.toString(),
+            style = MaterialTheme.typography.bodySmall,
+            modifier = Modifier.weight(1f)
+        )
+
+        VerticalDivider(
+            modifier = Modifier
+                .height(32.dp)
+                .padding(horizontal = 4.dp)
+        )
+
+        // Progresso
+        Text(
+            text = "${delivery.completedItems}/${delivery.totalItems}",
+            style = MaterialTheme.typography.bodySmall,
+            fontWeight = FontWeight.Bold,
+            color = MaterialTheme.colorScheme.primary,
+            modifier = Modifier.weight(0.8f)
+        )
     }
 }
 

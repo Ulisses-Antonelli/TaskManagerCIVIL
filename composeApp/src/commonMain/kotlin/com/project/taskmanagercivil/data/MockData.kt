@@ -255,7 +255,42 @@ class MockData {
             LocalDate(2024, 1, 20),
             LocalDate(2024, 2, 28),
             1.0f,
-            listOf("fundação", "estrutura", "bloco-a")
+            listOf("fundação", "estrutura", "bloco-a"),
+            emptyList(),
+            listOf(
+                TaskRevision(
+                    revisionNumber = 0,
+                    author = "Pedro Costa",
+                    description = "Emissão inicial - Conclusão da fundação do Bloco A conforme projeto executivo",
+                    startDate = LocalDate(2024, 1, 20),
+                    deliveryDate = LocalDate(2024, 2, 28)
+                ),
+                TaskRevision(
+                    revisionNumber = 1,
+                    author = "Pedro Costa",
+                    description = "Revisão solicitada pela fiscalização - Ajustes na prumada das estacas E-12 e E-15",
+                    startDate = LocalDate(2024, 1, 20),
+                    deliveryDate = LocalDate(2024, 3, 5)
+                )
+            ),
+            listOf(
+                PartialDelivery(
+                    deliveryNumber = 1,
+                    author = "Pedro Costa",
+                    description = "Primeira etapa: Execução de 50% das estacas (estacas E-01 a E-20)",
+                    deliveryDate = LocalDate(2024, 2, 10),
+                    completedItems = 20,
+                    totalItems = 40
+                ),
+                PartialDelivery(
+                    deliveryNumber = 2,
+                    author = "Pedro Costa",
+                    description = "Segunda etapa: Execução de 100% das estacas e blocos de coroamento",
+                    deliveryDate = LocalDate(2024, 2, 28),
+                    completedItems = 40,
+                    totalItems = 40
+                )
+            )
         ),
         Task(
             "2",
@@ -295,7 +330,24 @@ class MockData {
             LocalDate(2024, 2, 1),
             LocalDate(2024, 3, 15),
             0.8f,
-            listOf("documentação", "segurança", "ppci")
+            listOf("documentação", "segurança", "ppci"),
+            emptyList(),
+            listOf(
+                TaskRevision(
+                    revisionNumber = 0,
+                    author = "Ana Oliveira",
+                    description = "Emissão inicial - Projeto PPCI submetido ao Corpo de Bombeiros",
+                    startDate = LocalDate(2024, 2, 1),
+                    deliveryDate = LocalDate(2024, 3, 10)
+                ),
+                TaskRevision(
+                    revisionNumber = 1,
+                    author = "Ana Oliveira",
+                    description = "Revisão solicitada pelo Corpo de Bombeiros - Ajustes no dimensionamento das escadas de emergência e saídas de emergência",
+                    startDate = LocalDate(2024, 2, 1),
+                    deliveryDate = LocalDate(2024, 3, 25)
+                )
+            )
         ),
         Task(
             "5",
@@ -308,7 +360,17 @@ class MockData {
             LocalDate(2024, 3, 1),
             LocalDate(2024, 3, 20),
             1.0f,
-            listOf("demolição", "preparação")
+            listOf("demolição", "preparação"),
+            emptyList(),
+            listOf(
+                TaskRevision(
+                    revisionNumber = 0,
+                    author = "Pedro Costa",
+                    description = "Emissão inicial - Demolição controlada da estrutura antiga concluída conforme planejamento",
+                    startDate = LocalDate(2024, 3, 1),
+                    deliveryDate = LocalDate(2024, 3, 20)
+                )
+            )
         ),
         Task(
             "6",
@@ -401,7 +463,35 @@ class MockData {
             LocalDate(2024, 5, 1),
             LocalDate(2024, 6, 15),
             1.0f,
-            listOf("terraplenagem", "preparação")
+            listOf("terraplenagem", "preparação"),
+            emptyList(),
+            listOf(
+                TaskRevision(
+                    revisionNumber = 0,
+                    author = "Pedro Costa",
+                    description = "Emissão inicial - Terraplenagem completa, incluindo corte, aterro e compactação do solo",
+                    startDate = LocalDate(2024, 5, 1),
+                    deliveryDate = LocalDate(2024, 6, 15)
+                )
+            ),
+            listOf(
+                PartialDelivery(
+                    deliveryNumber = 1,
+                    author = "Pedro Costa",
+                    description = "Fase 1: Corte e remoção de material - 60% da área preparada",
+                    deliveryDate = LocalDate(2024, 5, 20),
+                    completedItems = 6000,
+                    totalItems = 10000
+                ),
+                PartialDelivery(
+                    deliveryNumber = 2,
+                    author = "Pedro Costa",
+                    description = "Fase 2: Aterro compactado e acabamento final",
+                    deliveryDate = LocalDate(2024, 6, 15),
+                    completedItems = 10000,
+                    totalItems = 10000
+                )
+            )
         ),
         // Tarefas adicionais para garantir variedade de status nos projetos
         Task(
@@ -428,7 +518,35 @@ class MockData {
             LocalDate(2024, 4, 5),
             LocalDate(2024, 5, 20),
             1.0f,
-            listOf("fundação", "hospital")
+            listOf("fundação", "hospital"),
+            emptyList(),
+            listOf(
+                TaskRevision(
+                    revisionNumber = 0,
+                    author = "Pedro Costa",
+                    description = "Emissão inicial - Fundação da ala principal concluída com estacas tipo hélice contínua",
+                    startDate = LocalDate(2024, 4, 5),
+                    deliveryDate = LocalDate(2024, 5, 20)
+                )
+            ),
+            listOf(
+                PartialDelivery(
+                    deliveryNumber = 1,
+                    author = "Pedro Costa",
+                    description = "Execução de 50% das estacas (blocos 1 a 6)",
+                    deliveryDate = LocalDate(2024, 4, 28),
+                    completedItems = 30,
+                    totalItems = 60
+                ),
+                PartialDelivery(
+                    deliveryNumber = 2,
+                    author = "Pedro Costa",
+                    description = "Execução completa de estacas e blocos de fundação",
+                    deliveryDate = LocalDate(2024, 5, 20),
+                    completedItems = 60,
+                    totalItems = 60
+                )
+            )
         ),
         Task(
             "15",
