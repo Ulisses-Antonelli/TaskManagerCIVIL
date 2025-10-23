@@ -18,6 +18,7 @@ import androidx.compose.ui.window.Dialog
 import com.project.taskmanagercivil.domain.models.Project
 import com.project.taskmanagercivil.domain.models.Task
 import com.project.taskmanagercivil.domain.models.TaskPriority
+import com.project.taskmanagercivil.domain.models.TaskRevision
 import com.project.taskmanagercivil.domain.models.TaskStatus
 import com.project.taskmanagercivil.domain.models.User
 import kotlinx.datetime.LocalDate
@@ -507,6 +508,21 @@ fun TaskFormModal(
                     Button(
                         onClick = {
                             if (selectedProject != null && selectedUser != null && taskName.isNotBlank()) {
+                                // Se for nova tarefa, cria revisão inicial (Rev. 00)
+                                val revisions = if (task == null) {
+                                    listOf(
+                                        TaskRevision(
+                                            revisionNumber = 0,
+                                            author = selectedUser!!.name,
+                                            description = "Emissão inicial",
+                                            startDate = startDate,
+                                            deliveryDate = dueDate
+                                        )
+                                    )
+                                } else {
+                                    task.revisions // Mantém revisões existentes ao editar
+                                }
+
                                 val newTask = Task(
                                     id = task?.id ?: "", // String vazia para novas tarefas, ViewModel gera o ID
                                     title = taskName,
@@ -521,7 +537,8 @@ fun TaskFormModal(
                                         (checklistItems.count { it.isCompleted }.toFloat() / checklistItems.size) * 100f
                                     },
                                     tags = emptyList(),
-                                    dependencies = emptyList()
+                                    dependencies = emptyList(),
+                                    revisions = revisions
                                 )
                                 onSave(newTask, checklistItems.toList())
                             }

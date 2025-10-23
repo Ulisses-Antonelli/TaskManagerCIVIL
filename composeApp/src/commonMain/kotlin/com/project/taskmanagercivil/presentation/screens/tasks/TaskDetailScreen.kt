@@ -23,21 +23,13 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import com.project.taskmanagercivil.domain.models.Task
 import com.project.taskmanagercivil.domain.models.TaskPriority
+import com.project.taskmanagercivil.domain.models.TaskRevision
 import com.project.taskmanagercivil.domain.models.TaskStatus
 import com.project.taskmanagercivil.presentation.theme.extendedColors
 import kotlinx.datetime.Clock
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.todayIn
-
-// Data class para representar histórico de revisões
-data class TaskRevision(
-    val revisionNumber: Int,
-    val author: String,
-    val description: String,
-    val startDate: LocalDate,
-    val deliveryDate: LocalDate
-)
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -161,39 +153,8 @@ private fun TaskDetailContent(
         .coerceAtLeast(0)
     val daysRemaining = (task.dueDate.toEpochDays() - today.toEpochDays()).toInt()
 
-    // Dados mockados de revisões (futuramente virão do backend)
-    val revisions = remember {
-        listOf(
-            TaskRevision(
-                revisionNumber = 3,
-                author = task.assignedTo.name,
-                description = "Revisão final com ajustes de acordo com as normas ABNT NBR 6118",
-                startDate = task.startDate,
-                deliveryDate = task.dueDate
-            ),
-            TaskRevision(
-                revisionNumber = 2,
-                author = "João Silva",
-                description = "Segunda revisão incorporando correções solicitadas pela fiscalização",
-                startDate = task.startDate,
-                deliveryDate = task.dueDate
-            ),
-            TaskRevision(
-                revisionNumber = 1,
-                author = "Maria Santos",
-                description = "Primeira revisão do projeto estrutural - análise preliminar",
-                startDate = task.startDate,
-                deliveryDate = task.dueDate
-            ),
-            TaskRevision(
-                revisionNumber = 0,
-                author = task.assignedTo.name,
-                description = "Emissão inicial",
-                startDate = task.startDate,
-                deliveryDate = task.dueDate
-            )
-        )
-    }
+    // Usa as revisões da tarefa (se vazia, mostra mensagem)
+    val revisions = task.revisions
 
     LazyColumn(
         modifier = modifier,
@@ -304,8 +265,8 @@ private fun GeneralInfoCard(
         TaskPriority.CRITICAL -> MaterialTheme.colorScheme.error
     }
 
-    // Número de revisão atual (mockado - futuramente virá do backend)
-    val currentRevision = 3
+    // Número de revisão atual (maior número de revisão)
+    val currentRevision = task.revisions.maxOfOrNull { it.revisionNumber } ?: 0
 
     Card(
         modifier = Modifier.fillMaxWidth(),

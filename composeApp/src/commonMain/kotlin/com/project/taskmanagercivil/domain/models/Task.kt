@@ -14,7 +14,16 @@ data class Task(
     val dueDate: LocalDate,
     val progress: Float,
     val tags: List<String> = emptyList(),
-    val dependencies: List<String> = emptyList()
+    val dependencies: List<String> = emptyList(),
+    val revisions: List<TaskRevision> = emptyList()
+)
+
+data class TaskRevision(
+    val revisionNumber: Int,
+    val author: String,
+    val description: String,
+    val startDate: LocalDate,
+    val deliveryDate: LocalDate
 )
 
 enum class TaskStatus(val label: String) {
