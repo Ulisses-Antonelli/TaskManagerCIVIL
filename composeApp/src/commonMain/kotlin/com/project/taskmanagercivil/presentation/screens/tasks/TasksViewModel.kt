@@ -14,6 +14,9 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.datetime.Clock
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.todayIn
 
 enum class ViewMode {
     LIST,
@@ -110,6 +113,33 @@ class TasksViewModel(
 
     fun onViewModeChange(viewMode: ViewMode) {
         _uiState.update { it.copy(viewMode = viewMode) }
+    }
+
+    fun createRevisionAndUpdateStatus(task: Task, description: String, newStatus: TaskStatus) {
+        viewModelScope.launch {
+            try {
+                val currentRevisionNumber = task.revisions.maxOfOrNull { it.revisionNumber } ?: -1
+                val newRevisionNumber = currentRevisionNumber + 1
+
+                val newRevision = com.project.taskmanagercivil.domain.models.TaskRevision(
+                    revisionNumber = newRevisionNumber,
+                    author = task.assignedTo.name,
+                    description = description,
+                    startDate = task.startDate,
+                    deliveryDate = Clock.System.todayIn(TimeZone.currentSystemDefault())
+                )
+
+                val updatedTask = task.copy(
+                    status = newStatus,
+                    revisions = task.revisions + newRevision
+                )
+
+                taskRepository.updateTask(updatedTask)
+                loadTasks()
+            } catch (e: Exception) {
+                _uiState.update { it.copy(error = "Falha ao criar revisão: ${e.message}") }
+            }
+        }
     }
 
     private fun applyFilters() {

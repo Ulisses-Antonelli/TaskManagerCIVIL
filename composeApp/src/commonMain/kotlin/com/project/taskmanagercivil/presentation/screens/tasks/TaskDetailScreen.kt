@@ -45,6 +45,8 @@ fun TaskDetailScreen(
     val uiState by viewModel.uiState.collectAsState()
     var showDescriptionDialog by remember { mutableStateOf(false) }
     var showChecklistDialog by remember { mutableStateOf(false) }
+    var showDeliveryDialog by remember { mutableStateOf(false) }
+    var showRevisionDialog by remember { mutableStateOf(false) }
     var selectedDescription by remember { mutableStateOf("") }
 
     Scaffold(
@@ -115,6 +117,20 @@ fun TaskDetailScreen(
                     onPartialDeliveryClick = {
                         showChecklistDialog = true
                     },
+                    onDeliverTaskClick = {
+                        showDeliveryDialog = true
+                    },
+                    onRequestRevisionClick = {
+                        showRevisionDialog = true
+                    },
+                    onConfirmDelivery = { description ->
+                        viewModel.deliverTask(description)
+                        showDeliveryDialog = false
+                    },
+                    onConfirmRevision = { description ->
+                        viewModel.requestRevision(description)
+                        showRevisionDialog = false
+                    },
                     modifier = Modifier
                         .fillMaxSize()
                         .padding(paddingValues)
@@ -136,6 +152,28 @@ fun TaskDetailScreen(
                 onDismiss = { showChecklistDialog = false }
             )
         }
+
+        // Dialog de confirmação de entrega
+        if (showDeliveryDialog) {
+            DeliveryConfirmationDialog(
+                onDismiss = { showDeliveryDialog = false },
+                onConfirm = { description ->
+                    viewModel.deliverTask(description)
+                    showDeliveryDialog = false
+                }
+            )
+        }
+
+        // Dialog de solicitação de revisão
+        if (showRevisionDialog) {
+            RevisionReasonDialog(
+                onDismiss = { showRevisionDialog = false },
+                onConfirm = { description ->
+                    viewModel.requestRevision(description)
+                    showRevisionDialog = false
+                }
+            )
+        }
     }
 }
 
@@ -146,6 +184,10 @@ private fun TaskDetailContent(
     onEmployeeClick: (String) -> Unit,
     onDescriptionClick: (String) -> Unit,
     onPartialDeliveryClick: () -> Unit,
+    onDeliverTaskClick: () -> Unit,
+    onRequestRevisionClick: () -> Unit,
+    onConfirmDelivery: (String) -> Unit,
+    onConfirmRevision: (String) -> Unit,
     modifier: Modifier = Modifier
 ) {
     val today = Clock.System.todayIn(TimeZone.currentSystemDefault())
@@ -179,18 +221,66 @@ private fun TaskDetailContent(
             )
         }
 
-        // Botões de Entrega
+        // Botões de Ação
         item {
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                // Botão Entrega Parcial
+                // Botão Entregar Tarefa - visível quando status != COMPLETED
+                if (task.status != TaskStatus.COMPLETED) {
+                    Button(
+                        onClick = onDeliverTaskClick,
+                        modifier = Modifier.weight(1f),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = MaterialTheme.colorScheme.primary
+                        ),
+                        shape = RoundedCornerShape(8.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Check,
+                            contentDescription = null,
+                            modifier = Modifier.size(20.dp)
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(
+                            text = "Entregar Tarefa",
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+                }
+
+                // Botão Solicitar Revisão - visível quando status == COMPLETED
+                if (task.status == TaskStatus.COMPLETED) {
+                    Button(
+                        onClick = onRequestRevisionClick,
+                        modifier = Modifier.weight(1f),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = MaterialTheme.colorScheme.secondary
+                        ),
+                        shape = RoundedCornerShape(8.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.RateReview,
+                            contentDescription = null,
+                            modifier = Modifier.size(20.dp)
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(
+                            text = "Solicitar Revisão",
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+                }
+
+                // Botão Entrega Parcial - sempre visível
                 Button(
                     onClick = onPartialDeliveryClick,
                     modifier = Modifier.weight(1f),
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = MaterialTheme.colorScheme.secondary
+                        containerColor = MaterialTheme.colorScheme.tertiary
                     ),
                     shape = RoundedCornerShape(8.dp)
                 ) {
@@ -202,30 +292,6 @@ private fun TaskDetailContent(
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(
                         text = "Entrega Parcial",
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Bold
-                    )
-                }
-
-                // Botão Finalizar Tarefa
-                Button(
-                    onClick = {
-                        // TODO: Implementar lógica de finalização quando houver método no repository
-                    },
-                    modifier = Modifier.weight(1f),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = MaterialTheme.colorScheme.primary
-                    ),
-                    shape = RoundedCornerShape(8.dp)
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Check,
-                        contentDescription = null,
-                        modifier = Modifier.size(20.dp)
-                    )
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text(
-                        text = "Finalizar Tarefa",
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold
                     )

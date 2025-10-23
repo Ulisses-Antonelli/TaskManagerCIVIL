@@ -8,6 +8,9 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import kotlinx.datetime.Clock
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.todayIn
 
 data class TaskDetailUiState(
     val task: Task? = null,
@@ -72,5 +75,67 @@ class TaskDetailViewModel(
 
     fun refresh() {
         loadTask()
+    }
+
+    fun deliverTask(description: String) {
+        viewModelScope.launch {
+            try {
+                val task = _uiState.value.task ?: return@launch
+
+                val currentRevisionNumber = task.revisions.maxOfOrNull { it.revisionNumber } ?: -1
+                val newRevisionNumber = currentRevisionNumber + 1
+
+                val newRevision = com.project.taskmanagercivil.domain.models.TaskRevision(
+                    revisionNumber = newRevisionNumber,
+                    author = task.assignedTo.name,
+                    description = description,
+                    startDate = task.startDate,
+                    deliveryDate = Clock.System.todayIn(TimeZone.currentSystemDefault())
+                )
+
+                val updatedTask = task.copy(
+                    status = com.project.taskmanagercivil.domain.models.TaskStatus.COMPLETED,
+                    revisions = task.revisions + newRevision
+                )
+
+                taskRepository.updateTask(updatedTask)
+                loadTask() // Reload to refresh UI
+            } catch (e: Exception) {
+                _uiState.value = _uiState.value.copy(
+                    error = "Erro ao entregar tarefa: ${e.message}"
+                )
+            }
+        }
+    }
+
+    fun requestRevision(description: String) {
+        viewModelScope.launch {
+            try {
+                val task = _uiState.value.task ?: return@launch
+
+                val currentRevisionNumber = task.revisions.maxOfOrNull { it.revisionNumber } ?: -1
+                val newRevisionNumber = currentRevisionNumber + 1
+
+                val newRevision = com.project.taskmanagercivil.domain.models.TaskRevision(
+                    revisionNumber = newRevisionNumber,
+                    author = task.assignedTo.name,
+                    description = description,
+                    startDate = task.startDate,
+                    deliveryDate = Clock.System.todayIn(TimeZone.currentSystemDefault())
+                )
+
+                val updatedTask = task.copy(
+                    status = com.project.taskmanagercivil.domain.models.TaskStatus.IN_REVIEW,
+                    revisions = task.revisions + newRevision
+                )
+
+                taskRepository.updateTask(updatedTask)
+                loadTask() // Reload to refresh UI
+            } catch (e: Exception) {
+                _uiState.value = _uiState.value.copy(
+                    error = "Erro ao solicitar revisão: ${e.message}"
+                )
+            }
+        }
     }
 }
