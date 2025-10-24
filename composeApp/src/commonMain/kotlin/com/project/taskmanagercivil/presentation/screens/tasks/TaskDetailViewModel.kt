@@ -139,7 +139,13 @@ class TaskDetailViewModel(
         }
     }
 
-    fun createPartialDelivery(description: String, completedItems: Int, totalItems: Int, checklistItems: List<com.project.taskmanagercivil.domain.models.ChecklistItem>) {
+    fun createPartialDelivery(
+        description: String,
+        completedItems: Int,
+        totalItems: Int,
+        checklistItems: List<com.project.taskmanagercivil.domain.models.ChecklistItem>,
+        revisionDescription: String? = null
+    ) {
         viewModelScope.launch {
             try {
                 val task = _uiState.value.task ?: return@launch
@@ -152,7 +158,7 @@ class TaskDetailViewModel(
                     val newRevision = com.project.taskmanagercivil.domain.models.TaskRevision(
                         revisionNumber = newRevisionNumber,
                         author = task.assignedTo.name,
-                        description = description,
+                        description = revisionDescription ?: description, // Usa revisionDescription se fornecida
                         startDate = task.startDate,
                         deliveryDate = Clock.System.todayIn(TimeZone.currentSystemDefault())
                     )

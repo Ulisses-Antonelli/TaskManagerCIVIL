@@ -33,6 +33,14 @@ import kotlinx.datetime.LocalDate
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.todayIn
 
+// Data class para armazenar dados pendentes de entrega parcial
+private data class PartialDeliveryData(
+    val description: String,
+    val completedItems: Int,
+    val totalItems: Int,
+    val checklistItems: List<ChecklistItem>
+)
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TaskDetailScreen(
@@ -49,7 +57,9 @@ fun TaskDetailScreen(
     var showChecklistDialog by remember { mutableStateOf(false) }
     var showDeliveryDialog by remember { mutableStateOf(false) }
     var showRevisionDialog by remember { mutableStateOf(false) }
+    var showDeliveryDialogAfterChecklist by remember { mutableStateOf(false) }
     var selectedDescription by remember { mutableStateOf("") }
+    var pendingPartialDeliveryData by remember { mutableStateOf<PartialDeliveryData?>(null) }
 
     Scaffold(
         topBar = {
@@ -154,8 +164,16 @@ fun TaskDetailScreen(
                 task = uiState.task!!,
                 onDismiss = { showChecklistDialog = false },
                 onConfirm = { description, completedItems, totalItems, checklistItems ->
-                    viewModel.createPartialDelivery(description, completedItems, totalItems, checklistItems)
-                    showChecklistDialog = false
+                    if (completedItems >= totalItems) {
+                        // Todos os itens completos - guardar dados e abrir diálogo de entrega
+                        pendingPartialDeliveryData = PartialDeliveryData(description, completedItems, totalItems, checklistItems)
+                        showChecklistDialog = false
+                        showDeliveryDialogAfterChecklist = true
+                    } else {
+                        // Entrega parcial normal
+                        viewModel.createPartialDelivery(description, completedItems, totalItems, checklistItems)
+                        showChecklistDialog = false
+                    }
                 }
             )
         }
@@ -187,6 +205,31 @@ fun TaskDetailScreen(
                     viewModel.requestRevision(description)
                     showRevisionDialog = false
                 }
+            )
+        }
+
+        // Dialog de confirmação de entrega após checklist completo
+        if (showDeliveryDialogAfterChecklist && pendingPartialDeliveryData != null) {
+            DeliveryConfirmationDialog(
+                onDismiss = {
+                    showDeliveryDialogAfterChecklist = false
+                    pendingPartialDeliveryData = null
+                },
+                onConfirm = { revisionDescription ->
+                    val data = pendingPartialDeliveryData!!
+                    viewModel.createPartialDelivery(
+                        description = data.description,
+                        completedItems = data.completedItems,
+                        totalItems = data.totalItems,
+                        checklistItems = data.checklistItems,
+                        revisionDescription = revisionDescription
+                    )
+                    showDeliveryDialogAfterChecklist = false
+                    pendingPartialDeliveryData = null
+                },
+                hasIncompleteItems = false,
+                incompleteCount = 0,
+                totalCount = 0
             )
         }
     }
