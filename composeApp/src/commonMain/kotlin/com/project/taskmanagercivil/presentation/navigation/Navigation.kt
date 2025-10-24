@@ -9,6 +9,7 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import androidx.navigation.toRoute
 import com.project.taskmanagercivil.presentation.ViewModelFactory
+import com.project.taskmanagercivil.presentation.components.ScreenLayout
 import com.project.taskmanagercivil.presentation.screens.dashboard.DashboardScreenContent
 import com.project.taskmanagercivil.presentation.screens.documents.DocumentDetailScreen
 import com.project.taskmanagercivil.presentation.screens.documents.DocumentFormScreen
@@ -91,45 +92,49 @@ fun AppNavigation(
 
         // Tela de Dashboard
         composable(Screen.Dashboard.route) {
-            val viewModel = ViewModelFactory.createDashboardViewModel()
-            DashboardScreenContent(
-                viewModel = viewModel,
-                onNavigate = { route ->
-                    navController.navigate(route) {
-                        launchSingleTop = true
+            ScreenLayout(navController = navController) {
+                val viewModel = ViewModelFactory.createDashboardViewModel()
+                DashboardScreenContent(
+                    viewModel = viewModel,
+                    onNavigate = { route ->
+                        navController.navigate(route) {
+                            launchSingleTop = true
+                        }
+                    },
+                    onProjectClick = { projectId ->
+                        NavigationState.pendingProjectId = projectId
+                        navController.navigate(Screen.ProjectDetail.createRoute(projectId))
+                    },
+                    onTaskClick = { taskId ->
+                        NavigationState.pendingTaskId = taskId
+                        navController.navigate(Screen.TaskDetail.createRoute(taskId))
+                    },
+                    onProjectsWithStatusClick = { status ->
+                        // Guarda o filtro pendente no singleton antes de navegar
+                        NavigationState.pendingProjectFilter = status.name
+                        // Navega para tela de projetos com filtro de status
+                        navController.navigate(Screen.Projects.createRoute(status.name))
                     }
-                },
-                onProjectClick = { projectId ->
-                    NavigationState.pendingProjectId = projectId
-                    navController.navigate(Screen.ProjectDetail.createRoute(projectId))
-                },
-                onTaskClick = { taskId ->
-                    NavigationState.pendingTaskId = taskId
-                    navController.navigate(Screen.TaskDetail.createRoute(taskId))
-                },
-                onProjectsWithStatusClick = { status ->
-                    // Guarda o filtro pendente no singleton antes de navegar
-                    NavigationState.pendingProjectFilter = status.name
-                    // Navega para tela de projetos com filtro de status
-                    navController.navigate(Screen.Projects.createRoute(status.name))
-                }
-            )
+                )
+            }
         }
 
         composable(Screen.Tasks.route) {
-            val viewModel = ViewModelFactory.createTasksViewModel()
-            TasksScreenContent(
-                viewModel = viewModel,
-                onTaskClick = { task ->
-                    NavigationState.pendingTaskId = task.id
-                    navController.navigate(Screen.TaskDetail.createRoute(task.id))
-                },
-                onNavigate = { route ->
-                    navController.navigate(route) {
-                        launchSingleTop = true
+            ScreenLayout(navController = navController) {
+                val viewModel = ViewModelFactory.createTasksViewModel()
+                TasksScreenContent(
+                    viewModel = viewModel,
+                    onTaskClick = { task ->
+                        NavigationState.pendingTaskId = task.id
+                        navController.navigate(Screen.TaskDetail.createRoute(task.id))
+                    },
+                    onNavigate = { route ->
+                        navController.navigate(route) {
+                            launchSingleTop = true
+                        }
                     }
-                }
-            )
+                )
+            }
         }
 
         // Tela de Detalhes da Tarefa
@@ -139,39 +144,41 @@ fun AppNavigation(
                 navArgument("taskId") { type = NavType.StringType }
             )
         ) { backStackEntry ->
-            // Usa o singleton para obter o taskId, similar à solução do projectId
-            val taskId = androidx.compose.runtime.remember {
-                NavigationState.pendingTaskId?.also {
-                    NavigationState.pendingTaskId = null
-                } ?: "1"
-            }
-
-            val viewModel = androidx.compose.runtime.remember(taskId) {
-                ViewModelFactory.createTaskDetailViewModel(taskId)
-            }
-
-            com.project.taskmanagercivil.presentation.screens.tasks.TaskDetailScreen(
-                viewModel = viewModel,
-                onBack = { navController.popBackStack() },
-                onEdit = { taskId ->
-                    // TODO: Implementar tela de edição de tarefa quando necessário
-                },
-                onDelete = { taskId ->
-                    // TODO: Implementar deleteTask no TaskRepository quando necessário
-                    navController.popBackStack()
-                },
-                onProjectClick = { projectId ->
-                    NavigationState.pendingProjectId = projectId
-                    navController.navigate(Screen.ProjectDetail.createRoute(projectId))
-                },
-                onEmployeeClick = { employeeId ->
-                    navController.navigate(Screen.EmployeeDetail.createRoute(employeeId))
-                },
-                onRelatedTaskClick = { relatedTaskId ->
-                    NavigationState.pendingTaskId = relatedTaskId
-                    navController.navigate(Screen.TaskDetail.createRoute(relatedTaskId))
+            ScreenLayout(navController = navController) {
+                // Usa o singleton para obter o taskId, similar à solução do projectId
+                val taskId = androidx.compose.runtime.remember {
+                    NavigationState.pendingTaskId?.also {
+                        NavigationState.pendingTaskId = null
+                    } ?: "1"
                 }
-            )
+
+                val viewModel = androidx.compose.runtime.remember(taskId) {
+                    ViewModelFactory.createTaskDetailViewModel(taskId)
+                }
+
+                com.project.taskmanagercivil.presentation.screens.tasks.TaskDetailScreen(
+                    viewModel = viewModel,
+                    onBack = { navController.popBackStack() },
+                    onEdit = { taskId ->
+                        // TODO: Implementar tela de edição de tarefa quando necessário
+                    },
+                    onDelete = { taskId ->
+                        // TODO: Implementar deleteTask no TaskRepository quando necessário
+                        navController.popBackStack()
+                    },
+                    onProjectClick = { projectId ->
+                        NavigationState.pendingProjectId = projectId
+                        navController.navigate(Screen.ProjectDetail.createRoute(projectId))
+                    },
+                    onEmployeeClick = { employeeId ->
+                        navController.navigate(Screen.EmployeeDetail.createRoute(employeeId))
+                    },
+                    onRelatedTaskClick = { relatedTaskId ->
+                        NavigationState.pendingTaskId = relatedTaskId
+                        navController.navigate(Screen.TaskDetail.createRoute(relatedTaskId))
+                    }
+                )
+            }
         }
 
 
@@ -230,21 +237,23 @@ fun AppNavigation(
                 }
             }
 
-            ProjectsScreenContent(
-                viewModel = viewModel,
-                onProjectClick = { projectId ->
-                    NavigationState.pendingProjectId = projectId
-                    navController.navigate(Screen.ProjectDetail.createRoute(projectId))
-                },
-                onCreateProject = {
-                    navController.navigate(Screen.ProjectCreate.route)
-                },
-                onNavigate = { route ->
-                    navController.navigate(route) {
-                        launchSingleTop = true
+            ScreenLayout(navController = navController) {
+                ProjectsScreenContent(
+                    viewModel = viewModel,
+                    onProjectClick = { projectId ->
+                        NavigationState.pendingProjectId = projectId
+                        navController.navigate(Screen.ProjectDetail.createRoute(projectId))
+                    },
+                    onCreateProject = {
+                        navController.navigate(Screen.ProjectCreate.route)
+                    },
+                    onNavigate = { route ->
+                        navController.navigate(route) {
+                            launchSingleTop = true
+                        }
                     }
-                }
-            )
+                )
+            }
         }
 
         // Tela de Detalhes do Projeto
@@ -254,39 +263,41 @@ fun AppNavigation(
                 navArgument("projectId") { type = NavType.StringType }
             )
         ) { backStackEntry ->
-            // Usa o singleton para obter o projectId, similar à solução do filtro de status
-            val projectId = androidx.compose.runtime.remember {
-                NavigationState.pendingProjectId?.also {
-                    NavigationState.pendingProjectId = null
-                } ?: "1"
-            }
-
-            val viewModel = androidx.compose.runtime.remember(projectId) {
-                ViewModelFactory.createProjectDetailViewModel(projectId)
-            }
-
-            ProjectDetailScreen(
-                viewModel = viewModel,
-                onBack = { navController.popBackStack() },
-                onEdit = { projectId ->
-                    navController.navigate(Screen.ProjectEdit.createRoute(projectId))
-                },
-                onDelete = { projectId ->
-                    // Deleta e volta para a lista
-                    viewModel.deleteProject(projectId)
-                    navController.popBackStack()
-                },
-                onTaskClick = { taskId ->
-                    NavigationState.pendingTaskId = taskId
-                    navController.navigate(Screen.TaskDetail.createRoute(taskId))
-                },
-                onEmployeeClick = { employeeId ->
-                    navController.navigate(Screen.EmployeeDetail.createRoute(employeeId))
-                },
-                onTeamClick = { teamId ->
-                    navController.navigate(Screen.TeamDetail.createRoute(teamId))
+            ScreenLayout(navController = navController) {
+                // Usa o singleton para obter o projectId, similar à solução do filtro de status
+                val projectId = androidx.compose.runtime.remember {
+                    NavigationState.pendingProjectId?.also {
+                        NavigationState.pendingProjectId = null
+                    } ?: "1"
                 }
-            )
+
+                val viewModel = androidx.compose.runtime.remember(projectId) {
+                    ViewModelFactory.createProjectDetailViewModel(projectId)
+                }
+
+                ProjectDetailScreen(
+                    viewModel = viewModel,
+                    onBack = { navController.popBackStack() },
+                    onEdit = { projectId ->
+                        navController.navigate(Screen.ProjectEdit.createRoute(projectId))
+                    },
+                    onDelete = { projectId ->
+                        // Deleta e volta para a lista
+                        viewModel.deleteProject(projectId)
+                        navController.popBackStack()
+                    },
+                    onTaskClick = { taskId ->
+                        NavigationState.pendingTaskId = taskId
+                        navController.navigate(Screen.TaskDetail.createRoute(taskId))
+                    },
+                    onEmployeeClick = { employeeId ->
+                        navController.navigate(Screen.EmployeeDetail.createRoute(employeeId))
+                    },
+                    onTeamClick = { teamId ->
+                        navController.navigate(Screen.TeamDetail.createRoute(teamId))
+                    }
+                )
+            }
         }
 
         // Tela de Criar Projeto

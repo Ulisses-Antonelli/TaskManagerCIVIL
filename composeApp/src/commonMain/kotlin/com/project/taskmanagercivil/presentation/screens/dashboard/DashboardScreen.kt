@@ -15,8 +15,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.project.taskmanagercivil.domain.models.TaskStatus
-import com.project.taskmanagercivil.presentation.components.Breadcrumbs
-import com.project.taskmanagercivil.presentation.components.BreadcrumbItem
 import com.project.taskmanagercivil.presentation.components.NavigationSidebar
 import com.project.taskmanagercivil.presentation.components.dashboard.*
 
@@ -53,65 +51,49 @@ fun DashboardScreenContent(
                     )
                 }
             ) { paddingValues ->
-                Column(modifier = Modifier.fillMaxSize()) {
-                    // Breadcrumbs logo abaixo da TopBar
-                    Breadcrumbs(
-                        items = listOf(
-                            BreadcrumbItem(
-                                label = "Dashboard",
-                                icon = Icons.Default.Dashboard,
-                                isActive = true
-                            )
-                        ),
-                        onNavigate = onNavigate,
-                        modifier = Modifier.padding(top = paddingValues.calculateTopPadding())
-                    )
-
-                    HorizontalDivider()
-
-                    when {
-                        uiState.isLoading -> {
-                            Box(
-                                modifier = Modifier
-                                    .fillMaxSize()
-                                    .padding(horizontal = paddingValues.calculateLeftPadding(androidx.compose.ui.unit.LayoutDirection.Ltr)),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                CircularProgressIndicator()
-                            }
+                when {
+                    uiState.isLoading -> {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .padding(paddingValues),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            CircularProgressIndicator()
                         }
+                    }
 
-                        uiState.error != null -> {
-                            Box(
-                                modifier = Modifier
-                                    .fillMaxSize(),
-                                contentAlignment = Alignment.Center
+                    uiState.error != null -> {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .padding(paddingValues),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Column(
+                                horizontalAlignment = Alignment.CenterHorizontally,
+                                verticalArrangement = Arrangement.spacedBy(16.dp)
                             ) {
-                                Column(
-                                    horizontalAlignment = Alignment.CenterHorizontally,
-                                    verticalArrangement = Arrangement.spacedBy(16.dp)
-                                ) {
-                                    Text(
-                                        text = uiState.error ?: "Erro desconhecido",
-                                        style = MaterialTheme.typography.bodyLarge,
-                                        color = MaterialTheme.colorScheme.error
-                                    )
-                                    Button(onClick = { viewModel.refresh() }) {
-                                        Text("Tentar Novamente")
-                                    }
+                                Text(
+                                    text = uiState.error ?: "Erro desconhecido",
+                                    style = MaterialTheme.typography.bodyLarge,
+                                    color = MaterialTheme.colorScheme.error
+                                )
+                                Button(onClick = { viewModel.refresh() }) {
+                                    Text("Tentar Novamente")
                                 }
                             }
                         }
+                    }
 
-                        else -> {
-                            DashboardContent(
-                                uiState = uiState,
-                                onProjectClick = onProjectClick,
-                                onTaskClick = onTaskClick,
-                                onProjectsWithStatusClick = onProjectsWithStatusClick,
-                                modifier = Modifier.fillMaxSize()
-                            )
-                        }
+                    else -> {
+                        DashboardContent(
+                            uiState = uiState,
+                            onProjectClick = onProjectClick,
+                            onTaskClick = onTaskClick,
+                            onProjectsWithStatusClick = onProjectsWithStatusClick,
+                            modifier = Modifier.padding(paddingValues)
+                        )
                     }
                 }
             }
