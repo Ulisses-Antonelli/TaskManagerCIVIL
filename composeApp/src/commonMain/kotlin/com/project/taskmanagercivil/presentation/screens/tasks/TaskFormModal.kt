@@ -64,10 +64,9 @@ fun TaskFormModal(
     // Checklist items
     val checklistItems = remember {
         mutableStateListOf<ChecklistItemData>().apply {
-            // Se editando, carregar checklist existente (mockado por enquanto)
-            if (task != null) {
-                add(ChecklistItemData(text = "Item de checklist 1", isCompleted = true))
-                add(ChecklistItemData(text = "Item de checklist 2", isCompleted = false))
+            // Se editando, carregar checklist existente da tarefa
+            if (task != null && task.checklistItems.isNotEmpty()) {
+                addAll(task.checklistItems.map { ChecklistItemData(text = it.text, isCompleted = it.isCompleted) })
             }
         }
     }
@@ -524,7 +523,8 @@ fun TaskFormModal(
                                     tags = emptyList(),
                                     dependencies = emptyList(),
                                     revisions = task?.revisions ?: emptyList(), // Mantém revisões ao editar, vazio ao criar
-                                    partialDeliveries = task?.partialDeliveries ?: emptyList()
+                                    partialDeliveries = task?.partialDeliveries ?: emptyList(),
+                                    checklistItems = checklistItems.map { com.project.taskmanagercivil.domain.models.ChecklistItem(text = it.text, isCompleted = it.isCompleted) }
                                 )
                                 onSave(newTask, checklistItems.toList())
                             }

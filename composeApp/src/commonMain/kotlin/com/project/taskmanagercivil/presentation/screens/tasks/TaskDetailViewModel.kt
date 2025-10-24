@@ -138,4 +138,74 @@ class TaskDetailViewModel(
             }
         }
     }
+
+    fun createPartialDelivery(description: String, completedItems: Int, totalItems: Int, checklistItems: List<com.project.taskmanagercivil.domain.models.ChecklistItem>) {
+        viewModelScope.launch {
+            try {
+                val task = _uiState.value.task ?: return@launch
+
+                // Se todos os itens estão completos, cria revisão e marca como COMPLETED
+                if (completedItems >= totalItems) {
+                    val currentRevisionNumber = task.revisions.maxOfOrNull { it.revisionNumber } ?: -1
+                    val newRevisionNumber = currentRevisionNumber + 1
+
+                    val newRevision = com.project.taskmanagercivil.domain.models.TaskRevision(
+                        revisionNumber = newRevisionNumber,
+                        author = task.assignedTo.name,
+                        description = description,
+                        startDate = task.startDate,
+                        deliveryDate = Clock.System.todayIn(TimeZone.currentSystemDefault())
+                    )
+
+                    val currentDeliveryNumber = task.partialDeliveries.maxOfOrNull { it.deliveryNumber } ?: 0
+                    val newDeliveryNumber = currentDeliveryNumber + 1
+
+                    val newPartialDelivery = com.project.taskmanagercivil.domain.models.PartialDelivery(
+                        deliveryNumber = newDeliveryNumber,
+                        author = task.assignedTo.name,
+                        description = description,
+                        deliveryDate = Clock.System.todayIn(TimeZone.currentSystemDefault()),
+                        completedItems = completedItems,
+                        totalItems = totalItems
+                    )
+
+                    val updatedTask = task.copy(
+                        partialDeliveries = task.partialDeliveries + newPartialDelivery,
+                        revisions = task.revisions + newRevision,
+                        status = com.project.taskmanagercivil.domain.models.TaskStatus.COMPLETED,
+                        checklistItems = checklistItems
+                    )
+
+                    taskRepository.updateTask(updatedTask)
+                    loadTask()
+                } else {
+                    // Entrega parcial normal - apenas IN_PROGRESS
+                    val currentDeliveryNumber = task.partialDeliveries.maxOfOrNull { it.deliveryNumber } ?: 0
+                    val newDeliveryNumber = currentDeliveryNumber + 1
+
+                    val newPartialDelivery = com.project.taskmanagercivil.domain.models.PartialDelivery(
+                        deliveryNumber = newDeliveryNumber,
+                        author = task.assignedTo.name,
+                        description = description,
+                        deliveryDate = Clock.System.todayIn(TimeZone.currentSystemDefault()),
+                        completedItems = completedItems,
+                        totalItems = totalItems
+                    )
+
+                    val updatedTask = task.copy(
+                        partialDeliveries = task.partialDeliveries + newPartialDelivery,
+                        status = com.project.taskmanagercivil.domain.models.TaskStatus.IN_PROGRESS,
+                        checklistItems = checklistItems
+                    )
+
+                    taskRepository.updateTask(updatedTask)
+                    loadTask()
+                }
+            } catch (e: Exception) {
+                _uiState.value = _uiState.value.copy(
+                    error = "Erro ao criar entrega parcial: ${e.message}"
+                )
+            }
+        }
+    }
 }

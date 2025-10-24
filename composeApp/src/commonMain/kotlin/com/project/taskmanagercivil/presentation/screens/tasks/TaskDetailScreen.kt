@@ -21,6 +21,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
+import com.project.taskmanagercivil.domain.models.ChecklistItem
 import com.project.taskmanagercivil.domain.models.PartialDelivery
 import com.project.taskmanagercivil.domain.models.Task
 import com.project.taskmanagercivil.domain.models.TaskPriority
@@ -148,20 +149,33 @@ fun TaskDetailScreen(
         }
 
         // Modal de checklist para entrega parcial
-        if (showChecklistDialog) {
+        if (showChecklistDialog && uiState.task != null) {
             ChecklistDialog(
-                onDismiss = { showChecklistDialog = false }
+                task = uiState.task!!,
+                onDismiss = { showChecklistDialog = false },
+                onConfirm = { description, completedItems, totalItems, checklistItems ->
+                    viewModel.createPartialDelivery(description, completedItems, totalItems, checklistItems)
+                    showChecklistDialog = false
+                }
             )
         }
 
         // Dialog de confirmação de entrega
-        if (showDeliveryDialog) {
+        if (showDeliveryDialog && uiState.task != null) {
+            val task = uiState.task!!
+            val completedItems = task.checklistItems.count { it.isCompleted }
+            val totalItems = task.checklistItems.size
+            val hasIncompleteItems = totalItems > 0 && completedItems < totalItems
+
             DeliveryConfirmationDialog(
                 onDismiss = { showDeliveryDialog = false },
                 onConfirm = { description ->
                     viewModel.deliverTask(description)
                     showDeliveryDialog = false
-                }
+                },
+                hasIncompleteItems = hasIncompleteItems,
+                incompleteCount = totalItems - completedItems,
+                totalCount = totalItems
             )
         }
 
@@ -910,20 +924,29 @@ private fun DescriptionDialog(
 
 @Composable
 private fun ChecklistDialog(
-    onDismiss: () -> Unit
+    task: Task,
+    onDismiss: () -> Unit,
+    onConfirm: (description: String, completedItems: Int, totalItems: Int, checklistItems: List<ChecklistItem>) -> Unit
 ) {
-    // Estado para controlar os checkboxes (mockado - futuramente virá do backend)
+    // Estado para controlar os checkboxes - carrega da tarefa real
     val checklistItems = remember {
-        mutableStateListOf(
-            ChecklistItem("1. Levantamento topográfico", false),
-            ChecklistItem("2. Sondagem do terreno", true),
-            ChecklistItem("3. Projeto arquitetônico preliminar", true),
-            ChecklistItem("4. Análise de viabilidade técnica", false),
-            ChecklistItem("5. Definição de materiais", false),
-            ChecklistItem("6. Orçamento detalhado", false),
-            ChecklistItem("7. Cronograma executivo", false)
-        )
+        mutableStateListOf<ChecklistItem>().apply {
+            if (task.checklistItems.isNotEmpty()) {
+                addAll(task.checklistItems)
+            } else {
+                // Se não houver checklist, adiciona itens padrão
+                add(ChecklistItem("1. Levantamento topográfico", false))
+                add(ChecklistItem("2. Sondagem do terreno", false))
+                add(ChecklistItem("3. Projeto arquitetônico preliminar", false))
+                add(ChecklistItem("4. Análise de viabilidade técnica", false))
+                add(ChecklistItem("5. Definição de materiais", false))
+                add(ChecklistItem("6. Orçamento detalhado", false))
+                add(ChecklistItem("7. Cronograma executivo", false))
+            }
+        }
     }
+
+    var description by remember { mutableStateOf("") }
 
     Dialog(onDismissRequest = onDismiss) {
         Card(
@@ -973,16 +996,16 @@ private fun ChecklistDialog(
                                 .fillMaxWidth()
                                 .clip(RoundedCornerShape(8.dp))
                                 .clickable {
-                                    checklistItems[index] = item.copy(isChecked = !item.isChecked)
+                                    checklistItems[index] = item.copy(isCompleted = !item.isCompleted)
                                 }
                                 .padding(12.dp),
                             verticalAlignment = Alignment.CenterVertically,
                             horizontalArrangement = Arrangement.spacedBy(12.dp)
                         ) {
                             Checkbox(
-                                checked = item.isChecked,
+                                checked = item.isCompleted,
                                 onCheckedChange = { checked ->
-                                    checklistItems[index] = item.copy(isChecked = checked)
+                                    checklistItems[index] = item.copy(isCompleted = checked)
                                 }
                             )
 
@@ -996,8 +1019,20 @@ private fun ChecklistDialog(
                     }
                 }
 
+                // Campo de Descrição
+                OutlinedTextField(
+                    value = description,
+                    onValueChange = { description = it },
+                    label = { Text("Descrição da entrega parcial *") },
+                    modifier = Modifier.fillMaxWidth(),
+                    minLines = 3,
+                    maxLines = 5,
+                    shape = RoundedCornerShape(8.dp),
+                    placeholder = { Text("Descreva o que foi entregue nesta etapa...") }
+                )
+
                 // Progresso
-                val completedCount = checklistItems.count { it.isChecked }
+                val completedCount = checklistItems.count { it.isCompleted }
                 val totalCount = checklistItems.size
                 val progress = if (totalCount > 0) completedCount.toFloat() / totalCount else 0f
 
@@ -1028,33 +1063,42 @@ private fun ChecklistDialog(
                     )
                 }
 
-                // Botão Entregar
-                Button(
-                    onClick = {
-                        // TODO: Implementar lógica de entrega parcial
-                        onDismiss()
-                    },
+                // Botões
+                Row(
                     modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(8.dp)
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
-                    Icon(
-                        imageVector = Icons.Default.Check,
-                        contentDescription = null,
-                        modifier = Modifier.size(20.dp)
-                    )
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text("Entregar")
+                    OutlinedButton(
+                        onClick = onDismiss,
+                        modifier = Modifier.weight(1f),
+                        shape = RoundedCornerShape(8.dp)
+                    ) {
+                        Text("Cancelar")
+                    }
+
+                    Button(
+                        onClick = {
+                            if (description.isNotBlank()) {
+                                onConfirm(description, completedCount, totalCount, checklistItems.toList())
+                            }
+                        },
+                        enabled = description.isNotBlank(),
+                        modifier = Modifier.weight(1f),
+                        shape = RoundedCornerShape(8.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Check,
+                            contentDescription = null,
+                            modifier = Modifier.size(20.dp)
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(if (completedCount >= totalCount) "Entregar Tarefa" else "Confirmar Entrega")
+                    }
                 }
             }
         }
     }
 }
-
-// Data class para itens do checklist
-private data class ChecklistItem(
-    val text: String,
-    val isChecked: Boolean
-)
 
 @Composable
 private fun HeaderCell(text: String, modifier: Modifier = Modifier) {

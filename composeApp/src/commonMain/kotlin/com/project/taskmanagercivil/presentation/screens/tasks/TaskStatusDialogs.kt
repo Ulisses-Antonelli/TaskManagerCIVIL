@@ -4,6 +4,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -19,7 +20,10 @@ import androidx.compose.ui.window.Dialog
 @Composable
 fun DeliveryConfirmationDialog(
     onDismiss: () -> Unit,
-    onConfirm: (description: String) -> Unit
+    onConfirm: (description: String) -> Unit,
+    hasIncompleteItems: Boolean = false,
+    incompleteCount: Int = 0,
+    totalCount: Int = 0
 ) {
     var description by remember { mutableStateOf("") }
 
@@ -56,6 +60,46 @@ fun DeliveryConfirmationDialog(
                 }
 
                 HorizontalDivider(modifier = Modifier.padding(vertical = 16.dp))
+
+                // Aviso de itens incompletos
+                if (hasIncompleteItems) {
+                    Card(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(bottom = 16.dp),
+                        colors = CardDefaults.cardColors(
+                            containerColor = MaterialTheme.colorScheme.errorContainer
+                        ),
+                        shape = RoundedCornerShape(8.dp)
+                    ) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(12.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Warning,
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.error
+                            )
+                            Column {
+                                Text(
+                                    text = "Atenção: Itens Pendentes!",
+                                    style = MaterialTheme.typography.titleSmall,
+                                    fontWeight = FontWeight.Bold,
+                                    color = MaterialTheme.colorScheme.error
+                                )
+                                Text(
+                                    text = "${incompleteCount} de ${totalCount} itens do checklist ainda não foram concluídos.",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onErrorContainer
+                                )
+                            }
+                        }
+                    }
+                }
 
                 // Conteúdo
                 Text(
@@ -99,9 +143,16 @@ fun DeliveryConfirmationDialog(
                         },
                         modifier = Modifier.weight(1f),
                         shape = RoundedCornerShape(8.dp),
-                        enabled = description.isNotBlank()
+                        enabled = description.isNotBlank(),
+                        colors = if (hasIncompleteItems) {
+                            ButtonDefaults.buttonColors(
+                                containerColor = MaterialTheme.colorScheme.error
+                            )
+                        } else {
+                            ButtonDefaults.buttonColors()
+                        }
                     ) {
-                        Text("Confirmar Entrega")
+                        Text(if (hasIncompleteItems) "Entregar com Pendências" else "Confirmar Entrega")
                     }
                 }
             }

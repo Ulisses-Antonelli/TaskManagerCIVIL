@@ -16,7 +16,13 @@ data class Task(
     val tags: List<String> = emptyList(),
     val dependencies: List<String> = emptyList(),
     val revisions: List<TaskRevision> = emptyList(),
-    val partialDeliveries: List<PartialDelivery> = emptyList()
+    val partialDeliveries: List<PartialDelivery> = emptyList(),
+    val checklistItems: List<ChecklistItem> = emptyList()
+)
+
+data class ChecklistItem(
+    val text: String,
+    val isCompleted: Boolean
 )
 
 data class TaskRevision(
