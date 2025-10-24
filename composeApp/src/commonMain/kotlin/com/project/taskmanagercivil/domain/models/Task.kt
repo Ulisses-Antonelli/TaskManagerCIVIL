@@ -30,7 +30,8 @@ data class TaskRevision(
     val author: String,
     val description: String,
     val startDate: LocalDate,
-    val deliveryDate: LocalDate
+    val deliveryDate: LocalDate,
+    val isEdited: Boolean = false
 )
 
 data class PartialDelivery(
@@ -39,7 +40,8 @@ data class PartialDelivery(
     val description: String,
     val deliveryDate: LocalDate,
     val completedItems: Int,
-    val totalItems: Int
+    val totalItems: Int,
+    val isEdited: Boolean = false
 )
 
 enum class TaskStatus(val label: String) {

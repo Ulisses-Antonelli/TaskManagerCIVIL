@@ -59,6 +59,9 @@ fun TaskDetailScreen(
     var showRevisionDialog by remember { mutableStateOf(false) }
     var showDeliveryDialogAfterChecklist by remember { mutableStateOf(false) }
     var selectedDescription by remember { mutableStateOf("") }
+    var selectedIsEdited by remember { mutableStateOf(false) }
+    var selectedRevisionNumber by remember { mutableStateOf<Int?>(null) }
+    var selectedDeliveryNumber by remember { mutableStateOf<Int?>(null) }
     var pendingPartialDeliveryData by remember { mutableStateOf<PartialDeliveryData?>(null) }
 
     Scaffold(
@@ -122,8 +125,18 @@ fun TaskDetailScreen(
                     task = uiState.task!!,
                     onProjectClick = onProjectClick,
                     onEmployeeClick = onEmployeeClick,
-                    onDescriptionClick = { description ->
-                        selectedDescription = description
+                    onRevisionDescriptionClick = { revision ->
+                        selectedDescription = revision.description
+                        selectedIsEdited = revision.isEdited
+                        selectedRevisionNumber = revision.revisionNumber
+                        selectedDeliveryNumber = null
+                        showDescriptionDialog = true
+                    },
+                    onDeliveryDescriptionClick = { delivery ->
+                        selectedDescription = delivery.description
+                        selectedIsEdited = delivery.isEdited
+                        selectedRevisionNumber = null
+                        selectedDeliveryNumber = delivery.deliveryNumber
                         showDescriptionDialog = true
                     },
                     onPartialDeliveryClick = {
@@ -154,7 +167,25 @@ fun TaskDetailScreen(
         if (showDescriptionDialog) {
             DescriptionDialog(
                 description = selectedDescription,
-                onDismiss = { showDescriptionDialog = false }
+                isEdited = selectedIsEdited,
+                onDismiss = {
+                    showDescriptionDialog = false
+                    selectedRevisionNumber = null
+                    selectedDeliveryNumber = null
+                },
+                onSave = { newDescription ->
+                    when {
+                        selectedRevisionNumber != null -> {
+                            viewModel.updateRevisionDescription(selectedRevisionNumber!!, newDescription)
+                        }
+                        selectedDeliveryNumber != null -> {
+                            viewModel.updatePartialDeliveryDescription(selectedDeliveryNumber!!, newDescription)
+                        }
+                    }
+                    showDescriptionDialog = false
+                    selectedRevisionNumber = null
+                    selectedDeliveryNumber = null
+                }
             )
         }
 
@@ -240,7 +271,8 @@ private fun TaskDetailContent(
     task: Task,
     onProjectClick: (String) -> Unit,
     onEmployeeClick: (String) -> Unit,
-    onDescriptionClick: (String) -> Unit,
+    onRevisionDescriptionClick: (TaskRevision) -> Unit,
+    onDeliveryDescriptionClick: (PartialDelivery) -> Unit,
     onPartialDeliveryClick: () -> Unit,
     onDeliverTaskClick: () -> Unit,
     onRequestRevisionClick: () -> Unit,
@@ -361,7 +393,7 @@ private fun TaskDetailContent(
         item {
             RevisionHistoryCard(
                 revisions = revisions,
-                onDescriptionClick = onDescriptionClick
+                onDescriptionClick = onRevisionDescriptionClick
             )
         }
 
@@ -369,7 +401,7 @@ private fun TaskDetailContent(
         item {
             PartialDeliveriesCard(
                 partialDeliveries = task.partialDeliveries,
-                onDescriptionClick = onDescriptionClick
+                onDescriptionClick = onDeliveryDescriptionClick
             )
         }
     }
@@ -581,7 +613,7 @@ private fun ScheduleCard(
 @Composable
 private fun RevisionHistoryCard(
     revisions: List<TaskRevision>,
-    onDescriptionClick: (String) -> Unit
+    onDescriptionClick: (TaskRevision) -> Unit
 ) {
     Card(
         modifier = Modifier.fillMaxWidth(),
@@ -637,7 +669,7 @@ private fun RevisionHistoryCard(
                 revisions.forEach { revision ->
                     RevisionRow(
                         revision = revision,
-                        onDescriptionClick = { onDescriptionClick(revision.description) }
+                        onDescriptionClick = { onDescriptionClick(revision) }
                     )
                 }
             }
@@ -648,7 +680,7 @@ private fun RevisionHistoryCard(
 @Composable
 private fun PartialDeliveriesCard(
     partialDeliveries: List<PartialDelivery>,
-    onDescriptionClick: (String) -> Unit
+    onDescriptionClick: (PartialDelivery) -> Unit
 ) {
     Card(
         modifier = Modifier.fillMaxWidth(),
@@ -712,7 +744,7 @@ private fun PartialDeliveriesCard(
                     partialDeliveries.forEach { delivery ->
                         PartialDeliveryRow(
                             delivery = delivery,
-                            onDescriptionClick = { onDescriptionClick(delivery.description) }
+                            onDescriptionClick = { onDescriptionClick(delivery) }
                         )
                     }
                 }
@@ -766,19 +798,33 @@ private fun PartialDeliveryRow(
                 .padding(horizontal = 4.dp)
         )
 
-        // Descrição (clicável)
-        Text(
-            text = delivery.description,
-            style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.primary,
-            maxLines = 2,
-            overflow = TextOverflow.Ellipsis,
-            modifier = Modifier
-                .weight(2f)
-                .clip(RoundedCornerShape(4.dp))
-                .clickable(onClick = onDescriptionClick)
-                .padding(4.dp)
-        )
+        // Descrição (clicável) com ícone se editada
+        Row(
+            modifier = Modifier.weight(2f),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(4.dp)
+        ) {
+            if (delivery.isEdited) {
+                Icon(
+                    imageVector = Icons.Default.Warning,
+                    contentDescription = "Editado",
+                    tint = MaterialTheme.colorScheme.error,
+                    modifier = Modifier.size(16.dp)
+                )
+            }
+            Text(
+                text = delivery.description,
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.primary,
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis,
+                modifier = Modifier
+                    .weight(1f)
+                    .clip(RoundedCornerShape(4.dp))
+                    .clickable(onClick = onDescriptionClick)
+                    .padding(4.dp)
+            )
+        }
 
         VerticalDivider(
             modifier = Modifier
@@ -855,19 +901,33 @@ private fun RevisionRow(
                 .padding(horizontal = 4.dp)
         )
 
-        // Descrição (clicável)
-        Text(
-            text = revision.description,
-            style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.primary,
-            maxLines = 2,
-            overflow = TextOverflow.Ellipsis,
-            modifier = Modifier
-                .weight(2f)
-                .clip(RoundedCornerShape(4.dp))
-                .clickable(onClick = onDescriptionClick)
-                .padding(4.dp)
-        )
+        // Descrição (clicável) com ícone se editada
+        Row(
+            modifier = Modifier.weight(2f),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(4.dp)
+        ) {
+            if (revision.isEdited) {
+                Icon(
+                    imageVector = Icons.Default.Warning,
+                    contentDescription = "Editado",
+                    tint = MaterialTheme.colorScheme.error,
+                    modifier = Modifier.size(16.dp)
+                )
+            }
+            Text(
+                text = revision.description,
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.primary,
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis,
+                modifier = Modifier
+                    .weight(1f)
+                    .clip(RoundedCornerShape(4.dp))
+                    .clickable(onClick = onDescriptionClick)
+                    .padding(4.dp)
+            )
+        }
 
         VerticalDivider(
             modifier = Modifier
@@ -900,8 +960,13 @@ private fun RevisionRow(
 @Composable
 private fun DescriptionDialog(
     description: String,
-    onDismiss: () -> Unit
+    isEdited: Boolean = false,
+    onDismiss: () -> Unit,
+    onSave: ((String) -> Unit)? = null
 ) {
+    var editedDescription by remember { mutableStateOf(description) }
+    var isEditMode by remember { mutableStateOf(false) }
+
     Dialog(onDismissRequest = onDismiss) {
         Card(
             modifier = Modifier
@@ -922,43 +987,140 @@ private fun DescriptionDialog(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        text = "Descrição da Revisão",
+                        text = "Descrição",
                         style = MaterialTheme.typography.headlineSmall,
                         fontWeight = FontWeight.Bold
                     )
 
-                    IconButton(onClick = onDismiss) {
-                        Icon(
-                            imageVector = Icons.Default.Close,
-                            contentDescription = "Fechar",
-                            tint = MaterialTheme.colorScheme.onSurface
-                        )
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        if (onSave != null && !isEditMode) {
+                            IconButton(onClick = { isEditMode = true }) {
+                                Icon(
+                                    imageVector = Icons.Default.Edit,
+                                    contentDescription = "Editar",
+                                    tint = MaterialTheme.colorScheme.primary
+                                )
+                            }
+                        }
+
+                        IconButton(onClick = onDismiss) {
+                            Icon(
+                                imageVector = Icons.Default.Close,
+                                contentDescription = "Fechar",
+                                tint = MaterialTheme.colorScheme.onSurface
+                            )
+                        }
                     }
                 }
 
                 HorizontalDivider()
 
-                // Conteúdo da descrição
-                LazyColumn(
-                    modifier = Modifier.weight(1f),
-                    verticalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    item {
-                        Text(
-                            text = description,
-                            style = MaterialTheme.typography.bodyLarge,
-                            color = MaterialTheme.colorScheme.onSurface
-                        )
+                // Badge de aviso se foi editado
+                if (isEdited) {
+                    Card(
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = CardDefaults.cardColors(
+                            containerColor = MaterialTheme.colorScheme.errorContainer
+                        ),
+                        shape = RoundedCornerShape(8.dp)
+                    ) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(12.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Warning,
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.error,
+                                modifier = Modifier.size(20.dp)
+                            )
+                            Text(
+                                text = "Esta descrição foi editada",
+                                style = MaterialTheme.typography.bodySmall,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.error
+                            )
+                        }
                     }
                 }
 
-                // Botão Fechar
-                Button(
-                    onClick = onDismiss,
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(8.dp)
-                ) {
-                    Text("Fechar")
+                // Conteúdo da descrição
+                if (isEditMode) {
+                    OutlinedTextField(
+                        value = editedDescription,
+                        onValueChange = { editedDescription = it },
+                        label = { Text("Editar Descrição") },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .weight(1f),
+                        minLines = 8,
+                        maxLines = 20,
+                        shape = RoundedCornerShape(8.dp)
+                    )
+                } else {
+                    LazyColumn(
+                        modifier = Modifier.weight(1f),
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        item {
+                            Text(
+                                text = description,
+                                style = MaterialTheme.typography.bodyLarge,
+                                color = MaterialTheme.colorScheme.onSurface
+                            )
+                        }
+                    }
+                }
+
+                // Botões
+                if (isEditMode) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        OutlinedButton(
+                            onClick = {
+                                editedDescription = description
+                                isEditMode = false
+                            },
+                            modifier = Modifier.weight(1f),
+                            shape = RoundedCornerShape(8.dp)
+                        ) {
+                            Text("Cancelar")
+                        }
+
+                        Button(
+                            onClick = {
+                                onSave?.invoke(editedDescription)
+                                isEditMode = false
+                            },
+                            modifier = Modifier.weight(1f),
+                            shape = RoundedCornerShape(8.dp),
+                            enabled = editedDescription.isNotBlank() && editedDescription != description
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Save,
+                                contentDescription = null,
+                                modifier = Modifier.size(20.dp)
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text("Salvar")
+                        }
+                    }
+                } else {
+                    Button(
+                        onClick = onDismiss,
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(8.dp)
+                    ) {
+                        Text("Fechar")
+                    }
                 }
             }
         }

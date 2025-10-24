@@ -214,4 +214,54 @@ class TaskDetailViewModel(
             }
         }
     }
+
+    fun updateRevisionDescription(revisionNumber: Int, newDescription: String) {
+        viewModelScope.launch {
+            try {
+                val task = _uiState.value.task ?: return@launch
+
+                val updatedRevisions = task.revisions.map { revision ->
+                    if (revision.revisionNumber == revisionNumber) {
+                        revision.copy(description = newDescription, isEdited = true)
+                    } else {
+                        revision
+                    }
+                }
+
+                val updatedTask = task.copy(revisions = updatedRevisions)
+
+                taskRepository.updateTask(updatedTask)
+                loadTask()
+            } catch (e: Exception) {
+                _uiState.value = _uiState.value.copy(
+                    error = "Erro ao atualizar revisão: ${e.message}"
+                )
+            }
+        }
+    }
+
+    fun updatePartialDeliveryDescription(deliveryNumber: Int, newDescription: String) {
+        viewModelScope.launch {
+            try {
+                val task = _uiState.value.task ?: return@launch
+
+                val updatedDeliveries = task.partialDeliveries.map { delivery ->
+                    if (delivery.deliveryNumber == deliveryNumber) {
+                        delivery.copy(description = newDescription, isEdited = true)
+                    } else {
+                        delivery
+                    }
+                }
+
+                val updatedTask = task.copy(partialDeliveries = updatedDeliveries)
+
+                taskRepository.updateTask(updatedTask)
+                loadTask()
+            } catch (e: Exception) {
+                _uiState.value = _uiState.value.copy(
+                    error = "Erro ao atualizar entrega parcial: ${e.message}"
+                )
+            }
+        }
+    }
 }
