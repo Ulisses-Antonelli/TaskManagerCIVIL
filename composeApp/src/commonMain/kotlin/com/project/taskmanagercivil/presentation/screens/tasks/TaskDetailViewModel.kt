@@ -108,25 +108,16 @@ class TaskDetailViewModel(
         }
     }
 
-    fun requestRevision(description: String) {
+    fun requestRevision(checklistItems: List<com.project.taskmanagercivil.domain.models.ChecklistItem>) {
         viewModelScope.launch {
             try {
                 val task = _uiState.value.task ?: return@launch
 
-                val currentRevisionNumber = task.revisions.maxOfOrNull { it.revisionNumber } ?: -1
-                val newRevisionNumber = currentRevisionNumber + 1
-
-                val newRevision = com.project.taskmanagercivil.domain.models.TaskRevision(
-                    revisionNumber = newRevisionNumber,
-                    author = task.assignedTo.name,
-                    description = description,
-                    startDate = task.startDate,
-                    deliveryDate = Clock.System.todayIn(TimeZone.currentSystemDefault())
-                )
-
+                // Apenas atualiza o checklist e muda o status para IN_REVIEW
+                // NÃO cria revisão automaticamente no histórico
                 val updatedTask = task.copy(
                     status = com.project.taskmanagercivil.domain.models.TaskStatus.IN_REVIEW,
-                    revisions = task.revisions + newRevision
+                    checklistItems = checklistItems
                 )
 
                 taskRepository.updateTask(updatedTask)

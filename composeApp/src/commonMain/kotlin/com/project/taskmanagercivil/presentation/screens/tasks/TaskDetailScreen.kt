@@ -148,14 +148,6 @@ fun TaskDetailScreen(
                     onRequestRevisionClick = {
                         showRevisionDialog = true
                     },
-                    onConfirmDelivery = { description ->
-                        viewModel.deliverTask(description)
-                        showDeliveryDialog = false
-                    },
-                    onConfirmRevision = { description ->
-                        viewModel.requestRevision(description)
-                        showRevisionDialog = false
-                    },
                     modifier = Modifier
                         .fillMaxSize()
                         .padding(paddingValues)
@@ -232,8 +224,8 @@ fun TaskDetailScreen(
         if (showRevisionDialog) {
             RevisionReasonDialog(
                 onDismiss = { showRevisionDialog = false },
-                onConfirm = { description ->
-                    viewModel.requestRevision(description)
+                onConfirm = { checklistItems ->
+                    viewModel.requestRevision(checklistItems)
                     showRevisionDialog = false
                 }
             )
@@ -276,8 +268,6 @@ private fun TaskDetailContent(
     onPartialDeliveryClick: () -> Unit,
     onDeliverTaskClick: () -> Unit,
     onRequestRevisionClick: () -> Unit,
-    onConfirmDelivery: (String) -> Unit,
-    onConfirmRevision: (String) -> Unit,
     modifier: Modifier = Modifier
 ) {
     val today = Clock.System.todayIn(TimeZone.currentSystemDefault())

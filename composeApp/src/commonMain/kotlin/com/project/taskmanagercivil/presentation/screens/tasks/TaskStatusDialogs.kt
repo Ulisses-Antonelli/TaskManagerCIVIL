@@ -1,11 +1,17 @@
 package com.project.taskmanagercivil.presentation.screens.tasks
 
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.*
+import androidx.compose.runtime.snapshots.SnapshotStateList
+import androidx.compose.runtime.toMutableStateList
+import com.project.taskmanagercivil.domain.models.ChecklistItem
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -161,22 +167,23 @@ fun DeliveryConfirmationDialog(
 }
 
 /**
- * Dialog para solicitar motivo de revisão
+ * Dialog para solicitar revisão com checklist
  * Exibido quando tarefa CONCLUÍDA é marcada como EM REVISÃO
  */
 @Composable
 fun RevisionReasonDialog(
     onDismiss: () -> Unit,
-    onConfirm: (description: String) -> Unit
+    onConfirm: (checklistItems: List<ChecklistItem>) -> Unit
 ) {
-    var description by remember { mutableStateOf("") }
+    val checklistItems = remember { mutableStateListOf<ChecklistItem>() }
+    var newChecklistItem by remember { mutableStateOf("") }
 
     Dialog(onDismissRequest = onDismiss) {
         Card(
             modifier = Modifier
                 .fillMaxWidth(0.9f)
-                .heightIn(min = 300.dp, max = 500.dp),
-            shape = RoundedCornerShape(8.dp)
+                .fillMaxHeight(0.8f),
+            shape = RoundedCornerShape(16.dp)
         ) {
             Column(
                 modifier = Modifier
@@ -190,7 +197,7 @@ fun RevisionReasonDialog(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        text = "Motivo da Revisão",
+                        text = "Solicitar Revisão",
                         style = MaterialTheme.typography.headlineSmall,
                         fontWeight = FontWeight.Bold
                     )
@@ -207,22 +214,94 @@ fun RevisionReasonDialog(
 
                 // Conteúdo
                 Text(
-                    text = "Descreva as alterações necessárias:",
+                    text = "Adicione os itens que precisam ser revisados:",
                     style = MaterialTheme.typography.bodyLarge,
-                    modifier = Modifier.padding(bottom = 8.dp)
+                    modifier = Modifier.padding(bottom = 12.dp)
                 )
 
-                OutlinedTextField(
-                    value = description,
-                    onValueChange = { description = it },
-                    label = { Text("Descrição da Revisão *") },
-                    placeholder = { Text("Ex: Ajustar cálculo de viga V3 conforme norma ABNT NBR 6118") },
+                // Input para adicionar novo item
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    OutlinedTextField(
+                        value = newChecklistItem,
+                        onValueChange = { newChecklistItem = it },
+                        placeholder = { Text("Ex: Ajustar cálculo de viga V3") },
+                        modifier = Modifier.weight(1f),
+                        singleLine = true,
+                        shape = RoundedCornerShape(8.dp)
+                    )
+                    IconButton(
+                        onClick = {
+                            if (newChecklistItem.isNotBlank()) {
+                                checklistItems.add(ChecklistItem(text = newChecklistItem, isCompleted = false))
+                                newChecklistItem = ""
+                            }
+                        }
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Add,
+                            contentDescription = "Adicionar item"
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                // Lista de itens do checklist
+                LazyColumn(
                     modifier = Modifier
-                        .fillMaxWidth()
-                        .weight(1f),
-                    minLines = 4,
-                    maxLines = 8
-                )
+                        .weight(1f)
+                        .fillMaxWidth(),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    if (checklistItems.isEmpty()) {
+                        item {
+                            Text(
+                                text = "Nenhum item adicionado ainda",
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                modifier = Modifier.padding(16.dp)
+                            )
+                        }
+                    } else {
+                        items(checklistItems.size) { index ->
+                            val item = checklistItems[index]
+                            Card(
+                                modifier = Modifier.fillMaxWidth(),
+                                colors = CardDefaults.cardColors(
+                                    containerColor = MaterialTheme.colorScheme.surfaceVariant
+                                ),
+                                shape = RoundedCornerShape(8.dp)
+                            ) {
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(12.dp),
+                                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Text(
+                                        text = item.text,
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        modifier = Modifier.weight(1f)
+                                    )
+                                    IconButton(
+                                        onClick = { checklistItems.removeAt(index) }
+                                    ) {
+                                        Icon(
+                                            imageVector = Icons.Default.Delete,
+                                            contentDescription = "Remover",
+                                            tint = MaterialTheme.colorScheme.error
+                                        )
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
 
                 Spacer(modifier = Modifier.height(16.dp))
 
@@ -241,13 +320,13 @@ fun RevisionReasonDialog(
 
                     Button(
                         onClick = {
-                            if (description.isNotBlank()) {
-                                onConfirm(description.trim())
+                            if (checklistItems.isNotEmpty()) {
+                                onConfirm(checklistItems.toList())
                             }
                         },
                         modifier = Modifier.weight(1f),
                         shape = RoundedCornerShape(8.dp),
-                        enabled = description.isNotBlank()
+                        enabled = checklistItems.isNotEmpty()
                     ) {
                         Text("Iniciar Revisão")
                     }
