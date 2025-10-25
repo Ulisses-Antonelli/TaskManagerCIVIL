@@ -47,24 +47,39 @@ fun ProjectsScreenContent(
                 topBar = {
                     Column {
                         TopAppBar(
-                            title = { Text("Obras e Projetos") },
-                            actions = {
-                                // Botão de adicionar
-                                IconButton(onClick = {
+                            title = { Text("Obras e Projetos") }
+                        )
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(end = 16.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            DynamicBreadcrumbs(
+                                navController = navController,
+                                currentRoot = NavigationState.currentRoot,
+                                modifier = Modifier.weight(1f)
+                            )
+
+                            // Botão de adicionar (alinhado com breadcrumbs)
+                            IconButton(
+                                onClick = {
                                     projectToEdit = null
                                     showProjectFormModal = true
-                                }) {
-                                    Icon(
-                                        imageVector = Icons.Default.Add,
-                                        contentDescription = "Adicionar Projeto"
-                                    )
-                                }
+                                },
+                                modifier = Modifier.size(40.dp),
+                                colors = IconButtonDefaults.iconButtonColors(
+                                    containerColor = MaterialTheme.colorScheme.surfaceVariant,
+                                    contentColor = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.Add,
+                                    contentDescription = "Criar nova obra",
+                                    modifier = Modifier.size(24.dp)
+                                )
                             }
-                        )
-                        DynamicBreadcrumbs(
-                            navController = navController,
-                            currentRoot = NavigationState.currentRoot
-                        )
+                        }
                     }
                 }
             ) { paddingValues ->

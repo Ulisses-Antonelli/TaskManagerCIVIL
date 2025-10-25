@@ -489,7 +489,7 @@ fun TaskFormModal(
                     }
                 }
 
-                Spacer(modifier = Modifier.height(16.dp))
+                HorizontalDivider(modifier = Modifier.padding(vertical = 16.dp))
 
                 // Botões
                 Row(

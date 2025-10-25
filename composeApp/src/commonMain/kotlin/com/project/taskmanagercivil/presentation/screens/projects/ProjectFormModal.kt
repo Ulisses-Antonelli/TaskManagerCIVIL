@@ -270,11 +270,12 @@ fun ProjectFormModal(
                 // Botões de ação
                 Row(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(12.dp, Alignment.End)
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
                     OutlinedButton(
                         onClick = onDismiss,
-                        modifier = Modifier.weight(1f)
+                        modifier = Modifier.weight(1f),
+                        shape = RoundedCornerShape(8.dp)
                     ) {
                         Text("Cancelar")
                     }
@@ -296,14 +297,9 @@ fun ProjectFormModal(
                             }
                         },
                         modifier = Modifier.weight(1f),
+                        shape = RoundedCornerShape(8.dp),
                         enabled = isValid
                     ) {
-                        Icon(
-                            imageVector = Icons.Default.Check,
-                            contentDescription = null,
-                            modifier = Modifier.size(18.dp)
-                        )
-                        Spacer(modifier = Modifier.width(8.dp))
                         Text(if (project == null) "Criar Obra" else "Salvar Alterações")
                     }
                 }
