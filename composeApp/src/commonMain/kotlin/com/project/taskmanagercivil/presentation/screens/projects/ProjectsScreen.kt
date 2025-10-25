@@ -29,6 +29,10 @@ fun ProjectsScreenContent(
 ) {
     val uiState by viewModel.uiState.collectAsState()
 
+    // Estado do modal
+    var showProjectFormModal by remember { mutableStateOf(false) }
+    var projectToEdit by remember { mutableStateOf<com.project.taskmanagercivil.domain.models.Project?>(null) }
+
     Row(modifier = Modifier.fillMaxSize()) {
         NavigationSidebar(
             currentRoute = "projects/NONE",
@@ -45,8 +49,11 @@ fun ProjectsScreenContent(
                         TopAppBar(
                             title = { Text("Obras e Projetos") },
                             actions = {
-                                // Botão de adicionar (futuro)
-                                IconButton(onClick = onCreateProject) {
+                                // Botão de adicionar
+                                IconButton(onClick = {
+                                    projectToEdit = null
+                                    showProjectFormModal = true
+                                }) {
                                     Icon(
                                         imageVector = Icons.Default.Add,
                                         contentDescription = "Adicionar Projeto"
@@ -148,6 +155,22 @@ fun ProjectsScreenContent(
                     }
                 }
             }
+        }
+
+        // Modal de formulário de projeto
+        if (showProjectFormModal) {
+            ProjectFormModal(
+                project = projectToEdit,
+                onDismiss = {
+                    showProjectFormModal = false
+                    projectToEdit = null
+                },
+                onSave = { project ->
+                    viewModel.saveProject(project)
+                    showProjectFormModal = false
+                    projectToEdit = null
+                }
+            )
         }
     }
 }

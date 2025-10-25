@@ -17,7 +17,6 @@ import com.project.taskmanagercivil.presentation.screens.employees.EmployeeDetai
 import com.project.taskmanagercivil.presentation.screens.employees.EmployeeFormScreen
 import com.project.taskmanagercivil.presentation.screens.employees.EmployeesScreenContent
 import com.project.taskmanagercivil.presentation.screens.projects.ProjectDetailScreen
-import com.project.taskmanagercivil.presentation.screens.projects.ProjectFormScreen
 import com.project.taskmanagercivil.presentation.screens.projects.ProjectsScreenContent
 import com.project.taskmanagercivil.presentation.screens.tasks.TasksScreenContent
 import com.project.taskmanagercivil.presentation.screens.teams.TeamDetailScreen
@@ -294,38 +293,6 @@ fun AppNavigation(
                 },
                 onTeamClick = { teamId ->
                     navController.navigate(Screen.TeamDetail.createRoute(teamId))
-                }
-            )
-        }
-
-        // Tela de Criar Projeto
-        composable(Screen.ProjectCreate.route) {
-            val viewModel = ViewModelFactory.createProjectFormViewModel(null)
-            ProjectFormScreen(
-                viewModel = viewModel,
-                onBack = { navController.popBackStack() },
-                onSaveSuccess = {
-                    navController.popBackStack(Screen.Projects.route, inclusive = false)
-                }
-            )
-        }
-
-        // Tela de Editar Projeto
-        composable(
-            route = Screen.ProjectEdit.route,
-            arguments = listOf(
-                navArgument("projectId") { type = NavType.StringType }
-            )
-        ) { backStackEntry ->
-            val currentRoute = navController.currentBackStackEntry?.destination?.route ?: ""
-            val projectId = currentRoute.removePrefix("project_edit/").takeIf { it.isNotBlank() } ?: "1"
-
-            val viewModel = ViewModelFactory.createProjectFormViewModel(projectId)
-            ProjectFormScreen(
-                viewModel = viewModel,
-                onBack = { navController.popBackStack() },
-                onSaveSuccess = {
-                    navController.popBackStack()
                 }
             )
         }

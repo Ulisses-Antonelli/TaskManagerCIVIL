@@ -189,4 +189,20 @@ class ProjectsViewModel(
     fun setProjectStatusFilter(status: TaskStatus) {
         onProjectStatusFilterChange(status)
     }
+
+    /**
+     * Salva um novo projeto ou atualiza um existente
+     */
+    fun saveProject(project: Project) {
+        viewModelScope.launch {
+            try {
+                projectRepository.createProject(project)
+                loadData()
+            } catch (e: Exception) {
+                _uiState.update {
+                    it.copy(error = "Falha ao salvar projeto: ${e.message}")
+                }
+            }
+        }
+    }
 }
