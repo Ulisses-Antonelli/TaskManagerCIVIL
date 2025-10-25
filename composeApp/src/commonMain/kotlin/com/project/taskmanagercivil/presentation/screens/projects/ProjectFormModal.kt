@@ -14,10 +14,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import com.project.taskmanagercivil.domain.models.Project
-import kotlinx.datetime.Clock
-import kotlinx.datetime.LocalDate
-import kotlinx.datetime.TimeZone
-import kotlinx.datetime.todayIn
+import kotlinx.datetime.*
 import kotlin.random.Random
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -41,7 +38,11 @@ fun ProjectFormModal(
     // Estados para datas
     val today = Clock.System.todayIn(TimeZone.currentSystemDefault())
     var startDate by remember { mutableStateOf(project?.startDate ?: today) }
-    var endDate by remember { mutableStateOf(project?.endDate ?: today.let { LocalDate(it.year, it.monthNumber, it.dayOfMonth + 30) }) }
+    var endDate by remember {
+        mutableStateOf(
+            project?.endDate ?: today.plus(DatePeriod(days = 30))
+        )
+    }
 
     // Validação
     val isValid = projectName.isNotBlank() &&

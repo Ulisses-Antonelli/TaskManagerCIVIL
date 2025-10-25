@@ -6,6 +6,7 @@ import com.project.taskmanagercivil.domain.models.Task
 import com.project.taskmanagercivil.domain.models.TaskPriority
 import com.project.taskmanagercivil.domain.models.TaskStatus
 import com.project.taskmanagercivil.domain.models.User
+import com.project.taskmanagercivil.domain.repository.ProjectRepository
 import com.project.taskmanagercivil.domain.repository.TaskRepository
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.SupervisorJob
@@ -36,7 +37,8 @@ data class TasksUiState(
 
 
 class TasksViewModel(
-    private val taskRepository: TaskRepository
+    private val taskRepository: TaskRepository,
+    private val projectRepository: ProjectRepository
 ) {
     private val viewModelScope = CoroutineScope(SupervisorJob())
     private val mockData = MockData()
@@ -49,7 +51,7 @@ class TasksViewModel(
     }
 
     fun getProjects(): List<Project> {
-        return mockData.projects
+        return projectRepository.getAllProjects()
     }
 
     fun getUsers(): List<User> {

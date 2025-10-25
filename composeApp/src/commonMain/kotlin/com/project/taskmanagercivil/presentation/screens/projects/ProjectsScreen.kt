@@ -29,10 +29,6 @@ fun ProjectsScreenContent(
 ) {
     val uiState by viewModel.uiState.collectAsState()
 
-    // Estado do modal
-    var showProjectFormModal by remember { mutableStateOf(false) }
-    var projectToEdit by remember { mutableStateOf<com.project.taskmanagercivil.domain.models.Project?>(null) }
-
     Row(modifier = Modifier.fillMaxSize()) {
         NavigationSidebar(
             currentRoute = "projects/NONE",
@@ -43,6 +39,10 @@ fun ProjectsScreenContent(
         HorizontalDivider(modifier = Modifier.fillMaxHeight().width(1.dp))
 
         Column(modifier = Modifier.weight(1f)) {
+            // Estado do modal (antes do Scaffold para ser acessível no TopAppBar)
+            var showProjectFormModal by remember { mutableStateOf(false) }
+            var projectToEdit by remember { mutableStateOf<com.project.taskmanagercivil.domain.models.Project?>(null) }
+
             Scaffold(
                 topBar = {
                     Column {
@@ -153,24 +153,24 @@ fun ProjectsScreenContent(
                             )
                         }
                     }
+
+                    // Modal de formulário de projeto
+                    if (showProjectFormModal) {
+                        ProjectFormModal(
+                            project = projectToEdit,
+                            onDismiss = {
+                                showProjectFormModal = false
+                                projectToEdit = null
+                            },
+                            onSave = { project ->
+                                viewModel.saveProject(project)
+                                showProjectFormModal = false
+                                projectToEdit = null
+                            }
+                        )
+                    }
                 }
             }
-        }
-
-        // Modal de formulário de projeto
-        if (showProjectFormModal) {
-            ProjectFormModal(
-                project = projectToEdit,
-                onDismiss = {
-                    showProjectFormModal = false
-                    projectToEdit = null
-                },
-                onSave = { project ->
-                    viewModel.saveProject(project)
-                    showProjectFormModal = false
-                    projectToEdit = null
-                }
-            )
         }
     }
 }
