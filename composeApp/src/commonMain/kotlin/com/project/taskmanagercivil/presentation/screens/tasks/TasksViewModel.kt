@@ -27,6 +27,7 @@ enum class ViewMode {
 data class TasksUiState(
     val allTasks: List<Task> = emptyList(),
     val filteredTasks: List<Task> = emptyList(),
+    val allProjects: List<Project> = emptyList(),
     val selectedStatus: TaskStatus? = null,
     val selectedPriority: TaskPriority? = null,
     val searchQuery: String = "",
@@ -48,10 +49,23 @@ class TasksViewModel(
 
     init {
         loadTasks()
+        loadProjects()
     }
 
     fun getProjects(): List<Project> {
-        return projectRepository.getAllProjects()
+        return _uiState.value.allProjects
+    }
+
+    private fun loadProjects() {
+        viewModelScope.launch {
+            try {
+                val projects = projectRepository.getAllProjects()
+                _uiState.update { it.copy(allProjects = projects) }
+            } catch (e: Exception) {
+                // Silently fail, projects loading is not critical
+                println("Error loading projects: ${e.message}")
+            }
+        }
     }
 
     fun getUsers(): List<User> {
@@ -72,8 +86,9 @@ class TasksViewModel(
                     // Update existing task
                     taskRepository.updateTask(task)
                 }
-                // Reload tasks to refresh the UI
+                // Reload tasks and projects to refresh the UI
                 loadTasks()
+                loadProjects()
             } catch (e: Exception) {
                 _uiState.update { it.copy(error = "Falha ao salvar tarefa: ${e.message}") }
             }
