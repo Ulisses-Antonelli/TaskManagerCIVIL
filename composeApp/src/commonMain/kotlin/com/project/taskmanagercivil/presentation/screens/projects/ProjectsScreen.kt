@@ -12,12 +12,16 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import androidx.navigation.NavController
+import com.project.taskmanagercivil.presentation.components.DynamicBreadcrumbs
 import com.project.taskmanagercivil.presentation.components.NavigationSidebar
 import com.project.taskmanagercivil.presentation.components.ProjectCard
+import com.project.taskmanagercivil.presentation.navigation.NavigationState
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ProjectsScreenContent(
+    navController: NavController,
     viewModel: ProjectsViewModel,
     onProjectClick: (String) -> Unit = {},
     onCreateProject: () -> Unit = {},
@@ -37,18 +41,24 @@ fun ProjectsScreenContent(
         Column(modifier = Modifier.weight(1f)) {
             Scaffold(
                 topBar = {
-                    TopAppBar(
-                        title = { Text("Obras e Projetos") },
-                        actions = {
-                            // Botão de adicionar (futuro)
-                            IconButton(onClick = onCreateProject) {
-                                Icon(
-                                    imageVector = Icons.Default.Add,
-                                    contentDescription = "Adicionar Projeto"
-                                )
+                    Column {
+                        TopAppBar(
+                            title = { Text("Obras e Projetos") },
+                            actions = {
+                                // Botão de adicionar (futuro)
+                                IconButton(onClick = onCreateProject) {
+                                    Icon(
+                                        imageVector = Icons.Default.Add,
+                                        contentDescription = "Adicionar Projeto"
+                                    )
+                                }
                             }
-                        }
-                    )
+                        )
+                        DynamicBreadcrumbs(
+                            navController = navController,
+                            currentRoot = NavigationState.currentRoot
+                        )
+                    }
                 }
             ) { paddingValues ->
                 Column(

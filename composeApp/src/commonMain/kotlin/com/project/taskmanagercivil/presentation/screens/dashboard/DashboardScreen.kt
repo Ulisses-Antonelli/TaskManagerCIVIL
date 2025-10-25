@@ -14,15 +14,19 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.navigation.NavController
 import com.project.taskmanagercivil.domain.models.TaskStatus
+import com.project.taskmanagercivil.presentation.components.DynamicBreadcrumbs
 import com.project.taskmanagercivil.presentation.components.NavigationSidebar
 import com.project.taskmanagercivil.presentation.components.dashboard.*
+import com.project.taskmanagercivil.presentation.navigation.NavigationState
 
 /**
  * Tela de Dashboard com visão geral do sistema
  */
 @Composable
 fun DashboardScreenContent(
+    navController: NavController,
     viewModel: DashboardViewModel,
     onNavigate: (String) -> Unit = {},
     onProjectClick: (String) -> Unit = {},
@@ -46,9 +50,15 @@ fun DashboardScreenContent(
         Column(modifier = Modifier.weight(1f)) {
             Scaffold(
                 topBar = {
-                    DashboardTopBar(
-                        onRefresh = { viewModel.refresh() }
-                    )
+                    Column {
+                        DashboardTopBar(
+                            onRefresh = { viewModel.refresh() }
+                        )
+                        DynamicBreadcrumbs(
+                            navController = navController,
+                            currentRoot = NavigationState.currentRoot
+                        )
+                    }
                 }
             ) { paddingValues ->
                 when {

@@ -21,12 +21,15 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
+import androidx.navigation.NavController
 import com.project.taskmanagercivil.domain.models.ChecklistItem
 import com.project.taskmanagercivil.domain.models.PartialDelivery
 import com.project.taskmanagercivil.domain.models.Task
 import com.project.taskmanagercivil.domain.models.TaskPriority
 import com.project.taskmanagercivil.domain.models.TaskRevision
 import com.project.taskmanagercivil.domain.models.TaskStatus
+import com.project.taskmanagercivil.presentation.components.DynamicBreadcrumbs
+import com.project.taskmanagercivil.presentation.navigation.NavigationState
 import com.project.taskmanagercivil.presentation.theme.extendedColors
 import kotlinx.datetime.Clock
 import kotlinx.datetime.LocalDate
@@ -44,6 +47,7 @@ private data class PartialDeliveryData(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TaskDetailScreen(
+    navController: NavController,
     viewModel: TaskDetailViewModel,
     onBack: () -> Unit,
     onEdit: (String) -> Unit = {},
@@ -66,25 +70,23 @@ fun TaskDetailScreen(
 
     Scaffold(
         topBar = {
-            TopAppBar(
-                title = { Text("Detalhes da Tarefa") },
-                navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Voltar"
-                        )
+            Column {
+                TopAppBar(
+                    title = { Text("DETALHES") },
+                    actions = {
+                        IconButton(onClick = { viewModel.refresh() }) {
+                            Icon(
+                                imageVector = Icons.Default.Refresh,
+                                contentDescription = "Atualizar"
+                            )
+                        }
                     }
-                },
-                actions = {
-                    IconButton(onClick = { viewModel.refresh() }) {
-                        Icon(
-                            imageVector = Icons.Default.Refresh,
-                            contentDescription = "Atualizar"
-                        )
-                    }
-                }
-            )
+                )
+                DynamicBreadcrumbs(
+                    navController = navController,
+                    currentRoot = NavigationState.currentRoot
+                )
+            }
         }
     ) { paddingValues ->
         when {

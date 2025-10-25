@@ -15,10 +15,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.navigation.NavController
 import com.project.taskmanagercivil.domain.models.TaskPriority
 import com.project.taskmanagercivil.domain.models.TaskStatus
+import com.project.taskmanagercivil.presentation.components.DynamicBreadcrumbs
 import com.project.taskmanagercivil.presentation.components.EmployeeTasksTable
 import com.project.taskmanagercivil.presentation.components.TaskCard
+import com.project.taskmanagercivil.presentation.navigation.NavigationState
 import com.project.taskmanagercivil.utils.calculateDerivedStatus
 import com.project.taskmanagercivil.utils.calculateProgress
 import com.project.taskmanagercivil.utils.formatCurrency
@@ -29,6 +32,7 @@ import kotlinx.datetime.todayIn
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ProjectDetailScreen(
+    navController: NavController,
     viewModel: ProjectDetailViewModel,
     onBack: () -> Unit,
     onEdit: (String) -> Unit = {},
@@ -42,46 +46,44 @@ fun ProjectDetailScreen(
 
     Scaffold(
         topBar = {
-            TopAppBar(
-                title = { Text("Detalhes do Projeto") },
-                navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Voltar"
-                        )
-                    }
-                },
-                actions = {
-                    
-                    if (uiState.project != null) {
-                        IconButton(onClick = { onEdit(uiState.project!!.id) }) {
+            Column {
+                TopAppBar(
+                    title = { Text("DETALHES") },
+                    actions = {
+
+                        if (uiState.project != null) {
+                            IconButton(onClick = { onEdit(uiState.project!!.id) }) {
+                                Icon(
+                                    imageVector = Icons.Default.Edit,
+                                    contentDescription = "Editar"
+                                )
+                            }
+                        }
+
+
+                        if (uiState.project != null) {
+                            IconButton(onClick = { showDeleteDialog = true }) {
+                                Icon(
+                                    imageVector = Icons.Default.Delete,
+                                    contentDescription = "Deletar",
+                                    tint = MaterialTheme.colorScheme.error
+                                )
+                            }
+                        }
+
+                        IconButton(onClick = { viewModel.refresh() }) {
                             Icon(
-                                imageVector = Icons.Default.Edit,
-                                contentDescription = "Editar"
+                                imageVector = Icons.Default.Refresh,
+                                contentDescription = "Atualizar"
                             )
                         }
                     }
-
-                    
-                    if (uiState.project != null) {
-                        IconButton(onClick = { showDeleteDialog = true }) {
-                            Icon(
-                                imageVector = Icons.Default.Delete,
-                                contentDescription = "Deletar",
-                                tint = MaterialTheme.colorScheme.error
-                            )
-                        }
-                    }
-
-                    IconButton(onClick = { viewModel.refresh() }) {
-                        Icon(
-                            imageVector = Icons.Default.Refresh,
-                            contentDescription = "Atualizar"
-                        )
-                    }
-                }
-            )
+                )
+                DynamicBreadcrumbs(
+                    navController = navController,
+                    currentRoot = NavigationState.currentRoot
+                )
+            }
         }
     ) { paddingValues ->
         when {

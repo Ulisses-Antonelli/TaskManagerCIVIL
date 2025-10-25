@@ -17,14 +17,18 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import androidx.navigation.NavController
 
 import com.project.taskmanagercivil.domain.models.TaskPriority
 import com.project.taskmanagercivil.domain.models.TaskStatus
+import com.project.taskmanagercivil.presentation.components.DynamicBreadcrumbs
 import com.project.taskmanagercivil.presentation.components.TaskCard
+import com.project.taskmanagercivil.presentation.navigation.NavigationState
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TasksScreenContent(
+    navController: NavController,
     viewModel: TasksViewModel,
     onTaskClick: (com.project.taskmanagercivil.domain.models.Task) -> Unit = {},
     onNavigate: (String) -> Unit = {}
@@ -42,24 +46,30 @@ fun TasksScreenContent(
         ) {
             Scaffold(
                 topBar = {
-                    TopAppBar(
-                        title = {
-                            Text("TaskManager Civil")
-                        },
-                        actions = {
-                            IconButton(
-                                onClick = {
-                                    val newMode = if (uiState.viewMode == ViewMode.LIST) ViewMode.KANBAN else ViewMode.LIST
-                                    viewModel.onViewModeChange(newMode)
+                    Column {
+                        TopAppBar(
+                            title = {
+                                Text("TaskManager Civil")
+                            },
+                            actions = {
+                                IconButton(
+                                    onClick = {
+                                        val newMode = if (uiState.viewMode == ViewMode.LIST) ViewMode.KANBAN else ViewMode.LIST
+                                        viewModel.onViewModeChange(newMode)
+                                    }
+                                ) {
+                                    Icon(
+                                        imageVector = if (uiState.viewMode == ViewMode.LIST) Icons.Default.ViewModule else Icons.AutoMirrored.Filled.ViewList,
+                                        contentDescription = if (uiState.viewMode == ViewMode.LIST) "Visualização Kanban" else "Visualização em Lista"
+                                    )
                                 }
-                            ) {
-                                Icon(
-                                    imageVector = if (uiState.viewMode == ViewMode.LIST) Icons.Default.ViewModule else Icons.AutoMirrored.Filled.ViewList,
-                                    contentDescription = if (uiState.viewMode == ViewMode.LIST) "Visualização Kanban" else "Visualização em Lista"
-                                )
                             }
-                        }
-                    )
+                        )
+                        DynamicBreadcrumbs(
+                            navController = navController,
+                            currentRoot = NavigationState.currentRoot
+                        )
+                    }
                 }
             ) { paddingValues ->
                 Column(
