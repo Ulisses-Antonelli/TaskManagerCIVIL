@@ -3,7 +3,9 @@ package com.project.taskmanagercivil.presentation.screens.employees
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.project.taskmanagercivil.domain.models.Employee
+import com.project.taskmanagercivil.domain.models.Project
 import com.project.taskmanagercivil.domain.repository.EmployeeRepository
+import com.project.taskmanagercivil.domain.repository.ProjectRepository
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 
@@ -11,6 +13,7 @@ import kotlinx.coroutines.launch
 data class EmployeesUiState(
     val employees: List<Employee> = emptyList(),
     val filteredEmployees: List<Employee> = emptyList(),
+    val allProjects: List<Project> = emptyList(),
     val searchQuery: String = "",
     val filterStatus: EmployeeFilterStatus = EmployeeFilterStatus.ALL,
     val sortOrder: EmployeeSortOrder = EmployeeSortOrder.NAME_ASC,
@@ -35,7 +38,8 @@ enum class EmployeeSortOrder(val displayName: String) {
 
 
 class EmployeesViewModel(
-    private val repository: EmployeeRepository
+    private val repository: EmployeeRepository,
+    private val projectRepository: ProjectRepository
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(EmployeesUiState())
@@ -43,6 +47,7 @@ class EmployeesViewModel(
 
     init {
         loadEmployees()
+        loadProjects()
     }
 
     private fun loadEmployees() {
@@ -142,6 +147,35 @@ class EmployeesViewModel(
         }
 
         return result
+    }
+
+    private fun loadProjects() {
+        viewModelScope.launch {
+            try {
+                val projects = projectRepository.getAllProjects()
+                _uiState.update { it.copy(allProjects = projects) }
+            } catch (e: Exception) {
+                println("Error loading projects: ${e.message}")
+            }
+        }
+    }
+
+    fun saveEmployee(employee: Employee) {
+        viewModelScope.launch {
+            try {
+                if (employee.id.toIntOrNull() != null && employee.id.toInt() < 1000) {
+                    // É um ID temporário, criar novo
+                    repository.addEmployee(employee)
+                } else {
+                    // Atualizar existente
+                    repository.updateEmployee(employee)
+                }
+                loadEmployees()
+                loadProjects()
+            } catch (e: Exception) {
+                println("Error saving employee: ${e.message}")
+            }
+        }
     }
 
     fun deleteEmployee(employeeId: String) {

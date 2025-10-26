@@ -44,7 +44,7 @@ object ViewModelFactory {
     }
 
     fun createTasksViewModel(): TasksViewModel {
-        return TasksViewModel(taskRepository, projectRepository)
+        return TasksViewModel(taskRepository, projectRepository, employeeRepository)
     }
 
     fun createTaskDetailViewModel(taskId: String): TaskDetailViewModel {
@@ -64,7 +64,7 @@ object ViewModelFactory {
     }
 
     fun createEmployeesViewModel(): EmployeesViewModel {
-        return EmployeesViewModel(employeeRepository)
+        return EmployeesViewModel(employeeRepository, projectRepository)
     }
 
     fun createEmployeeDetailViewModel(employeeId: String): EmployeeDetailViewModel {

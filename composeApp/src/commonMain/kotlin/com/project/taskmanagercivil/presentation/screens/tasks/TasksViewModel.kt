@@ -1,11 +1,13 @@
 package com.project.taskmanagercivil.presentation.screens.tasks
 
 import com.project.taskmanagercivil.data.MockData
+import com.project.taskmanagercivil.domain.models.Employee
 import com.project.taskmanagercivil.domain.models.Project
 import com.project.taskmanagercivil.domain.models.Task
 import com.project.taskmanagercivil.domain.models.TaskPriority
 import com.project.taskmanagercivil.domain.models.TaskStatus
 import com.project.taskmanagercivil.domain.models.User
+import com.project.taskmanagercivil.domain.repository.EmployeeRepository
 import com.project.taskmanagercivil.domain.repository.ProjectRepository
 import com.project.taskmanagercivil.domain.repository.TaskRepository
 import kotlinx.coroutines.CoroutineScope
@@ -28,6 +30,7 @@ data class TasksUiState(
     val allTasks: List<Task> = emptyList(),
     val filteredTasks: List<Task> = emptyList(),
     val allProjects: List<Project> = emptyList(),
+    val allEmployees: List<Employee> = emptyList(),
     val selectedStatus: TaskStatus? = null,
     val selectedPriority: TaskPriority? = null,
     val searchQuery: String = "",
@@ -39,7 +42,8 @@ data class TasksUiState(
 
 class TasksViewModel(
     private val taskRepository: TaskRepository,
-    private val projectRepository: ProjectRepository
+    private val projectRepository: ProjectRepository,
+    private val employeeRepository: EmployeeRepository
 ) {
     private val viewModelScope = CoroutineScope(SupervisorJob())
     private val mockData = MockData()
@@ -50,6 +54,7 @@ class TasksViewModel(
     init {
         loadTasks()
         loadProjects()
+        loadEmployees()
     }
 
     fun getProjects(): List<Project> {
@@ -68,8 +73,29 @@ class TasksViewModel(
         }
     }
 
+    private fun loadEmployees() {
+        viewModelScope.launch {
+            try {
+                employeeRepository.getAllEmployees().collect { employees ->
+                    _uiState.update { it.copy(allEmployees = employees) }
+                }
+            } catch (e: Exception) {
+                println("Error loading employees: ${e.message}")
+            }
+        }
+    }
+
     fun getUsers(): List<User> {
-        return mockData.users
+        // Converter colaboradores em Users para compatibilidade com o modal
+        return _uiState.value.allEmployees.map { employee ->
+            User(
+                id = employee.id,
+                name = employee.fullName,
+                email = employee.email,
+                role = employee.role,
+                avatarUrl = employee.avatarUrl
+            )
+        }
     }
 
     fun saveTask(task: Task, checklistItems: List<ChecklistItemData>) {
@@ -86,9 +112,10 @@ class TasksViewModel(
                     // Update existing task
                     taskRepository.updateTask(task)
                 }
-                // Reload tasks and projects to refresh the UI
+                // Reload tasks, projects and employees to refresh the UI
                 loadTasks()
                 loadProjects()
+                loadEmployees()
             } catch (e: Exception) {
                 _uiState.update { it.copy(error = "Falha ao salvar tarefa: ${e.message}") }
             }

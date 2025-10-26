@@ -299,8 +299,10 @@ fun AppNavigation(
 
         // Tela de Colaboradores
         composable(Screen.Employees.route) {
+            NavigationState.currentRoot = "users"
             val viewModel = ViewModelFactory.createEmployeesViewModel()
             EmployeesScreenContent(
+                navController = navController,
                 viewModel = viewModel,
                 onEmployeeClick = { employeeId ->
                     navController.navigate(Screen.EmployeeDetail.createRoute(employeeId))
