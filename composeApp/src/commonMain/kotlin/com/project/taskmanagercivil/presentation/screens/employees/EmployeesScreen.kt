@@ -157,12 +157,17 @@ fun EmployeesScreenContent(
                         EmployeeFormModal(
                             employee = employeeToEdit,
                             availableProjects = uiState.allProjects,
+                            availableTeams = uiState.allTeams,
+                            currentTeamId = employeeToEdit?.let { emp ->
+                                // Encontrar o time do colaborador
+                                uiState.allTeams.find { team -> emp.id in team.memberIds }?.id
+                            },
                             onDismiss = {
                                 showEmployeeFormModal = false
                                 employeeToEdit = null
                             },
-                            onSave = { employee, projectIds ->
-                                viewModel.saveEmployee(employee)
+                            onSave = { employee, projectIds, teamId ->
+                                viewModel.saveEmployee(employee, teamId)
                                 showEmployeeFormModal = false
                                 employeeToEdit = null
                             }

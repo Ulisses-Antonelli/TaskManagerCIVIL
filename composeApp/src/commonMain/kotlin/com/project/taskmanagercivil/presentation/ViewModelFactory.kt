@@ -64,7 +64,7 @@ object ViewModelFactory {
     }
 
     fun createEmployeesViewModel(): EmployeesViewModel {
-        return EmployeesViewModel(employeeRepository, projectRepository)
+        return EmployeesViewModel(employeeRepository, projectRepository, teamRepository)
     }
 
     fun createEmployeeDetailViewModel(employeeId: String): EmployeeDetailViewModel {
@@ -76,11 +76,11 @@ object ViewModelFactory {
     }
 
     fun createTeamsViewModel(): TeamsViewModel {
-        return TeamsViewModel(teamRepository)
+        return TeamsViewModel(teamRepository, employeeRepository, projectRepository)
     }
 
     fun createTeamDetailViewModel(teamId: String): TeamDetailViewModel {
-        return TeamDetailViewModel(teamId, teamRepository, employeeRepository, projectRepository)
+        return TeamDetailViewModel(teamId, teamRepository, employeeRepository, projectRepository, taskRepository)
     }
 
     fun createTeamFormViewModel(teamId: String? = null): TeamFormViewModel {

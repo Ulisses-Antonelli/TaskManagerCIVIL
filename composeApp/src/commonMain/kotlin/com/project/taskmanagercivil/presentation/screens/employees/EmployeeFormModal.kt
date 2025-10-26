@@ -18,6 +18,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import com.project.taskmanagercivil.domain.models.Employee
 import com.project.taskmanagercivil.domain.models.Project
+import com.project.taskmanagercivil.domain.models.Team
 import com.project.taskmanagercivil.utils.FormatUtils
 import kotlinx.datetime.*
 
@@ -26,8 +27,10 @@ import kotlinx.datetime.*
 fun EmployeeFormModal(
     employee: Employee? = null,
     availableProjects: List<Project> = emptyList(),
+    availableTeams: List<Team> = emptyList(),
+    currentTeamId: String? = null,
     onDismiss: () -> Unit,
-    onSave: (Employee, List<String>) -> Unit
+    onSave: (Employee, List<String>, String?) -> Unit
 ) {
     // Estados do formulário
     var fullName by remember { mutableStateOf(employee?.fullName ?: "") }
@@ -49,10 +52,15 @@ fun EmployeeFormModal(
     // Estados para projetos selecionados
     var selectedProjectIds by remember { mutableStateOf(employee?.projectIds?.toSet() ?: emptySet()) }
 
+    // Estado para time selecionado
+    var selectedTeamId by remember { mutableStateOf(currentTeamId) }
+    var teamExpanded by remember { mutableStateOf(false) }
+
     // Validação
     val isValid = fullName.isNotBlank() &&
                   role.isNotBlank() &&
-                  email.isNotBlank()
+                  email.isNotBlank() &&
+                  selectedTeamId != null // Time é obrigatório
 
     Dialog(onDismissRequest = onDismiss) {
         Card(
@@ -259,6 +267,68 @@ fun EmployeeFormModal(
                         }
                     }
 
+                    // Time (Obrigatório)
+                    item {
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Text(
+                            text = "Time *",
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+
+                    item {
+                        ExposedDropdownMenuBox(
+                            expanded = teamExpanded,
+                            onExpandedChange = { teamExpanded = it }
+                        ) {
+                            OutlinedTextField(
+                                value = selectedTeamId?.let { teamId ->
+                                    availableTeams.find { it.id == teamId }?.name ?: "Selecione um time"
+                                } ?: "Selecione um time",
+                                onValueChange = {},
+                                readOnly = true,
+                                label = { Text("Time do Colaborador") },
+                                trailingIcon = {
+                                    ExposedDropdownMenuDefaults.TrailingIcon(expanded = teamExpanded)
+                                },
+                                colors = ExposedDropdownMenuDefaults.outlinedTextFieldColors(),
+                                modifier = Modifier
+                                    .menuAnchor()
+                                    .fillMaxWidth(),
+                                isError = selectedTeamId == null
+                            )
+
+                            ExposedDropdownMenu(
+                                expanded = teamExpanded,
+                                onDismissRequest = { teamExpanded = false }
+                            ) {
+                                availableTeams.forEach { team ->
+                                    DropdownMenuItem(
+                                        text = {
+                                            Column {
+                                                Text(
+                                                    text = team.name,
+                                                    style = MaterialTheme.typography.bodyLarge,
+                                                    fontWeight = FontWeight.Medium
+                                                )
+                                                Text(
+                                                    text = team.department.displayName,
+                                                    style = MaterialTheme.typography.bodySmall,
+                                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                                )
+                                            }
+                                        },
+                                        onClick = {
+                                            selectedTeamId = team.id
+                                            teamExpanded = false
+                                        }
+                                    )
+                                }
+                            }
+                        }
+                    }
+
                     // Projetos
                     item {
                         Spacer(modifier = Modifier.height(8.dp))
@@ -324,7 +394,7 @@ fun EmployeeFormModal(
                                     isActive = isActive,
                                     projectIds = selectedProjectIds.toList()
                                 )
-                                onSave(newEmployee, selectedProjectIds.toList())
+                                onSave(newEmployee, selectedProjectIds.toList(), selectedTeamId)
                             }
                         },
                         modifier = Modifier.weight(1f),

@@ -2,8 +2,12 @@ package com.project.taskmanagercivil.presentation.screens.teams
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.project.taskmanagercivil.domain.models.Employee
+import com.project.taskmanagercivil.domain.models.Project
 import com.project.taskmanagercivil.domain.models.Team
 import com.project.taskmanagercivil.domain.models.TeamDepartment
+import com.project.taskmanagercivil.domain.repository.EmployeeRepository
+import com.project.taskmanagercivil.domain.repository.ProjectRepository
 import com.project.taskmanagercivil.domain.repository.TeamRepository
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
@@ -12,6 +16,8 @@ import kotlinx.coroutines.launch
 data class TeamsUiState(
     val teams: List<Team> = emptyList(),
     val filteredTeams: List<Team> = emptyList(),
+    val allEmployees: List<Employee> = emptyList(),
+    val allProjects: List<Project> = emptyList(),
     val searchQuery: String = "",
     val filterDepartment: TeamFilterDepartment = TeamFilterDepartment.ALL,
     val sortOrder: TeamSortOrder = TeamSortOrder.NAME_ASC,
@@ -46,7 +52,9 @@ enum class TeamSortOrder(val displayName: String) {
 
 
 class TeamsViewModel(
-    private val repository: TeamRepository
+    private val repository: TeamRepository,
+    private val employeeRepository: EmployeeRepository,
+    private val projectRepository: ProjectRepository
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(TeamsUiState())
@@ -54,6 +62,8 @@ class TeamsViewModel(
 
     init {
         loadTeams()
+        loadEmployees()
+        loadProjects()
     }
 
     private fun loadTeams() {
@@ -162,6 +172,46 @@ class TeamsViewModel(
         }
 
         return result
+    }
+
+    private fun loadEmployees() {
+        viewModelScope.launch {
+            employeeRepository.getAllEmployees().collect { employees ->
+                _uiState.update { it.copy(allEmployees = employees) }
+            }
+        }
+    }
+
+    private fun loadProjects() {
+        viewModelScope.launch {
+            try {
+                val projects = projectRepository.getAllProjects()
+                _uiState.update { it.copy(allProjects = projects) }
+            } catch (e: Exception) {
+                println("Error loading projects: ${e.message}")
+            }
+        }
+    }
+
+    fun saveTeam(team: Team) {
+        viewModelScope.launch {
+            try {
+                if (team.id.isEmpty()) {
+                    // Criar novo time com ID gerado
+                    val currentTeams = _uiState.value.teams
+                    val maxId = currentTeams.mapNotNull { it.id.toIntOrNull() }.maxOrNull() ?: 0
+                    val newId = (maxId + 1).toString()
+                    val newTeam = team.copy(id = newId)
+                    repository.addTeam(newTeam)
+                } else {
+                    // Atualizar time existente
+                    repository.updateTeam(team)
+                }
+                // Não precisa chamar loadTeams() porque o Flow já atualiza automaticamente
+            } catch (e: Exception) {
+                println("Error saving team: ${e.message}")
+            }
+        }
     }
 
     fun deleteTeam(teamId: String) {

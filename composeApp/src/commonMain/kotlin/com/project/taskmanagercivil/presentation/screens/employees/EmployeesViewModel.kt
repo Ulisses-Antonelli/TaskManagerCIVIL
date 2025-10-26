@@ -4,8 +4,10 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.project.taskmanagercivil.domain.models.Employee
 import com.project.taskmanagercivil.domain.models.Project
+import com.project.taskmanagercivil.domain.models.Team
 import com.project.taskmanagercivil.domain.repository.EmployeeRepository
 import com.project.taskmanagercivil.domain.repository.ProjectRepository
+import com.project.taskmanagercivil.domain.repository.TeamRepository
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 
@@ -14,6 +16,7 @@ data class EmployeesUiState(
     val employees: List<Employee> = emptyList(),
     val filteredEmployees: List<Employee> = emptyList(),
     val allProjects: List<Project> = emptyList(),
+    val allTeams: List<Team> = emptyList(),
     val searchQuery: String = "",
     val filterStatus: EmployeeFilterStatus = EmployeeFilterStatus.ALL,
     val sortOrder: EmployeeSortOrder = EmployeeSortOrder.NAME_ASC,
@@ -39,7 +42,8 @@ enum class EmployeeSortOrder(val displayName: String) {
 
 class EmployeesViewModel(
     private val repository: EmployeeRepository,
-    private val projectRepository: ProjectRepository
+    private val projectRepository: ProjectRepository,
+    private val teamRepository: TeamRepository
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(EmployeesUiState())
@@ -48,6 +52,7 @@ class EmployeesViewModel(
     init {
         loadEmployees()
         loadProjects()
+        loadTeams()
     }
 
     private fun loadEmployees() {
@@ -160,20 +165,55 @@ class EmployeesViewModel(
         }
     }
 
-    fun saveEmployee(employee: Employee) {
+    private fun loadTeams() {
+        viewModelScope.launch {
+            teamRepository.getAllTeams().collect { teams ->
+                _uiState.update { it.copy(allTeams = teams) }
+            }
+        }
+    }
+
+    fun saveEmployee(employee: Employee, teamId: String?) {
         viewModelScope.launch {
             try {
-                if (employee.id.isEmpty()) {
+                val employeeId: String = if (employee.id.isEmpty()) {
                     // Criar novo colaborador com ID gerado
                     val currentEmployees = _uiState.value.employees
                     val maxId = currentEmployees.mapNotNull { it.id.toIntOrNull() }.maxOrNull() ?: 0
                     val newId = (maxId + 1).toString()
                     val newEmployee = employee.copy(id = newId)
                     repository.addEmployee(newEmployee)
+                    newId
                 } else {
                     // Atualizar colaborador existente
                     repository.updateEmployee(employee)
+                    employee.id
                 }
+
+                // Atualizar o time para incluir/remover o colaborador
+                if (teamId != null) {
+                    val allTeams = _uiState.value.allTeams
+
+                    // Remover o colaborador de todos os times
+                    allTeams.forEach { team ->
+                        if (employeeId in team.memberIds) {
+                            val updatedTeam = team.copy(
+                                memberIds = team.memberIds.filter { it != employeeId }
+                            )
+                            teamRepository.updateTeam(updatedTeam)
+                        }
+                    }
+
+                    // Adicionar o colaborador ao time selecionado
+                    val targetTeam = allTeams.find { it.id == teamId }
+                    if (targetTeam != null && employeeId !in targetTeam.memberIds) {
+                        val updatedTeam = targetTeam.copy(
+                            memberIds = targetTeam.memberIds + employeeId
+                        )
+                        teamRepository.updateTeam(updatedTeam)
+                    }
+                }
+
                 // Não precisa chamar loadEmployees() porque o Flow já atualiza automaticamente
             } catch (e: Exception) {
                 println("Error saving employee: ${e.message}")

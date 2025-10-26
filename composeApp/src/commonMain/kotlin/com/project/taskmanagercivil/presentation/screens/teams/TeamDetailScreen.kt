@@ -17,51 +17,58 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.navigation.NavController
 import com.project.taskmanagercivil.domain.models.Team
 import com.project.taskmanagercivil.domain.models.TeamDepartment
 import com.project.taskmanagercivil.domain.models.Employee
 import com.project.taskmanagercivil.domain.models.Project
+import com.project.taskmanagercivil.domain.models.Task
+import com.project.taskmanagercivil.presentation.components.DynamicBreadcrumbs
+import com.project.taskmanagercivil.presentation.navigation.NavigationState
 import com.project.taskmanagercivil.utils.FormatUtils
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TeamDetailScreen(
+    navController: NavController,
     viewModel: TeamDetailViewModel,
     onBack: () -> Unit,
     onEdit: (String) -> Unit,
     onDelete: (String) -> Unit,
     onEmployeeClick: (String) -> Unit,
-    onProjectClick: (String) -> Unit
+    onProjectClick: (String) -> Unit,
+    onTaskClick: (String) -> Unit = {}
 ) {
     val uiState by viewModel.uiState.collectAsState()
 
     Scaffold(
         topBar = {
-            TopAppBar(
-                title = { Text("Detalhes do Time") },
-                navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Voltar")
-                    }
-                },
-                actions = {
-                    if (uiState.team != null) {
-                        IconButton(onClick = { onEdit(uiState.team!!.id) }) {
-                            Icon(Icons.Default.Edit, contentDescription = "Editar")
-                        }
-                        IconButton(onClick = {
-                            onDelete(uiState.team!!.id)
-                            onBack()
-                        }) {
-                            Icon(
-                                Icons.Default.Delete,
-                                contentDescription = "Deletar",
-                                tint = MaterialTheme.colorScheme.error
-                            )
+            Column {
+                TopAppBar(
+                    title = { Text("DETALHES") },
+                    actions = {
+                        if (uiState.team != null) {
+                            IconButton(onClick = { onEdit(uiState.team!!.id) }) {
+                                Icon(Icons.Default.Edit, contentDescription = "Editar")
+                            }
+                            IconButton(onClick = {
+                                onDelete(uiState.team!!.id)
+                                onBack()
+                            }) {
+                                Icon(
+                                    Icons.Default.Delete,
+                                    contentDescription = "Deletar",
+                                    tint = MaterialTheme.colorScheme.error
+                                )
+                            }
                         }
                     }
-                }
-            )
+                )
+                DynamicBreadcrumbs(
+                    navController = navController,
+                    currentRoot = NavigationState.currentRoot
+                )
+            }
         }
     ) { paddingValues ->
         Box(
@@ -98,8 +105,10 @@ fun TeamDetailScreen(
                         leader = uiState.leader,
                         members = uiState.members,
                         projects = uiState.projects,
+                        tasks = uiState.tasks,
                         onEmployeeClick = onEmployeeClick,
-                        onProjectClick = onProjectClick
+                        onProjectClick = onProjectClick,
+                        onTaskClick = onTaskClick
                     )
                 }
             }
@@ -113,126 +122,30 @@ private fun TeamDetailContent(
     leader: Employee?,
     members: List<Employee>,
     projects: List<Project>,
+    tasks: List<Task>,
     onEmployeeClick: (String) -> Unit,
-    onProjectClick: (String) -> Unit
+    onProjectClick: (String) -> Unit,
+    onTaskClick: (String) -> Unit
 ) {
     LazyColumn(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(24.dp),
-        verticalArrangement = Arrangement.spacedBy(24.dp)
+        modifier = Modifier.fillMaxSize(),
+        contentPadding = PaddingValues(16.dp),
+        verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
+        // Cabeçalho com Avatar e Nome
         item {
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
-            ) {
-                Column(
-                    modifier = Modifier.padding(24.dp),
-                    verticalArrangement = Arrangement.spacedBy(16.dp)
-                ) {
-                    Row(
-                        horizontalArrangement = Arrangement.spacedBy(16.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Box(
-                            modifier = Modifier
-                                .size(80.dp)
-                                .clip(RoundedCornerShape(40.dp))
-                                .background(getDepartmentColor(team.department)),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Text(
-                                text = getDepartmentInitials(team.department),
-                                style = MaterialTheme.typography.headlineMedium,
-                                fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colorScheme.onPrimary
-                            )
-                        }
-
-                        Column(
-                            verticalArrangement = Arrangement.spacedBy(8.dp)
-                        ) {
-                            Row(
-                                horizontalArrangement = Arrangement.spacedBy(12.dp),
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Text(
-                                    text = team.name,
-                                    style = MaterialTheme.typography.headlineSmall,
-                                    fontWeight = FontWeight.Bold
-                                )
-
-                                if (!team.isActive) {
-                                    Surface(
-                                        color = MaterialTheme.colorScheme.errorContainer,
-                                        shape = RoundedCornerShape(4.dp)
-                                    ) {
-                                        Text(
-                                            text = "Inativo",
-                                            modifier = Modifier.padding(
-                                                horizontal = 8.dp,
-                                                vertical = 4.dp
-                                            ),
-                                            style = MaterialTheme.typography.labelMedium,
-                                            color = MaterialTheme.colorScheme.onErrorContainer
-                                        )
-                                    }
-                                }
-                            }
-
-                            
-                            Surface(
-                                color = getDepartmentColor(team.department).copy(alpha = 0.2f),
-                                shape = RoundedCornerShape(4.dp)
-                            ) {
-                                Text(
-                                    text = team.department.displayName,
-                                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
-                                    style = MaterialTheme.typography.labelLarge,
-                                    color = getDepartmentColor(team.department),
-                                    fontWeight = FontWeight.Medium
-                                )
-                            }
-                        }
-                    }
-                }
-            }
+            TeamHeader(team = team, leader = leader)
         }
 
-        
+        // Informações Gerais
         item {
-            SectionCard(title = "Informações Gerais") {
-                InfoRow(label = "Departamento", value = team.department.displayName)
-                if (team.description.isNotEmpty()) {
-                    InfoRow(label = "Descrição", value = team.description)
-                }
-                InfoRow(label = "Data de Criação", value = FormatUtils.formatDate(team.createdDate))
-            }
+            GeneralInfoCard(team = team, membersCount = members.size, leader = leader)
         }
 
-        
-        if (leader != null) {
-            item {
-                Text(
-                    text = "Líder do Time",
-                    style = MaterialTheme.typography.titleLarge,
-                    fontWeight = FontWeight.Bold
-                )
-            }
-
-            item {
-                LeaderCard(
-                    leader = leader,
-                    onClick = { onEmployeeClick(leader.id) }
-                )
-            }
-        }
-
-        
+        // Quadro de Membros do Time
         item {
             Text(
-                text = "Membros (${members.size})",
+                text = "Membros do time de: ${team.name}",
                 style = MaterialTheme.typography.titleLarge,
                 fontWeight = FontWeight.Bold
             )
@@ -242,6 +155,7 @@ private fun TeamDetailContent(
             item {
                 Card(
                     modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(8.dp),
                     colors = CardDefaults.cardColors(
                         containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)
                     )
@@ -261,27 +175,31 @@ private fun TeamDetailContent(
                 }
             }
         } else {
-            items(members) { member ->
-                MemberCard(
-                    member = member,
-                    onClick = { onEmployeeClick(member.id) }
+            item {
+                TeamMembersTable(
+                    members = members,
+                    leaderId = leader?.id,
+                    tasks = tasks,
+                    onEmployeeClick = onEmployeeClick
                 )
             }
         }
 
-        
+        // Histórico de Tarefas do Time
         item {
             Text(
-                text = "Projetos (${projects.size})",
+                text = "Histórico de Tarefas do Time de ${team.name} (${tasks.size})",
                 style = MaterialTheme.typography.titleLarge,
-                fontWeight = FontWeight.Bold
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier.padding(top = 8.dp)
             )
         }
 
-        if (projects.isEmpty()) {
+        if (tasks.isEmpty()) {
             item {
                 Card(
                     modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(8.dp),
                     colors = CardDefaults.cardColors(
                         containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)
                     )
@@ -293,7 +211,7 @@ private fun TeamDetailContent(
                         contentAlignment = Alignment.Center
                     ) {
                         Text(
-                            text = "Nenhum projeto atribuído",
+                            text = "Nenhuma tarefa atribuída aos membros deste time",
                             style = MaterialTheme.typography.bodyLarge,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -301,214 +219,528 @@ private fun TeamDetailContent(
                 }
             }
         } else {
-            items(projects) { project ->
-                ProjectItemCard(
-                    project = project,
-                    onClick = { onProjectClick(project.id) }
+            item {
+                TeamTasksTable(
+                    tasks = tasks,
+                    onTaskClick = onTaskClick,
+                    onProjectClick = onProjectClick
                 )
             }
         }
     }
 }
 
+// Cabeçalho com Avatar do Time
 @Composable
-private fun SectionCard(
-    title: String,
-    content: @Composable ColumnScope.() -> Unit
-) {
+private fun TeamHeader(team: Team, leader: Employee?) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.Start,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        // Avatar com iniciais do departamento
+        Box(
+            modifier = Modifier
+                .size(80.dp)
+                .clip(androidx.compose.foundation.shape.CircleShape)
+                .background(getDepartmentColor(team.department)),
+            contentAlignment = Alignment.Center
+        ) {
+            Text(
+                text = getDepartmentInitials(team.department),
+                style = MaterialTheme.typography.headlineMedium,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.onPrimary
+            )
+        }
+
+        Spacer(modifier = Modifier.width(16.dp))
+
+        Column(
+            verticalArrangement = Arrangement.spacedBy(4.dp)
+        ) {
+            Text(
+                text = team.name,
+                style = MaterialTheme.typography.headlineMedium,
+                fontWeight = FontWeight.Bold
+            )
+
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = team.department.displayName,
+                    style = MaterialTheme.typography.titleMedium,
+                    color = MaterialTheme.colorScheme.primary
+                )
+
+                if (!team.isActive) {
+                    Surface(
+                        color = MaterialTheme.colorScheme.errorContainer,
+                        shape = RoundedCornerShape(4.dp)
+                    ) {
+                        Text(
+                            text = "Inativo",
+                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.onErrorContainer
+                        )
+                    }
+                }
+            }
+
+            if (leader != null) {
+                Text(
+                    text = "Líder: ${leader.fullName}",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+        }
+    }
+}
+
+// Card de Informações Gerais
+@Composable
+private fun GeneralInfoCard(team: Team, membersCount: Int, leader: Employee?) {
     Card(
         modifier = Modifier.fillMaxWidth(),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+        shape = RoundedCornerShape(8.dp)
     ) {
         Column(
-            modifier = Modifier.padding(20.dp),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             Text(
-                text = title,
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.SemiBold,
-                color = MaterialTheme.colorScheme.primary
+                text = "Informações Gerais",
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.Bold
+            )
+
+            // Departamento
+            StampRow(
+                label = "Departamento:",
+                value = team.department.displayName
+            )
+
+            if (team.description.isNotEmpty()) {
+                HorizontalDivider()
+                StampRow(
+                    label = "Descrição:",
+                    value = team.description
+                )
+            }
+
+            HorizontalDivider()
+
+            // Membros
+            StampRow(
+                label = "Quantidade de Membros:",
+                value = "$membersCount"
+            )
+
+            if (leader != null) {
+                HorizontalDivider()
+                StampRow(
+                    label = "Líder:",
+                    value = leader.fullName
+                )
+            }
+
+            HorizontalDivider()
+
+            // Data de Criação
+            StampRow(
+                label = "Data de Criação:",
+                value = FormatUtils.formatDate(team.createdDate)
             )
 
             HorizontalDivider()
 
-            content()
+            // Status
+            StampRow(
+                label = "Status:",
+                value = if (team.isActive) "Ativo" else "Inativo"
+            )
         }
     }
 }
 
 @Composable
-private fun InfoRow(label: String, value: String) {
+private fun StampRow(
+    label: String,
+    value: String
+) {
     Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.SpaceBetween
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(48.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.Start
     ) {
         Text(
             text = label,
-            style = MaterialTheme.typography.bodyMedium,
+            style = MaterialTheme.typography.titleMedium,
+            fontWeight = FontWeight.Bold,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
-            fontWeight = FontWeight.Medium
+            modifier = Modifier.padding(end = 12.dp)
         )
         Text(
             text = value,
-            style = MaterialTheme.typography.bodyMedium
+            style = MaterialTheme.typography.bodyLarge,
+            color = MaterialTheme.colorScheme.onSurface
         )
     }
 }
 
+// Tabela de Membros do Time
 @Composable
-private fun LeaderCard(
-    leader: Employee,
-    onClick: () -> Unit
+private fun TeamMembersTable(
+    members: List<Employee>,
+    leaderId: String?,
+    tasks: List<Task>,
+    onEmployeeClick: (String) -> Unit
 ) {
+    // Calcular desempenho do time (% de tarefas concluídas)
+    val completedTasks = tasks.count { it.status == com.project.taskmanagercivil.domain.models.TaskStatus.COMPLETED }
+    val teamPerformance = if (tasks.isNotEmpty()) (completedTasks.toFloat() / tasks.size * 100).toInt() else 0
+
     Card(
         modifier = Modifier.fillMaxWidth(),
-        onClick = onClick,
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f)
-        )
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
-            horizontalArrangement = Arrangement.spacedBy(12.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            
-            Box(
-                modifier = Modifier
-                    .size(48.dp)
-                    .clip(RoundedCornerShape(24.dp))
-                    .background(MaterialTheme.colorScheme.primary),
-                contentAlignment = Alignment.Center
-            ) {
-                Text(
-                    text = leader.fullName.split(" ")
-                        .take(2)
-                        .joinToString("") { it.first().uppercase() },
-                    style = MaterialTheme.typography.titleSmall,
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onPrimary
-                )
-            }
-
-            Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    text = leader.fullName,
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.SemiBold
-                )
-                Text(
-                    text = leader.role,
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.primary
-                )
-                Text(
-                    text = leader.email,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
-        }
-    }
-}
-
-@Composable
-private fun MemberCard(
-    member: Employee,
-    onClick: () -> Unit
-) {
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        onClick = onClick,
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
-            horizontalArrangement = Arrangement.spacedBy(12.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            // Avatar
-            Box(
-                modifier = Modifier
-                    .size(48.dp)
-                    .clip(RoundedCornerShape(24.dp))
-                    .background(MaterialTheme.colorScheme.primaryContainer),
-                contentAlignment = Alignment.Center
-            ) {
-                Text(
-                    text = member.fullName.split(" ")
-                        .take(2)
-                        .joinToString("") { it.first().uppercase() },
-                    style = MaterialTheme.typography.titleSmall,
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onPrimaryContainer
-                )
-            }
-
-            Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    text = member.fullName,
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.SemiBold
-                )
-                Text(
-                    text = member.role,
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
-        }
-    }
-}
-
-@Composable
-private fun ProjectItemCard(
-    project: Project,
-    onClick: () -> Unit
-) {
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        onClick = onClick,
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+        shape = RoundedCornerShape(8.dp)
     ) {
         Column(
-            modifier = Modifier.padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp)
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp)
+        ) {
+            // Cabeçalho da Tabela
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(
+                        MaterialTheme.colorScheme.surfaceVariant,
+                        RoundedCornerShape(4.dp)
+                    )
+                    .padding(horizontal = 8.dp, vertical = 12.dp),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                HeaderCell("Nome do Colaborador", Modifier.weight(2f))
+                VerticalDivider(modifier = Modifier.height(20.dp).padding(horizontal = 4.dp))
+
+                HeaderCell("Função", Modifier.weight(1.5f))
+                VerticalDivider(modifier = Modifier.height(20.dp).padding(horizontal = 4.dp))
+
+                HeaderCell("Liderança", Modifier.weight(0.8f))
+                VerticalDivider(modifier = Modifier.height(20.dp).padding(horizontal = 4.dp))
+
+                HeaderCell("Tarefas", Modifier.weight(0.6f))
+                VerticalDivider(modifier = Modifier.height(20.dp).padding(horizontal = 4.dp))
+
+                HeaderCell("Desempenho", Modifier.weight(0.8f))
+            }
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            // Linhas da Tabela
+            Column(
+                modifier = Modifier.fillMaxWidth(),
+                verticalArrangement = Arrangement.spacedBy(4.dp)
+            ) {
+                members.forEach { member ->
+                    val memberTasks = tasks.filter { it.assignedTo.id == member.id }
+                    val memberCompletedTasks = memberTasks.count { it.status == com.project.taskmanagercivil.domain.models.TaskStatus.COMPLETED }
+                    val memberPerformance = if (memberTasks.isNotEmpty())
+                        (memberCompletedTasks.toFloat() / memberTasks.size * 100).toInt()
+                    else 0
+
+                    MemberRow(
+                        member = member,
+                        isLeader = member.id == leaderId,
+                        taskCount = memberTasks.size,
+                        performance = memberPerformance,
+                        onClick = { onEmployeeClick(member.id) }
+                    )
+                }
+
+                // Linha de totais/desempenho geral
+                HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .background(
+                            MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f),
+                            RoundedCornerShape(4.dp)
+                        )
+                        .padding(horizontal = 8.dp, vertical = 12.dp),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = "Desempenho Geral do Time",
+                        style = MaterialTheme.typography.titleSmall,
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.weight(4.9f)
+                    )
+
+                    Text(
+                        text = "$teamPerformance%",
+                        style = MaterialTheme.typography.titleSmall,
+                        fontWeight = FontWeight.Bold,
+                        color = when {
+                            teamPerformance >= 80 -> androidx.compose.ui.graphics.Color(0xFF4CAF50)
+                            teamPerformance >= 50 -> androidx.compose.ui.graphics.Color(0xFFFFC107)
+                            else -> MaterialTheme.colorScheme.error
+                        },
+                        modifier = Modifier.weight(0.8f)
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun HeaderCell(text: String, modifier: Modifier = Modifier) {
+    Text(
+        text = text,
+        style = MaterialTheme.typography.titleSmall,
+        fontWeight = FontWeight.Bold,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+        modifier = modifier
+    )
+}
+
+@Composable
+private fun MemberRow(
+    member: Employee,
+    isLeader: Boolean,
+    taskCount: Int,
+    performance: Int,
+    onClick: () -> Unit
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(
+                MaterialTheme.colorScheme.surface,
+                RoundedCornerShape(4.dp)
+            )
+            .clickable { onClick() }
+            .padding(horizontal = 8.dp, vertical = 12.dp),
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(
+            text = member.fullName,
+            style = MaterialTheme.typography.bodyMedium,
+            fontWeight = FontWeight.Medium,
+            modifier = Modifier.weight(2f)
+        )
+
+        VerticalDivider(modifier = Modifier.height(20.dp).padding(horizontal = 4.dp))
+
+        Text(
+            text = member.role,
+            style = MaterialTheme.typography.bodySmall,
+            modifier = Modifier.weight(1.5f)
+        )
+
+        VerticalDivider(modifier = Modifier.height(20.dp).padding(horizontal = 4.dp))
+
+        Text(
+            text = if (isLeader) "Sim" else "Não",
+            style = MaterialTheme.typography.bodySmall,
+            color = if (isLeader) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
+            fontWeight = if (isLeader) FontWeight.Bold else FontWeight.Normal,
+            modifier = Modifier.weight(0.8f)
+        )
+
+        VerticalDivider(modifier = Modifier.height(20.dp).padding(horizontal = 4.dp))
+
+        Text(
+            text = taskCount.toString(),
+            style = MaterialTheme.typography.bodySmall,
+            modifier = Modifier.weight(0.6f)
+        )
+
+        VerticalDivider(modifier = Modifier.height(20.dp).padding(horizontal = 4.dp))
+
+        Text(
+            text = "$performance%",
+            style = MaterialTheme.typography.bodySmall,
+            fontWeight = FontWeight.Medium,
+            color = when {
+                performance >= 80 -> androidx.compose.ui.graphics.Color(0xFF4CAF50)
+                performance >= 50 -> androidx.compose.ui.graphics.Color(0xFFFFC107)
+                else -> MaterialTheme.colorScheme.error
+            },
+            modifier = Modifier.weight(0.8f)
+        )
+    }
+}
+
+// Tabela de Tarefas dos Colaboradores do Time
+@Composable
+private fun TeamTasksTable(
+    tasks: List<Task>,
+    onTaskClick: (String) -> Unit,
+    onProjectClick: (String) -> Unit
+) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(8.dp)
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp)
+        ) {
+            // Cabeçalho da Tabela
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(
+                        MaterialTheme.colorScheme.surfaceVariant,
+                        RoundedCornerShape(4.dp)
+                    )
+                    .padding(horizontal = 8.dp, vertical = 12.dp),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                HeaderCell("Nome da Obra", Modifier.weight(1.2f))
+                VerticalDivider(modifier = Modifier.height(20.dp).padding(horizontal = 4.dp))
+
+                HeaderCell("Nome da Tarefa", Modifier.weight(1.5f))
+                VerticalDivider(modifier = Modifier.height(20.dp).padding(horizontal = 4.dp))
+
+                HeaderCell("Colaborador", Modifier.weight(1.2f))
+                VerticalDivider(modifier = Modifier.height(20.dp).padding(horizontal = 4.dp))
+
+                HeaderCell("Data Início", Modifier.weight(0.9f))
+                VerticalDivider(modifier = Modifier.height(20.dp).padding(horizontal = 4.dp))
+
+                HeaderCell("Prazo", Modifier.weight(0.9f))
+                VerticalDivider(modifier = Modifier.height(20.dp).padding(horizontal = 4.dp))
+
+                HeaderCell("Status", Modifier.weight(0.8f))
+            }
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            // Linhas da Tabela
+            Column(
+                modifier = Modifier.fillMaxWidth(),
+                verticalArrangement = Arrangement.spacedBy(4.dp)
+            ) {
+                tasks.forEach { task ->
+                    TeamTaskRow(
+                        task = task,
+                        onTaskClick = onTaskClick,
+                        onProjectClick = onProjectClick
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun TeamTaskRow(
+    task: Task,
+    onTaskClick: (String) -> Unit,
+    onProjectClick: (String) -> Unit
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(
+                MaterialTheme.colorScheme.surface,
+                RoundedCornerShape(4.dp)
+            )
+            .clickable { onTaskClick(task.id) }
+            .padding(horizontal = 8.dp, vertical = 12.dp),
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        // Nome da Obra (clicável)
+        Text(
+            text = task.project.name,
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.primary,
+            modifier = Modifier
+                .weight(1.2f)
+                .clickable { onProjectClick(task.project.id) },
+            fontWeight = FontWeight.Medium
+        )
+
+        VerticalDivider(modifier = Modifier.height(20.dp).padding(horizontal = 4.dp))
+
+        // Nome da Tarefa
+        Text(
+            text = task.title,
+            style = MaterialTheme.typography.bodySmall,
+            modifier = Modifier.weight(1.5f),
+            fontWeight = FontWeight.Medium
+        )
+
+        VerticalDivider(modifier = Modifier.height(20.dp).padding(horizontal = 4.dp))
+
+        // Colaborador
+        Text(
+            text = task.assignedTo.name,
+            style = MaterialTheme.typography.bodySmall,
+            modifier = Modifier.weight(1.2f)
+        )
+
+        VerticalDivider(modifier = Modifier.height(20.dp).padding(horizontal = 4.dp))
+
+        // Data Início
+        Text(
+            text = FormatUtils.formatDate(task.startDate),
+            style = MaterialTheme.typography.bodySmall,
+            modifier = Modifier.weight(0.9f)
+        )
+
+        VerticalDivider(modifier = Modifier.height(20.dp).padding(horizontal = 4.dp))
+
+        // Prazo
+        Text(
+            text = FormatUtils.formatDate(task.dueDate),
+            style = MaterialTheme.typography.bodySmall,
+            modifier = Modifier.weight(0.9f)
+        )
+
+        VerticalDivider(modifier = Modifier.height(20.dp).padding(horizontal = 4.dp))
+
+        // Status
+        Surface(
+            color = when (task.status) {
+                com.project.taskmanagercivil.domain.models.TaskStatus.TODO -> MaterialTheme.colorScheme.errorContainer
+                com.project.taskmanagercivil.domain.models.TaskStatus.IN_PROGRESS -> MaterialTheme.colorScheme.primaryContainer
+                com.project.taskmanagercivil.domain.models.TaskStatus.IN_REVIEW -> MaterialTheme.colorScheme.secondaryContainer
+                com.project.taskmanagercivil.domain.models.TaskStatus.COMPLETED -> MaterialTheme.colorScheme.tertiaryContainer
+                com.project.taskmanagercivil.domain.models.TaskStatus.BLOCKED -> MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.7f)
+            },
+            shape = RoundedCornerShape(4.dp),
+            modifier = Modifier.weight(0.8f)
         ) {
             Text(
-                text = project.name,
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.SemiBold
+                text = task.status.label,
+                modifier = Modifier.padding(horizontal = 6.dp, vertical = 4.dp),
+                style = MaterialTheme.typography.labelSmall,
+                color = when (task.status) {
+                    com.project.taskmanagercivil.domain.models.TaskStatus.TODO -> MaterialTheme.colorScheme.onErrorContainer
+                    com.project.taskmanagercivil.domain.models.TaskStatus.IN_PROGRESS -> MaterialTheme.colorScheme.onPrimaryContainer
+                    com.project.taskmanagercivil.domain.models.TaskStatus.IN_REVIEW -> MaterialTheme.colorScheme.onSecondaryContainer
+                    com.project.taskmanagercivil.domain.models.TaskStatus.COMPLETED -> MaterialTheme.colorScheme.onTertiaryContainer
+                    com.project.taskmanagercivil.domain.models.TaskStatus.BLOCKED -> MaterialTheme.colorScheme.onErrorContainer
+                }
             )
-
-            Text(
-                text = project.location,
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                Text(
-                    text = "Cliente: ${project.client}",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-
-                Text(
-                    text = "Prazo: ${FormatUtils.formatDate(project.endDate)}",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
         }
     }
 }

@@ -33,6 +33,7 @@ object NavigationState {
     var pendingProjectId: String? = null
     var pendingTaskId: String? = null
     var pendingEmployeeId: String? = null
+    var pendingTeamId: String? = null
     var currentRoot: String = "dashboard" // Raiz atual da navegação (dashboard, projects, tasks, users, teams, documents)
 }
 
@@ -393,10 +394,13 @@ fun AppNavigation(
 
         // Tela de Times
         composable(Screen.Teams.route) {
+            NavigationState.currentRoot = "teams"
             val viewModel = ViewModelFactory.createTeamsViewModel()
             TeamsScreenContent(
+                navController = navController,
                 viewModel = viewModel,
                 onTeamClick = { teamId ->
+                    NavigationState.pendingTeamId = teamId
                     navController.navigate(Screen.TeamDetail.createRoute(teamId))
                 },
                 onCreateTeam = {
@@ -417,11 +421,20 @@ fun AppNavigation(
                 navArgument("teamId") { type = NavType.StringType }
             )
         ) { backStackEntry ->
-            val currentRoute = navController.currentBackStackEntry?.destination?.route ?: ""
-            val teamId = currentRoute.removePrefix("team_detail/").takeIf { it.isNotBlank() } ?: "1"
+            NavigationState.currentRoot = "teams"
+            // Usa o singleton para obter o teamId
+            val teamId = androidx.compose.runtime.remember {
+                NavigationState.pendingTeamId?.also {
+                    NavigationState.pendingTeamId = null
+                } ?: "1"
+            }
 
-            val viewModel = ViewModelFactory.createTeamDetailViewModel(teamId)
+            val viewModel = androidx.compose.runtime.remember(teamId) {
+                ViewModelFactory.createTeamDetailViewModel(teamId)
+            }
+
             TeamDetailScreen(
+                navController = navController,
                 viewModel = viewModel,
                 onBack = { navController.popBackStack() },
                 onEdit = { teamId ->
@@ -436,7 +449,12 @@ fun AppNavigation(
                     navController.navigate(Screen.EmployeeDetail.createRoute(employeeId))
                 },
                 onProjectClick = { projectId ->
+                    NavigationState.pendingProjectId = projectId
                     navController.navigate(Screen.ProjectDetail.createRoute(projectId))
+                },
+                onTaskClick = { taskId ->
+                    NavigationState.pendingTaskId = taskId
+                    navController.navigate(Screen.TaskDetail.createRoute(taskId))
                 }
             )
         }

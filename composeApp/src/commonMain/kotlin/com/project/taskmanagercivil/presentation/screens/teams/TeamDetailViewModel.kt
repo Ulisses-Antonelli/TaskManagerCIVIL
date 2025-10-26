@@ -4,9 +4,11 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.project.taskmanagercivil.domain.models.Employee
 import com.project.taskmanagercivil.domain.models.Project
+import com.project.taskmanagercivil.domain.models.Task
 import com.project.taskmanagercivil.domain.models.Team
 import com.project.taskmanagercivil.domain.repository.EmployeeRepository
 import com.project.taskmanagercivil.domain.repository.ProjectRepository
+import com.project.taskmanagercivil.domain.repository.TaskRepository
 import com.project.taskmanagercivil.domain.repository.TeamRepository
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
@@ -17,6 +19,7 @@ data class TeamDetailUiState(
     val members: List<Employee> = emptyList(),
     val projects: List<Project> = emptyList(),
     val leader: Employee? = null,
+    val tasks: List<Task> = emptyList(),
     val isLoading: Boolean = true,
     val errorMessage: String? = null
 )
@@ -26,7 +29,8 @@ class TeamDetailViewModel(
     private val teamId: String,
     private val teamRepository: TeamRepository,
     private val employeeRepository: EmployeeRepository,
-    private val projectRepository: ProjectRepository
+    private val projectRepository: ProjectRepository,
+    private val taskRepository: TaskRepository
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(TeamDetailUiState())
@@ -56,11 +60,17 @@ class TeamDetailViewModel(
                         employee.id in team.memberIds
                     }
 
-                    
+ 
                     val teamLeader: Employee? = if (team.leaderId != null) {
                         employeeRepository.getEmployeeById(team.leaderId)
                     } else {
                         null
+                    }
+
+                    // Buscar as tarefas dos membros do time
+                    val allTasks: List<Task> = taskRepository.getAllTasks()
+                    val teamTasks: List<Task> = allTasks.filter { task: Task ->
+                        task.assignedTo.id in team.memberIds
                     }
 
                     _uiState.update {
@@ -69,6 +79,7 @@ class TeamDetailViewModel(
                             members = teamMembers,
                             projects = teamProjects,
                             leader = teamLeader,
+                            tasks = teamTasks,
                             isLoading = false,
                             errorMessage = null
                         )
