@@ -4,8 +4,10 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.project.taskmanagercivil.domain.models.Employee
 import com.project.taskmanagercivil.domain.models.Project
+import com.project.taskmanagercivil.domain.models.Task
 import com.project.taskmanagercivil.domain.repository.EmployeeRepository
 import com.project.taskmanagercivil.domain.repository.ProjectRepository
+import com.project.taskmanagercivil.domain.repository.TaskRepository
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 
@@ -13,6 +15,7 @@ import kotlinx.coroutines.launch
 data class EmployeeDetailUiState(
     val employee: Employee? = null,
     val projects: List<Project> = emptyList(),
+    val tasks: List<Task> = emptyList(),
     val isLoading: Boolean = true,
     val errorMessage: String? = null
 )
@@ -21,7 +24,8 @@ data class EmployeeDetailUiState(
 class EmployeeDetailViewModel(
     private val employeeId: String,
     private val employeeRepository: EmployeeRepository,
-    private val projectRepository: ProjectRepository
+    private val projectRepository: ProjectRepository,
+    private val taskRepository: TaskRepository
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(EmployeeDetailUiState())
@@ -36,7 +40,9 @@ class EmployeeDetailViewModel(
             _uiState.update { it.copy(isLoading = true) }
 
             try {
+                println("DEBUG: Loading employee with ID: '$employeeId'")
                 val employee = employeeRepository.getEmployeeById(employeeId)
+                println("DEBUG: Found employee: ${employee?.fullName ?: "NULL"}")
 
                 if (employee != null) {
                     // Buscar os projetos do colaborador
@@ -45,10 +51,17 @@ class EmployeeDetailViewModel(
                         project.id in employee.projectIds
                     }
 
+                    // Buscar as tarefas do colaborador
+                    val allTasks: List<Task> = taskRepository.getAllTasks()
+                    val employeeTasks: List<Task> = allTasks.filter { task: Task ->
+                        task.assignedTo.id == employeeId
+                    }
+
                     _uiState.update {
                         it.copy(
                             employee = employee,
                             projects = employeeProjects,
+                            tasks = employeeTasks,
                             isLoading = false,
                             errorMessage = null
                         )

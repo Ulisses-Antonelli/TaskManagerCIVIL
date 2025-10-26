@@ -32,6 +32,7 @@ object NavigationState {
     var pendingProjectFilter: String? = null
     var pendingProjectId: String? = null
     var pendingTaskId: String? = null
+    var pendingEmployeeId: String? = null
     var currentRoot: String = "dashboard" // Raiz atual da navegação (dashboard, projects, tasks, users, teams, documents)
 }
 
@@ -170,6 +171,7 @@ fun AppNavigation(
                     navController.navigate(Screen.ProjectDetail.createRoute(projectId))
                 },
                 onEmployeeClick = { employeeId ->
+                    NavigationState.pendingEmployeeId = employeeId
                     navController.navigate(Screen.EmployeeDetail.createRoute(employeeId))
                 },
                 onRelatedTaskClick = { relatedTaskId ->
@@ -289,6 +291,7 @@ fun AppNavigation(
                     navController.navigate(Screen.TaskDetail.createRoute(taskId))
                 },
                 onEmployeeClick = { employeeId ->
+                    NavigationState.pendingEmployeeId = employeeId
                     navController.navigate(Screen.EmployeeDetail.createRoute(employeeId))
                 },
                 onTeamClick = { teamId ->
@@ -305,6 +308,7 @@ fun AppNavigation(
                 navController = navController,
                 viewModel = viewModel,
                 onEmployeeClick = { employeeId ->
+                    NavigationState.pendingEmployeeId = employeeId
                     navController.navigate(Screen.EmployeeDetail.createRoute(employeeId))
                 },
                 onCreateEmployee = {
@@ -325,11 +329,18 @@ fun AppNavigation(
                 navArgument("employeeId") { type = NavType.StringType }
             )
         ) { backStackEntry ->
-            val currentRoute = navController.currentBackStackEntry?.destination?.route ?: ""
-            val employeeId = currentRoute.removePrefix("employee_detail/").takeIf { it.isNotBlank() } ?: "1"
+            NavigationState.currentRoot = "users"
+            // Usa o singleton para obter o employeeId
+            val employeeId = androidx.compose.runtime.remember {
+                NavigationState.pendingEmployeeId?.also {
+                    NavigationState.pendingEmployeeId = null
+                } ?: "1"
+            }
+            println("DEBUG Navigation: Employee ID from route: '$employeeId'")
 
             val viewModel = ViewModelFactory.createEmployeeDetailViewModel(employeeId)
             EmployeeDetailScreen(
+                navController = navController,
                 viewModel = viewModel,
                 onBack = { navController.popBackStack() },
                 onEdit = { employeeId ->
@@ -338,6 +349,9 @@ fun AppNavigation(
                 onDelete = { employeeId ->
                     viewModel.deleteEmployee(employeeId)
                     navController.popBackStack()
+                },
+                onTaskClick = { taskId ->
+                    navController.navigate(Screen.TaskDetail.createRoute(taskId))
                 },
                 onProjectClick = { projectId ->
                     navController.navigate(Screen.ProjectDetail.createRoute(projectId))
@@ -418,6 +432,7 @@ fun AppNavigation(
                     navController.popBackStack()
                 },
                 onEmployeeClick = { employeeId ->
+                    NavigationState.pendingEmployeeId = employeeId
                     navController.navigate(Screen.EmployeeDetail.createRoute(employeeId))
                 },
                 onProjectClick = { projectId ->

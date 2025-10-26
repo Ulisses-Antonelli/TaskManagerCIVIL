@@ -68,7 +68,7 @@ object ViewModelFactory {
     }
 
     fun createEmployeeDetailViewModel(employeeId: String): EmployeeDetailViewModel {
-        return EmployeeDetailViewModel(employeeId, employeeRepository, projectRepository)
+        return EmployeeDetailViewModel(employeeId, employeeRepository, projectRepository, taskRepository)
     }
 
     fun createEmployeeFormViewModel(employeeId: String? = null): EmployeeFormViewModel {

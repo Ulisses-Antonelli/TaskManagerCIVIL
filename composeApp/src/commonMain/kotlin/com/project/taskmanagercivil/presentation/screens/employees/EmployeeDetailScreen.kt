@@ -1,98 +1,616 @@
 package com.project.taskmanagercivil.presentation.screens.employees
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.navigation.NavController
 import com.project.taskmanagercivil.domain.models.Employee
-import com.project.taskmanagercivil.domain.models.Project
+import com.project.taskmanagercivil.domain.models.Task
+import com.project.taskmanagercivil.presentation.components.DynamicBreadcrumbs
+import com.project.taskmanagercivil.presentation.navigation.NavigationState
 import com.project.taskmanagercivil.utils.FormatUtils
-import kotlinx.datetime.*
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun EmployeeDetailScreen(
+    navController: NavController,
     viewModel: EmployeeDetailViewModel,
     onBack: () -> Unit,
-    onEdit: (String) -> Unit,
-    onDelete: (String) -> Unit,
-    onProjectClick: (String) -> Unit
+    onEdit: (String) -> Unit = {},
+    onDelete: (String) -> Unit = {},
+    onTaskClick: (String) -> Unit = {},
+    onProjectClick: (String) -> Unit = {}
 ) {
     val uiState by viewModel.uiState.collectAsState()
+    var showDeleteDialog by remember { mutableStateOf(false) }
 
     Scaffold(
         topBar = {
-            TopAppBar(
-                title = { Text("Detalhes do Colaborador") },
-                navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Voltar")
-                    }
-                },
-                actions = {
-                    if (uiState.employee != null) {
-                        IconButton(onClick = { onEdit(uiState.employee!!.id) }) {
-                            Icon(Icons.Default.Edit, contentDescription = "Editar")
+            Column {
+                TopAppBar(
+                    title = { Text("DETALHES") },
+                    actions = {
+                        if (uiState.employee != null) {
+                            IconButton(onClick = { onEdit(uiState.employee!!.id) }) {
+                                Icon(
+                                    imageVector = Icons.Default.Edit,
+                                    contentDescription = "Editar"
+                                )
+                            }
                         }
-                        IconButton(onClick = {
-                            onDelete(uiState.employee!!.id)
-                            onBack()
-                        }) {
+
+                        if (uiState.employee != null) {
+                            IconButton(onClick = { showDeleteDialog = true }) {
+                                Icon(
+                                    imageVector = Icons.Default.Delete,
+                                    contentDescription = "Deletar",
+                                    tint = MaterialTheme.colorScheme.error
+                                )
+                            }
+                        }
+
+                        IconButton(onClick = { viewModel.refreshEmployee() }) {
                             Icon(
-                                Icons.Default.Delete,
-                                contentDescription = "Deletar",
-                                tint = MaterialTheme.colorScheme.error
+                                imageVector = Icons.Default.Refresh,
+                                contentDescription = "Atualizar"
                             )
                         }
                     }
-                }
-            )
+                )
+                DynamicBreadcrumbs(
+                    navController = navController,
+                    currentRoot = NavigationState.currentRoot
+                )
+            }
         }
     ) { paddingValues ->
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(paddingValues)
-        ) {
-            when {
-                uiState.isLoading -> {
-                    CircularProgressIndicator(
-                        modifier = Modifier.align(Alignment.Center)
-                    )
+        when {
+            uiState.isLoading -> {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(paddingValues),
+                    contentAlignment = Alignment.Center
+                ) {
+                    CircularProgressIndicator()
                 }
+            }
 
-                uiState.errorMessage != null -> {
-                    Column(
-                        modifier = Modifier.align(Alignment.Center),
-                        horizontalAlignment = Alignment.CenterHorizontally
-                    ) {
+            uiState.errorMessage != null -> {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(paddingValues),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
                         Text(
                             text = uiState.errorMessage!!,
+                            style = MaterialTheme.typography.bodyLarge,
                             color = MaterialTheme.colorScheme.error
                         )
-                        Spacer(modifier = Modifier.height(8.dp))
+                        Spacer(modifier = Modifier.height(16.dp))
                         Button(onClick = { viewModel.refreshEmployee() }) {
                             Text("Tentar novamente")
                         }
                     }
                 }
+            }
 
-                uiState.employee != null -> {
-                    EmployeeDetailContent(
-                        employee = uiState.employee!!,
-                        projects = uiState.projects,
+            uiState.employee != null -> {
+                EmployeeDetailContent(
+                    employee = uiState.employee!!,
+                    tasks = uiState.tasks,
+                    onTaskClick = onTaskClick,
+                    onProjectClick = onProjectClick,
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(paddingValues)
+                )
+            }
+        }
+
+        // Dialog de confirmação de exclusão
+        if (showDeleteDialog && uiState.employee != null) {
+            AlertDialog(
+                onDismissRequest = { showDeleteDialog = false },
+                icon = {
+                    Icon(
+                        Icons.Default.Warning,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.error
+                    )
+                },
+                title = { Text("Deletar Colaborador?") },
+                text = {
+                    Text("Tem certeza que deseja deletar o colaborador \"${uiState.employee!!.fullName}\"? Esta ação não pode ser desfeita.")
+                },
+                confirmButton = {
+                    Button(
+                        onClick = {
+                            onDelete(uiState.employee!!.id)
+                            showDeleteDialog = false
+                        },
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = MaterialTheme.colorScheme.error
+                        )
+                    ) {
+                        Text("Deletar")
+                    }
+                },
+                dismissButton = {
+                    TextButton(onClick = { showDeleteDialog = false }) {
+                        Text("Cancelar")
+                    }
+                }
+            )
+        }
+    }
+}
+
+@Composable
+private fun EmployeeDetailContent(
+    employee: Employee,
+    tasks: List<Task>,
+    onTaskClick: (String) -> Unit,
+    onProjectClick: (String) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    LazyColumn(
+        modifier = modifier,
+        contentPadding = PaddingValues(16.dp),
+        verticalArrangement = Arrangement.spacedBy(16.dp)
+    ) {
+        // Cabeçalho com Avatar e Nome
+        item {
+            EmployeeHeader(employee = employee)
+        }
+
+        // Informações Gerais
+        item {
+            GeneralInfoCard(employee = employee, totalTasks = tasks.size)
+        }
+
+        // Estatísticas de Tarefas
+        item {
+            TaskStatsCard(tasks = tasks)
+        }
+
+        // Histórico de Tarefas
+        item {
+            Text(
+                text = "Histórico de Tarefas (${tasks.size})",
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier.padding(top = 8.dp)
+            )
+        }
+
+        if (tasks.isEmpty()) {
+            item {
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(8.dp)
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(32.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = "Nenhuma tarefa atribuída a este colaborador",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                }
+            }
+        } else {
+            item {
+                TaskHistoryTable(
+                    tasks = tasks,
+                    onTaskClick = onTaskClick,
+                    onProjectClick = onProjectClick
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun EmployeeHeader(employee: Employee) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.Start,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        // Avatar com iniciais
+        Box(
+            modifier = Modifier
+                .size(80.dp)
+                .clip(CircleShape)
+                .background(MaterialTheme.colorScheme.primaryContainer),
+            contentAlignment = Alignment.Center
+        ) {
+            Text(
+                text = employee.fullName.split(" ")
+                    .take(2)
+                    .joinToString("") { it.first().uppercase() },
+                style = MaterialTheme.typography.headlineMedium,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.onPrimaryContainer
+            )
+        }
+
+        Spacer(modifier = Modifier.width(16.dp))
+
+        Column(
+            verticalArrangement = Arrangement.spacedBy(4.dp)
+        ) {
+            Text(
+                text = employee.fullName,
+                style = MaterialTheme.typography.headlineMedium,
+                fontWeight = FontWeight.Bold
+            )
+            Text(
+                text = employee.role,
+                style = MaterialTheme.typography.titleMedium,
+                color = MaterialTheme.colorScheme.primary
+            )
+            if (!employee.isCurrentlyActive()) {
+                Surface(
+                    color = MaterialTheme.colorScheme.errorContainer,
+                    shape = RoundedCornerShape(4.dp)
+                ) {
+                    Text(
+                        text = "Inativo",
+                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                        style = MaterialTheme.typography.labelMedium,
+                        color = MaterialTheme.colorScheme.onErrorContainer
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun GeneralInfoCard(
+    employee: Employee,
+    totalTasks: Int
+) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(8.dp)
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            Text(
+                text = "Informações Gerais",
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.Bold
+            )
+
+            // Nome Completo
+            StampRow(
+                label = "Nome:",
+                value = employee.fullName
+            )
+
+            HorizontalDivider()
+
+            // Cargo
+            StampRow(
+                label = "Cargo:",
+                value = employee.role
+            )
+
+            HorizontalDivider()
+
+            // Email
+            StampRow(
+                label = "Email:",
+                value = employee.email
+            )
+
+            if (employee.phone != null) {
+                HorizontalDivider()
+                StampRow(
+                    label = "Telefone:",
+                    value = employee.phone
+                )
+            }
+
+            if (employee.cpf != null) {
+                HorizontalDivider()
+                StampRow(
+                    label = "CPF:",
+                    value = employee.cpf
+                )
+            }
+
+            HorizontalDivider()
+
+            // Grid com 3 colunas
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                // Data de Admissão
+                StampCell(
+                    label = "Data de Admissão",
+                    value = FormatUtils.formatDate(employee.hireDate),
+                    modifier = Modifier.weight(1f)
+                )
+
+                VerticalDivider(
+                    modifier = Modifier
+                        .height(56.dp)
+                        .padding(horizontal = 8.dp)
+                )
+
+                // Status
+                StampCell(
+                    label = "Status",
+                    value = if (employee.isCurrentlyActive()) "Ativo" else "Inativo",
+                    modifier = Modifier.weight(1f)
+                )
+
+                VerticalDivider(
+                    modifier = Modifier
+                        .height(56.dp)
+                        .padding(horizontal = 8.dp)
+                )
+
+                // Total de Tarefas
+                StampCell(
+                    label = "Total de Tarefas",
+                    value = totalTasks.toString(),
+                    modifier = Modifier.weight(1f)
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun StampRow(
+    label: String,
+    value: String
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(48.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.Start
+    ) {
+        Text(
+            text = label,
+            style = MaterialTheme.typography.titleMedium,
+            fontWeight = FontWeight.Bold,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.padding(end = 12.dp)
+        )
+        Text(
+            text = value,
+            style = MaterialTheme.typography.bodyLarge,
+            fontWeight = FontWeight.Medium,
+            color = MaterialTheme.colorScheme.onSurface,
+            modifier = Modifier.fillMaxWidth(),
+            textAlign = TextAlign.Center
+        )
+    }
+}
+
+@Composable
+private fun StampCell(
+    label: String,
+    value: String,
+    modifier: Modifier = Modifier
+) {
+    Column(
+        modifier = modifier
+            .height(56.dp)
+            .padding(horizontal = 4.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center
+    ) {
+        Text(
+            text = label,
+            style = MaterialTheme.typography.titleSmall,
+            fontWeight = FontWeight.Bold,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            textAlign = TextAlign.Center,
+            maxLines = 2
+        )
+        Spacer(modifier = Modifier.height(4.dp))
+        Text(
+            text = value,
+            style = MaterialTheme.typography.titleLarge,
+            fontWeight = FontWeight.Bold,
+            color = MaterialTheme.colorScheme.primary,
+            textAlign = TextAlign.Center,
+            maxLines = 1
+        )
+    }
+}
+
+@Composable
+private fun TaskStatsCard(tasks: List<Task>) {
+    val totalTasks = tasks.size
+    val todoTasks = tasks.count { it.status == com.project.taskmanagercivil.domain.models.TaskStatus.TODO }
+    val inProgressTasks = tasks.count { it.status == com.project.taskmanagercivil.domain.models.TaskStatus.IN_PROGRESS }
+    val inReviewTasks = tasks.count { it.status == com.project.taskmanagercivil.domain.models.TaskStatus.IN_REVIEW }
+    val completedTasks = tasks.count { it.status == com.project.taskmanagercivil.domain.models.TaskStatus.COMPLETED }
+    val blockedTasks = tasks.count { it.status == com.project.taskmanagercivil.domain.models.TaskStatus.BLOCKED }
+
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(8.dp)
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            Text(
+                text = "Estatísticas de Tarefas",
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.Bold
+            )
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                StatItem(label = "Total", value = totalTasks.toString(), modifier = Modifier.weight(1f))
+
+                VerticalDivider(
+                    modifier = Modifier
+                        .height(56.dp)
+                        .padding(horizontal = 8.dp)
+                )
+
+                StatItem(label = "A Fazer", value = todoTasks.toString(), modifier = Modifier.weight(1f))
+
+                VerticalDivider(
+                    modifier = Modifier
+                        .height(56.dp)
+                        .padding(horizontal = 8.dp)
+                )
+
+                StatItem(label = "Em Andamento", value = inProgressTasks.toString(), modifier = Modifier.weight(1f))
+
+                VerticalDivider(
+                    modifier = Modifier
+                        .height(56.dp)
+                        .padding(horizontal = 8.dp)
+                )
+
+                StatItem(label = "Em Revisão", value = inReviewTasks.toString(), modifier = Modifier.weight(1f))
+
+                VerticalDivider(
+                    modifier = Modifier
+                        .height(56.dp)
+                        .padding(horizontal = 8.dp)
+                )
+
+                StatItem(label = "Concluídas", value = completedTasks.toString(), modifier = Modifier.weight(1f))
+
+                VerticalDivider(
+                    modifier = Modifier
+                        .height(56.dp)
+                        .padding(horizontal = 8.dp)
+                )
+
+                StatItem(label = "Bloqueadas", value = blockedTasks.toString(), modifier = Modifier.weight(1f))
+            }
+        }
+    }
+}
+
+@Composable
+private fun StatItem(label: String, value: String, modifier: Modifier = Modifier) {
+    Column(
+        modifier = modifier,
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center
+    ) {
+        Text(
+            text = label,
+            style = MaterialTheme.typography.titleSmall,
+            fontWeight = FontWeight.Bold,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            textAlign = TextAlign.Center,
+            maxLines = 1
+        )
+        Spacer(modifier = Modifier.height(4.dp))
+        Text(
+            text = value,
+            style = MaterialTheme.typography.titleLarge,
+            fontWeight = FontWeight.Bold,
+            color = MaterialTheme.colorScheme.primary,
+            textAlign = TextAlign.Center
+        )
+    }
+}
+
+@Composable
+private fun TaskHistoryTable(
+    tasks: List<Task>,
+    onTaskClick: (String) -> Unit,
+    onProjectClick: (String) -> Unit
+) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(8.dp)
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp)
+        ) {
+            // Cabeçalho da Tabela
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(
+                        MaterialTheme.colorScheme.surfaceVariant,
+                        RoundedCornerShape(4.dp)
+                    )
+                    .padding(horizontal = 8.dp, vertical = 12.dp),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                HeaderCell("Nome da Obra", Modifier.weight(1.2f))
+                VerticalDivider(modifier = Modifier.height(20.dp).padding(horizontal = 4.dp))
+
+                HeaderCell("Nome da Tarefa", Modifier.weight(1.5f))
+                VerticalDivider(modifier = Modifier.height(20.dp).padding(horizontal = 4.dp))
+
+                HeaderCell("Descrição", Modifier.weight(2f))
+                VerticalDivider(modifier = Modifier.height(20.dp).padding(horizontal = 4.dp))
+
+                HeaderCell("Data Início", Modifier.weight(1f))
+                VerticalDivider(modifier = Modifier.height(20.dp).padding(horizontal = 4.dp))
+
+                HeaderCell("Data Conclusão", Modifier.weight(1f))
+                VerticalDivider(modifier = Modifier.height(20.dp).padding(horizontal = 4.dp))
+
+                HeaderCell("Última Revisão", Modifier.weight(0.8f))
+            }
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            // Linhas da Tabela (espaçamento de 4.dp)
+            Column(
+                modifier = Modifier.fillMaxWidth(),
+                verticalArrangement = Arrangement.spacedBy(4.dp)
+            ) {
+                tasks.forEach { task ->
+                    TaskHistoryRow(
+                        task = task,
+                        onTaskClick = onTaskClick,
                         onProjectClick = onProjectClick
                     )
                 }
@@ -102,274 +620,92 @@ fun EmployeeDetailScreen(
 }
 
 @Composable
-private fun EmployeeDetailContent(
-    employee: Employee,
-    projects: List<Project>,
+private fun HeaderCell(text: String, modifier: Modifier = Modifier) {
+    Text(
+        text = text,
+        style = MaterialTheme.typography.titleSmall,
+        fontWeight = FontWeight.Bold,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+        modifier = modifier
+    )
+}
+
+@Composable
+private fun TaskHistoryRow(
+    task: Task,
+    onTaskClick: (String) -> Unit,
     onProjectClick: (String) -> Unit
 ) {
-    LazyColumn(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(24.dp),
-        verticalArrangement = Arrangement.spacedBy(24.dp)
-    ) {
-        
-        item {
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
-            ) {
-                Column(
-                    modifier = Modifier.padding(24.dp),
-                    verticalArrangement = Arrangement.spacedBy(16.dp)
-                ) {
-                    Row(
-                        horizontalArrangement = Arrangement.spacedBy(16.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        // Avatar grande
-                        Box(
-                            modifier = Modifier
-                                .size(80.dp)
-                                .clip(RoundedCornerShape(40.dp))
-                                .background(MaterialTheme.colorScheme.primaryContainer),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Text(
-                                text = employee.fullName.split(" ")
-                                    .take(2)
-                                    .joinToString("") { it.first().uppercase() },
-                                style = MaterialTheme.typography.headlineMedium,
-                                fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colorScheme.onPrimaryContainer
-                            )
-                        }
+    val lastRevision = task.revisions.maxByOrNull { it.revisionNumber }?.revisionNumber ?: 0
 
-                        Column(
-                            verticalArrangement = Arrangement.spacedBy(8.dp)
-                        ) {
-                            Row(
-                                horizontalArrangement = Arrangement.spacedBy(12.dp),
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Text(
-                                    text = employee.fullName,
-                                    style = MaterialTheme.typography.headlineSmall,
-                                    fontWeight = FontWeight.Bold
-                                )
-
-                                if (!employee.isCurrentlyActive()) {
-                                    Surface(
-                                        color = MaterialTheme.colorScheme.errorContainer,
-                                        shape = RoundedCornerShape(4.dp)
-                                    ) {
-                                        Text(
-                                            text = "Inativo",
-                                            modifier = Modifier.padding(
-                                                horizontal = 8.dp,
-                                                vertical = 4.dp
-                                            ),
-                                            style = MaterialTheme.typography.labelMedium,
-                                            color = MaterialTheme.colorScheme.onErrorContainer
-                                        )
-                                    }
-                                }
-                            }
-
-                            Text(
-                                text = employee.role,
-                                style = MaterialTheme.typography.titleMedium,
-                                color = MaterialTheme.colorScheme.primary
-                            )
-                        }
-                    }
-                }
-            }
-        }
-
-        
-        item {
-            SectionCard(title = "Informações de Contato") {
-                InfoRow(label = "Email", value = employee.email)
-                if (employee.phone != null) {
-                    InfoRow(label = "Telefone", value = employee.phone)
-                }
-            }
-        }
-
-        // Dados cadastrais
-        item {
-            SectionCard(title = "Dados Cadastrais") {
-                if (employee.cpf != null) {
-                    InfoRow(label = "CPF", value = employee.cpf)
-                }
-                InfoRow(label = "Data de Admissão", value = FormatUtils.formatDate(employee.hireDate))
-                if (employee.terminationDate != null) {
-                    InfoRow(
-                        label = "Data de Demissão",
-                        value = FormatUtils.formatDate(employee.terminationDate)
-                    )
-                }
-                InfoRow(
-                    label = "Tempo de Empresa",
-                    value = calculateEmploymentDuration(employee.hireDate, employee.terminationDate)
-                )
-            }
-        }
-
-        // Projetos
-        item {
-            Text(
-                text = "Obras/Projetos (${projects.size})",
-                style = MaterialTheme.typography.titleLarge,
-                fontWeight = FontWeight.Bold
-            )
-        }
-
-        if (projects.isEmpty()) {
-            item {
-                Card(
-                    modifier = Modifier.fillMaxWidth(),
-                    colors = CardDefaults.cardColors(
-                        containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)
-                    )
-                ) {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(32.dp),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text(
-                            text = "Nenhum projeto atribuído",
-                            style = MaterialTheme.typography.bodyLarge,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
-                }
-            }
-        } else {
-            items(projects) { project ->
-                ProjectItemCard(
-                    project = project,
-                    onClick = { onProjectClick(project.id) }
-                )
-            }
-        }
-    }
-}
-
-@Composable
-private fun SectionCard(
-    title: String,
-    content: @Composable ColumnScope.() -> Unit
-) {
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
-    ) {
-        Column(
-            modifier = Modifier.padding(20.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
-        ) {
-            Text(
-                text = title,
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.SemiBold,
-                color = MaterialTheme.colorScheme.primary
-            )
-
-            HorizontalDivider()
-
-            content()
-        }
-    }
-}
-
-@Composable
-private fun InfoRow(label: String, value: String) {
     Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.SpaceBetween
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(
+                MaterialTheme.colorScheme.surface,
+                RoundedCornerShape(4.dp)
+            )
+            .clickable { onTaskClick(task.id) }
+            .padding(horizontal = 8.dp, vertical = 12.dp),
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        verticalAlignment = Alignment.CenterVertically
     ) {
+        // Nome da Obra (clicável)
         Text(
-            text = label,
-            style = MaterialTheme.typography.bodyMedium,
+            text = task.project.name,
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.primary,
+            modifier = Modifier
+                .weight(1.2f)
+                .clickable { onProjectClick(task.project.id) }
+        )
+
+        VerticalDivider(modifier = Modifier.height(32.dp).padding(horizontal = 4.dp))
+
+        // Nome da Tarefa
+        Text(
+            text = task.title,
+            style = MaterialTheme.typography.bodySmall,
+            modifier = Modifier.weight(1.5f)
+        )
+
+        VerticalDivider(modifier = Modifier.height(32.dp).padding(horizontal = 4.dp))
+
+        // Descrição (truncada)
+        Text(
+            text = task.description.take(50) + if (task.description.length > 50) "..." else "",
+            style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
-            fontWeight = FontWeight.Medium
+            modifier = Modifier.weight(2f)
         )
+
+        VerticalDivider(modifier = Modifier.height(32.dp).padding(horizontal = 4.dp))
+
+        // Data de Início
         Text(
-            text = value,
-            style = MaterialTheme.typography.bodyMedium
+            text = FormatUtils.formatDate(task.startDate),
+            style = MaterialTheme.typography.bodySmall,
+            modifier = Modifier.weight(1f)
         )
-    }
-}
 
-@Composable
-private fun ProjectItemCard(
-    project: Project,
-    onClick: () -> Unit
-) {
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        onClick = onClick,
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
-    ) {
-        Column(
-            modifier = Modifier.padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
-            Text(
-                text = project.name,
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.SemiBold
-            )
+        VerticalDivider(modifier = Modifier.height(32.dp).padding(horizontal = 4.dp))
 
-            Text(
-                text = project.location,
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
+        // Data de Conclusão
+        Text(
+            text = FormatUtils.formatDate(task.dueDate),
+            style = MaterialTheme.typography.bodySmall,
+            modifier = Modifier.weight(1f)
+        )
 
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                Text(
-                    text = "Cliente: ${project.client}",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
+        VerticalDivider(modifier = Modifier.height(32.dp).padding(horizontal = 4.dp))
 
-                Text(
-                    text = "Prazo: ${FormatUtils.formatDate(project.endDate)}",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
-        }
-    }
-}
-
-private fun calculateEmploymentDuration(hireDate: LocalDate, terminationDate: LocalDate?): String {
-    val endDate = terminationDate ?: kotlinx.datetime.Clock.System.todayIn(kotlinx.datetime.TimeZone.currentSystemDefault())
-    val years = endDate.year - hireDate.year
-    val months = endDate.monthNumber - hireDate.monthNumber
-
-    val totalMonths = years * 12 + months
-    val displayYears = totalMonths / 12
-    val displayMonths = totalMonths % 12
-
-    return buildString {
-        if (displayYears > 0) {
-            append("$displayYears ano${if (displayYears > 1) "s" else ""}")
-        }
-        if (displayMonths > 0) {
-            if (displayYears > 0) append(" e ")
-            append("$displayMonths mês${if (displayMonths > 1) "es" else ""}")
-        }
-        if (displayYears == 0 && displayMonths == 0) {
-            append("Menos de 1 mês")
-        }
+        // Número da Última Revisão
+        Text(
+            text = lastRevision.toString(),
+            style = MaterialTheme.typography.bodySmall,
+            fontWeight = FontWeight.Bold,
+            modifier = Modifier.weight(0.8f),
+            textAlign = TextAlign.Center
+        )
     }
 }
