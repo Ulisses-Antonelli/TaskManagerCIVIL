@@ -20,7 +20,6 @@ import com.project.taskmanagercivil.domain.models.Employee
 import com.project.taskmanagercivil.domain.models.Project
 import com.project.taskmanagercivil.utils.FormatUtils
 import kotlinx.datetime.*
-import kotlin.random.Random
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -314,7 +313,7 @@ fun EmployeeFormModal(
                         onClick = {
                             if (isValid) {
                                 val newEmployee = Employee(
-                                    id = employee?.id ?: Random.nextInt(1000, 9999).toString(),
+                                    id = employee?.id ?: "", // ID vazio para novo colaborador
                                     fullName = fullName,
                                     role = role,
                                     email = email,

@@ -163,15 +163,18 @@ class EmployeesViewModel(
     fun saveEmployee(employee: Employee) {
         viewModelScope.launch {
             try {
-                if (employee.id.toIntOrNull() != null && employee.id.toInt() < 1000) {
-                    // É um ID temporário, criar novo
-                    repository.addEmployee(employee)
+                if (employee.id.isEmpty()) {
+                    // Criar novo colaborador com ID gerado
+                    val currentEmployees = _uiState.value.employees
+                    val maxId = currentEmployees.mapNotNull { it.id.toIntOrNull() }.maxOrNull() ?: 0
+                    val newId = (maxId + 1).toString()
+                    val newEmployee = employee.copy(id = newId)
+                    repository.addEmployee(newEmployee)
                 } else {
-                    // Atualizar existente
+                    // Atualizar colaborador existente
                     repository.updateEmployee(employee)
                 }
-                loadEmployees()
-                loadProjects()
+                // Não precisa chamar loadEmployees() porque o Flow já atualiza automaticamente
             } catch (e: Exception) {
                 println("Error saving employee: ${e.message}")
             }
