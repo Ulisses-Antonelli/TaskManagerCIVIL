@@ -8,6 +8,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -155,7 +156,11 @@ fun DocumentsScreenContent(
                                 ) { document ->
                                     DocumentCard(
                                         document = document,
-                                        onClick = { onDocumentClick(document.id) }
+                                        onClick = { onDocumentClick(document.id) },
+                                        onEdit = {
+                                            documentToEdit = document
+                                            showDocumentFormModal = true
+                                        }
                                     )
                                 }
                             }
@@ -467,7 +472,8 @@ private fun FiltersRow(
 @Composable
 private fun DocumentCard(
     document: Document,
-    onClick: () -> Unit
+    onClick: () -> Unit,
+    onEdit: ((Document) -> Unit)? = null
 ) {
     Surface(
         modifier = Modifier
@@ -478,7 +484,10 @@ private fun DocumentCard(
         shadowElevation = 2.dp,
         color = MaterialTheme.colorScheme.surface
     ) {
-        Row(
+        Box(
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Row(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(16.dp),
@@ -646,6 +655,40 @@ private fun DocumentCard(
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
+                }
+            }
+        }
+
+            // Botão Editar no canto superior direito (sobreposto)
+            if (onEdit != null) {
+                var showMenu by remember { mutableStateOf(false) }
+                Box(
+                    modifier = Modifier
+                        .align(Alignment.TopEnd)
+                        .padding(8.dp)
+                ) {
+                    IconButton(
+                        onClick = { showMenu = true },
+                        modifier = Modifier.size(32.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.MoreVert,
+                            contentDescription = "Mais opções",
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                    DropdownMenu(
+                        expanded = showMenu,
+                        onDismissRequest = { showMenu = false }
+                    ) {
+                        DropdownMenuItem(
+                            text = { Text("Editar") },
+                            onClick = {
+                                showMenu = false
+                                onEdit(document)
+                            }
+                        )
+                    }
                 }
             }
         }
