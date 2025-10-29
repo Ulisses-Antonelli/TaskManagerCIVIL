@@ -6,6 +6,8 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -14,18 +16,26 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.navigation.NavController
 import com.project.taskmanagercivil.domain.models.*
+import com.project.taskmanagercivil.presentation.components.DynamicBreadcrumbs
 import com.project.taskmanagercivil.presentation.components.NavigationSidebar
+import com.project.taskmanagercivil.presentation.navigation.NavigationState
 import com.project.taskmanagercivil.utils.FormatUtils
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DocumentsScreenContent(
+    navController: NavController,
     viewModel: DocumentsViewModel,
     onDocumentClick: (String) -> Unit,
-    onCreateDocument: () -> Unit,
     onNavigate: (String) -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsState()
+
+    // Estado do modal
+    var showDocumentFormModal by remember { mutableStateOf(false) }
+    var documentToEdit by remember { mutableStateOf<Document?>(null) }
 
     Row(modifier = Modifier.fillMaxSize()) {
         NavigationSidebar(
@@ -33,80 +43,140 @@ fun DocumentsScreenContent(
             onMenuClick = onNavigate
         )
 
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(24.dp)
-        ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(
-                    text = "Documentos",
-                    style = MaterialTheme.typography.headlineMedium,
-                    fontWeight = FontWeight.Bold
-                )
+        HorizontalDivider(modifier = Modifier.fillMaxHeight().width(1.dp))
 
-                Button(
-                    onClick = onCreateDocument,
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = MaterialTheme.colorScheme.primary
+        Column(modifier = Modifier.weight(1f)) {
+            Scaffold(
+                topBar = {
+                    Column {
+                        TopAppBar(
+                            title = { Text("Documentos") }
+                        )
+
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(end = 16.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            DynamicBreadcrumbs(
+                                navController = navController,
+                                currentRoot = NavigationState.currentRoot,
+                                modifier = Modifier.weight(1f)
+                            )
+
+                            // Botão de adicionar
+                            IconButton(
+                                onClick = {
+                                    documentToEdit = null
+                                    showDocumentFormModal = true
+                                },
+                                modifier = Modifier.size(40.dp),
+                                colors = IconButtonDefaults.iconButtonColors(
+                                    containerColor = MaterialTheme.colorScheme.surfaceVariant,
+                                    contentColor = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.Add,
+                                    contentDescription = "Criar novo documento",
+                                    modifier = Modifier.size(24.dp)
+                                )
+                            }
+                        }
+                    }
+                }
+            ) { paddingValues ->
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(paddingValues)
+                ) {
+                    // Barra de pesquisa
+                    SearchBar(
+                        query = uiState.searchQuery,
+                        onQueryChange = viewModel::onSearchQueryChange,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 16.dp, vertical = 8.dp)
                     )
-                ) {
-                    Text("+ Novo Documento")
-                }
-            }
 
-            Spacer(modifier = Modifier.height(24.dp))
-
-            DocumentFiltersSection(
-                searchQuery = uiState.searchQuery,
-                onSearchQueryChange = { viewModel.onSearchQueryChange(it) },
-                filterCategory = uiState.filterCategory,
-                onFilterCategoryChange = { viewModel.onFilterCategoryChange(it) },
-                filterType = uiState.filterType,
-                onFilterTypeChange = { viewModel.onFilterTypeChange(it) },
-                filterStatus = uiState.filterStatus,
-                onFilterStatusChange = { viewModel.onFilterStatusChange(it) },
-                filterPhase = uiState.filterPhase,
-                onFilterPhaseChange = { viewModel.onFilterPhaseChange(it) },
-                sortOrder = uiState.sortOrder,
-                onSortOrderChange = { viewModel.onSortOrderChange(it) }
-            )
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            if (uiState.isLoading) {
-                Box(
-                    modifier = Modifier.fillMaxSize(),
-                    contentAlignment = Alignment.Center
-                ) {
-                    CircularProgressIndicator()
-                }
-            } else if (uiState.filteredDocuments.isEmpty()) {
-                Box(
-                    modifier = Modifier.fillMaxSize(),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(
-                        text = "Nenhum documento encontrado",
-                        style = MaterialTheme.typography.bodyLarge,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    // Filtros
+                    FiltersRow(
+                        uiState = uiState,
+                        viewModel = viewModel,
+                        modifier = Modifier.padding(horizontal = 16.dp)
                     )
-                }
-            } else {
-                LazyColumn(
-                    verticalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
-                    items(
-                        items = uiState.filteredDocuments,
-                        key = { it.id }
-                    ) { document ->
-                        DocumentCard(
-                            document = document,
-                            onClick = { onDocumentClick(document.id) }
+
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    // Lista de documentos
+                    when {
+                        uiState.isLoading -> {
+                            Box(
+                                modifier = Modifier.fillMaxSize(),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                CircularProgressIndicator()
+                            }
+                        }
+
+                        uiState.filteredDocuments.isEmpty() -> {
+                            Box(
+                                modifier = Modifier.fillMaxSize(),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Column(
+                                    horizontalAlignment = Alignment.CenterHorizontally
+                                ) {
+                                    Text(
+                                        text = "Nenhum documento encontrado",
+                                        style = MaterialTheme.typography.headlineSmall
+                                    )
+                                    Spacer(modifier = Modifier.height(8.dp))
+                                    Text(
+                                        text = "Tente ajustar os filtros",
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                }
+                            }
+                        }
+
+                        else -> {
+                            LazyColumn(
+                                modifier = Modifier.fillMaxSize(),
+                                contentPadding = PaddingValues(16.dp),
+                                verticalArrangement = Arrangement.spacedBy(12.dp)
+                            ) {
+                                items(
+                                    items = uiState.filteredDocuments,
+                                    key = { it.id }
+                                ) { document ->
+                                    DocumentCard(
+                                        document = document,
+                                        onClick = { onDocumentClick(document.id) }
+                                    )
+                                }
+                            }
+                        }
+                    }
+
+                    // Modal de formulário de documento
+                    if (showDocumentFormModal) {
+                        DocumentFormModal(
+                            document = documentToEdit,
+                            availableProjects = uiState.allProjects,
+                            availableTasks = uiState.allTasks,
+                            onDismiss = {
+                                showDocumentFormModal = false
+                                documentToEdit = null
+                            },
+                            onSave = { document ->
+                                viewModel.saveDocument(document)
+                                showDocumentFormModal = false
+                                documentToEdit = null
+                            }
                         )
                     }
                 }
@@ -116,186 +186,97 @@ fun DocumentsScreenContent(
 }
 
 @Composable
-private fun DocumentFiltersSection(
-    searchQuery: String,
-    onSearchQueryChange: (String) -> Unit,
-    filterCategory: DocumentFilterCategory,
-    onFilterCategoryChange: (DocumentFilterCategory) -> Unit,
-    filterType: DocumentType?,
-    onFilterTypeChange: (DocumentType?) -> Unit,
-    filterStatus: DocumentStatus?,
-    onFilterStatusChange: (DocumentStatus?) -> Unit,
-    filterPhase: ProjectPhase?,
-    onFilterPhaseChange: (ProjectPhase?) -> Unit,
-    sortOrder: DocumentSortOrder,
-    onSortOrderChange: (DocumentSortOrder) -> Unit
+private fun SearchBar(
+    query: String,
+    onQueryChange: (String) -> Unit,
+    modifier: Modifier = Modifier
 ) {
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)
-        )
-    ) {
-        Column(
-            modifier = Modifier.padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
+    OutlinedTextField(
+        value = query,
+        onValueChange = onQueryChange,
+        modifier = modifier,
+        placeholder = { Text("Buscar por título, código ou descrição...") },
+        singleLine = true,
+        shape = RoundedCornerShape(8.dp)
+    )
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun FiltersRow(
+    uiState: DocumentsUiState,
+    viewModel: DocumentsViewModel,
+    modifier: Modifier = Modifier
+) {
+    // Estados para controlar abertura dos dropdowns
+    var categoryExpanded by remember { mutableStateOf(false) }
+    var typeExpanded by remember { mutableStateOf(false) }
+    var statusExpanded by remember { mutableStateOf(false) }
+    var phaseExpanded by remember { mutableStateOf(false) }
+    var sortExpanded by remember { mutableStateOf(false) }
+
+    Column(modifier = modifier) {
+        // Primeira linha: Categoria, Tipo, Status
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            OutlinedTextField(
-                value = searchQuery,
-                onValueChange = onSearchQueryChange,
-                modifier = Modifier.fillMaxWidth(),
-                placeholder = { Text("Buscar por título, código ou descrição...") },
-                singleLine = true
-            )
-
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(12.dp)
+            // Dropdown 1: Categoria
+            ExposedDropdownMenuBox(
+                expanded = categoryExpanded,
+                onExpandedChange = { categoryExpanded = it },
+                modifier = Modifier.weight(1f)
             ) {
-                Box(modifier = Modifier.weight(1f)) {
-                    var expanded by remember { mutableStateOf(false) }
+                OutlinedTextField(
+                    value = when (uiState.filterCategory) {
+                        DocumentFilterCategory.ALL -> "Todas as Categorias"
+                        DocumentFilterCategory.PLANS_PROJECTS -> DocumentCategory.PLANS_PROJECTS.displayName
+                        DocumentFilterCategory.TECHNICAL -> DocumentCategory.TECHNICAL.displayName
+                        DocumentFilterCategory.LEGAL_CONTRACTUAL -> DocumentCategory.LEGAL_CONTRACTUAL.displayName
+                        DocumentFilterCategory.FINANCIAL -> DocumentCategory.FINANCIAL.displayName
+                        DocumentFilterCategory.QUALITY -> DocumentCategory.QUALITY.displayName
+                        DocumentFilterCategory.CONSTRUCTION_SITE -> DocumentCategory.CONSTRUCTION_SITE.displayName
+                        DocumentFilterCategory.OTHER -> DocumentCategory.OTHER.displayName
+                    },
+                    onValueChange = {},
+                    readOnly = true,
+                    label = { Text("Categoria") },
+                    trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = categoryExpanded) },
+                    colors = ExposedDropdownMenuDefaults.outlinedTextFieldColors(),
+                    modifier = Modifier.menuAnchor().fillMaxWidth()
+                )
 
-                    OutlinedButton(
-                        onClick = { expanded = true },
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        Text(
-                            text = when (filterCategory) {
-                                DocumentFilterCategory.ALL -> "Todas as Categorias"
-                                DocumentFilterCategory.PLANS_PROJECTS -> DocumentCategory.PLANS_PROJECTS.displayName
-                                DocumentFilterCategory.TECHNICAL -> DocumentCategory.TECHNICAL.displayName
-                                DocumentFilterCategory.LEGAL_CONTRACTUAL -> DocumentCategory.LEGAL_CONTRACTUAL.displayName
-                                DocumentFilterCategory.FINANCIAL -> DocumentCategory.FINANCIAL.displayName
-                                DocumentFilterCategory.QUALITY -> DocumentCategory.QUALITY.displayName
-                                DocumentFilterCategory.CONSTRUCTION_SITE -> DocumentCategory.CONSTRUCTION_SITE.displayName
-                                DocumentFilterCategory.OTHER -> DocumentCategory.OTHER.displayName
-                            }
-                        )
-                    }
-
-                    DropdownMenu(
-                        expanded = expanded,
-                        onDismissRequest = { expanded = false }
-                    ) {
-                        DropdownMenuItem(
-                            text = { Text("Todas as Categorias") },
-                            onClick = {
-                                onFilterCategoryChange(DocumentFilterCategory.ALL)
-                                expanded = false
-                            }
-                        )
-                        DropdownMenuItem(
-                            text = { Text(DocumentCategory.PLANS_PROJECTS.displayName) },
-                            onClick = {
-                                onFilterCategoryChange(DocumentFilterCategory.PLANS_PROJECTS)
-                                expanded = false
-                            }
-                        )
-                        DropdownMenuItem(
-                            text = { Text(DocumentCategory.TECHNICAL.displayName) },
-                            onClick = {
-                                onFilterCategoryChange(DocumentFilterCategory.TECHNICAL)
-                                expanded = false
-                            }
-                        )
-                        DropdownMenuItem(
-                            text = { Text(DocumentCategory.LEGAL_CONTRACTUAL.displayName) },
-                            onClick = {
-                                onFilterCategoryChange(DocumentFilterCategory.LEGAL_CONTRACTUAL)
-                                expanded = false
-                            }
-                        )
-                        DropdownMenuItem(
-                            text = { Text(DocumentCategory.FINANCIAL.displayName) },
-                            onClick = {
-                                onFilterCategoryChange(DocumentFilterCategory.FINANCIAL)
-                                expanded = false
-                            }
-                        )
-                        DropdownMenuItem(
-                            text = { Text(DocumentCategory.QUALITY.displayName) },
-                            onClick = {
-                                onFilterCategoryChange(DocumentFilterCategory.QUALITY)
-                                expanded = false
-                            }
-                        )
-                        DropdownMenuItem(
-                            text = { Text(DocumentCategory.CONSTRUCTION_SITE.displayName) },
-                            onClick = {
-                                onFilterCategoryChange(DocumentFilterCategory.CONSTRUCTION_SITE)
-                                expanded = false
-                            }
-                        )
-                        DropdownMenuItem(
-                            text = { Text(DocumentCategory.OTHER.displayName) },
-                            onClick = {
-                                onFilterCategoryChange(DocumentFilterCategory.OTHER)
-                                expanded = false
-                            }
-                        )
-                    }
-                }
-
-                Box(modifier = Modifier.weight(1f)) {
-                    var expanded by remember { mutableStateOf(false) }
-
-                    OutlinedButton(
-                        onClick = { expanded = true },
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        Text(text = filterType?.displayName ?: "Todos os Tipos")
-                    }
-
-                    DropdownMenu(
-                        expanded = expanded,
-                        onDismissRequest = { expanded = false }
-                    ) {
-                        DropdownMenuItem(
-                            text = { Text("Todos os Tipos") },
-                            onClick = {
-                                onFilterTypeChange(null)
-                                expanded = false
-                            }
-                        )
-                        DocumentType.entries.forEach { type ->
-                            DropdownMenuItem(
-                                text = { Text(type.displayName) },
-                                onClick = {
-                                    onFilterTypeChange(type)
-                                    expanded = false
-                                }
-                            )
+                ExposedDropdownMenu(
+                    expanded = categoryExpanded,
+                    onDismissRequest = { categoryExpanded = false }
+                ) {
+                    DropdownMenuItem(
+                        text = { Text("Todas as Categorias") },
+                        onClick = {
+                            viewModel.onFilterCategoryChange(DocumentFilterCategory.ALL)
+                            categoryExpanded = false
                         }
-                    }
-                }
-
-                Box(modifier = Modifier.weight(1f)) {
-                    var expanded by remember { mutableStateOf(false) }
-
-                    OutlinedButton(
-                        onClick = { expanded = true },
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        Text(text = filterStatus?.displayName ?: "Todos os Status")
-                    }
-
-                    DropdownMenu(
-                        expanded = expanded,
-                        onDismissRequest = { expanded = false }
-                    ) {
-                        DropdownMenuItem(
-                            text = { Text("Todos os Status") },
-                            onClick = {
-                                onFilterStatusChange(null)
-                                expanded = false
-                            }
-                        )
-                        DocumentStatus.entries.forEach { status ->
+                    )
+                    DocumentFilterCategory.entries.forEach { filter ->
+                        if (filter != DocumentFilterCategory.ALL) {
                             DropdownMenuItem(
-                                text = { Text(status.displayName) },
+                                text = {
+                                    Text(
+                                        when (filter) {
+                                            DocumentFilterCategory.PLANS_PROJECTS -> DocumentCategory.PLANS_PROJECTS.displayName
+                                            DocumentFilterCategory.TECHNICAL -> DocumentCategory.TECHNICAL.displayName
+                                            DocumentFilterCategory.LEGAL_CONTRACTUAL -> DocumentCategory.LEGAL_CONTRACTUAL.displayName
+                                            DocumentFilterCategory.FINANCIAL -> DocumentCategory.FINANCIAL.displayName
+                                            DocumentFilterCategory.QUALITY -> DocumentCategory.QUALITY.displayName
+                                            DocumentFilterCategory.CONSTRUCTION_SITE -> DocumentCategory.CONSTRUCTION_SITE.displayName
+                                            DocumentFilterCategory.OTHER -> DocumentCategory.OTHER.displayName
+                                            else -> ""
+                                        }
+                                    )
+                                },
                                 onClick = {
-                                    onFilterStatusChange(status)
-                                    expanded = false
+                                    viewModel.onFilterCategoryChange(filter)
+                                    categoryExpanded = false
                                 }
                             )
                         }
@@ -303,68 +284,181 @@ private fun DocumentFiltersSection(
                 }
             }
 
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(12.dp)
+            // Dropdown 2: Tipo de Documento
+            ExposedDropdownMenuBox(
+                expanded = typeExpanded,
+                onExpandedChange = { typeExpanded = it },
+                modifier = Modifier.weight(1f)
             ) {
-                Box(modifier = Modifier.weight(1f)) {
-                    var expanded by remember { mutableStateOf(false) }
+                OutlinedTextField(
+                    value = uiState.filterType?.displayName ?: "Todos os Tipos",
+                    onValueChange = {},
+                    readOnly = true,
+                    label = { Text("Tipo") },
+                    trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = typeExpanded) },
+                    colors = ExposedDropdownMenuDefaults.outlinedTextFieldColors(),
+                    modifier = Modifier.menuAnchor().fillMaxWidth()
+                )
 
-                    OutlinedButton(
-                        onClick = { expanded = true },
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        Text(text = filterPhase?.displayName ?: "Todas as Fases")
-                    }
-
-                    DropdownMenu(
-                        expanded = expanded,
-                        onDismissRequest = { expanded = false }
-                    ) {
+                ExposedDropdownMenu(
+                    expanded = typeExpanded,
+                    onDismissRequest = { typeExpanded = false }
+                ) {
+                    DropdownMenuItem(
+                        text = { Text("Todos os Tipos") },
+                        onClick = {
+                            viewModel.onFilterTypeChange(null)
+                            typeExpanded = false
+                        }
+                    )
+                    DocumentType.entries.forEach { type ->
                         DropdownMenuItem(
-                            text = { Text("Todas as Fases") },
+                            text = { Text(type.displayName) },
                             onClick = {
-                                onFilterPhaseChange(null)
-                                expanded = false
+                                viewModel.onFilterTypeChange(type)
+                                typeExpanded = false
                             }
                         )
-                        ProjectPhase.entries.forEach { phase ->
-                            DropdownMenuItem(
-                                text = { Text(phase.displayName) },
-                                onClick = {
-                                    onFilterPhaseChange(phase)
-                                    expanded = false
-                                }
-                            )
-                        }
                     }
                 }
+            }
 
-                Box(modifier = Modifier.weight(1f)) {
-                    var expanded by remember { mutableStateOf(false) }
+            // Dropdown 3: Status do Documento
+            ExposedDropdownMenuBox(
+                expanded = statusExpanded,
+                onExpandedChange = { statusExpanded = it },
+                modifier = Modifier.weight(1f)
+            ) {
+                OutlinedTextField(
+                    value = uiState.filterStatus?.displayName ?: "Todos os Status",
+                    onValueChange = {},
+                    readOnly = true,
+                    label = { Text("Status") },
+                    trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = statusExpanded) },
+                    colors = ExposedDropdownMenuDefaults.outlinedTextFieldColors(),
+                    modifier = Modifier.menuAnchor().fillMaxWidth()
+                )
 
-                    OutlinedButton(
-                        onClick = { expanded = true },
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        Text(text = sortOrder.displayName)
-                    }
-
-                    DropdownMenu(
-                        expanded = expanded,
-                        onDismissRequest = { expanded = false }
-                    ) {
-                        DocumentSortOrder.entries.forEach { order ->
-                            DropdownMenuItem(
-                                text = { Text(order.displayName) },
-                                onClick = {
-                                    onSortOrderChange(order)
-                                    expanded = false
-                                }
-                            )
+                ExposedDropdownMenu(
+                    expanded = statusExpanded,
+                    onDismissRequest = { statusExpanded = false }
+                ) {
+                    DropdownMenuItem(
+                        text = { Text("Todos os Status") },
+                        onClick = {
+                            viewModel.onFilterStatusChange(null)
+                            statusExpanded = false
                         }
+                    )
+                    DocumentStatus.entries.forEach { status ->
+                        DropdownMenuItem(
+                            text = { Text(status.displayName) },
+                            onClick = {
+                                viewModel.onFilterStatusChange(status)
+                                statusExpanded = false
+                            }
+                        )
                     }
                 }
+            }
+        }
+
+        Spacer(modifier = Modifier.height(8.dp))
+
+        // Segunda linha: Fase, Ordenação
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            // Dropdown 4: Fase do Documento
+            ExposedDropdownMenuBox(
+                expanded = phaseExpanded,
+                onExpandedChange = { phaseExpanded = it },
+                modifier = Modifier.weight(1f)
+            ) {
+                OutlinedTextField(
+                    value = uiState.filterPhase?.displayName ?: "Todas as Fases",
+                    onValueChange = {},
+                    readOnly = true,
+                    label = { Text("Fase") },
+                    trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = phaseExpanded) },
+                    colors = ExposedDropdownMenuDefaults.outlinedTextFieldColors(),
+                    modifier = Modifier.menuAnchor().fillMaxWidth()
+                )
+
+                ExposedDropdownMenu(
+                    expanded = phaseExpanded,
+                    onDismissRequest = { phaseExpanded = false }
+                ) {
+                    DropdownMenuItem(
+                        text = { Text("Todas as Fases") },
+                        onClick = {
+                            viewModel.onFilterPhaseChange(null)
+                            phaseExpanded = false
+                        }
+                    )
+                    ProjectPhase.entries.forEach { phase ->
+                        DropdownMenuItem(
+                            text = { Text(phase.displayName) },
+                            onClick = {
+                                viewModel.onFilterPhaseChange(phase)
+                                phaseExpanded = false
+                            }
+                        )
+                    }
+                }
+            }
+
+            // Dropdown 5: Ordenação
+            ExposedDropdownMenuBox(
+                expanded = sortExpanded,
+                onExpandedChange = { sortExpanded = it },
+                modifier = Modifier.weight(1f)
+            ) {
+                OutlinedTextField(
+                    value = uiState.sortOrder.displayName,
+                    onValueChange = {},
+                    readOnly = true,
+                    label = { Text("Ordenar por") },
+                    trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = sortExpanded) },
+                    colors = ExposedDropdownMenuDefaults.outlinedTextFieldColors(),
+                    modifier = Modifier.menuAnchor().fillMaxWidth()
+                )
+
+                ExposedDropdownMenu(
+                    expanded = sortExpanded,
+                    onDismissRequest = { sortExpanded = false }
+                ) {
+                    DocumentSortOrder.entries.forEach { order ->
+                        DropdownMenuItem(
+                            text = { Text(order.displayName) },
+                            onClick = {
+                                viewModel.onSortOrderChange(order)
+                                sortExpanded = false
+                            }
+                        )
+                    }
+                }
+            }
+        }
+
+        // Botão para limpar filtros (se houver filtros ativos)
+        if (uiState.filterCategory != DocumentFilterCategory.ALL ||
+            uiState.filterType != null ||
+            uiState.filterStatus != null ||
+            uiState.filterPhase != null
+        ) {
+            Spacer(modifier = Modifier.height(8.dp))
+            TextButton(
+                onClick = {
+                    viewModel.onFilterCategoryChange(DocumentFilterCategory.ALL)
+                    viewModel.onFilterTypeChange(null)
+                    viewModel.onFilterStatusChange(null)
+                    viewModel.onFilterPhaseChange(null)
+                },
+                modifier = Modifier.align(Alignment.End)
+            ) {
+                Text("Limpar Filtros")
             }
         }
     }
@@ -375,18 +469,23 @@ private fun DocumentCard(
     document: Document,
     onClick: () -> Unit
 ) {
-    Card(
+    Surface(
         modifier = Modifier
             .fillMaxWidth()
+            .clip(RoundedCornerShape(8.dp))
             .clickable(onClick = onClick),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+        tonalElevation = 1.dp,
+        shadowElevation = 2.dp,
+        color = MaterialTheme.colorScheme.surface
     ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(16.dp),
-            horizontalArrangement = Arrangement.spacedBy(16.dp)
+            horizontalArrangement = Arrangement.spacedBy(16.dp),
+            verticalAlignment = Alignment.CenterVertically
         ) {
+            // Avatar com ícone da categoria
             Box(
                 modifier = Modifier
                     .size(56.dp)
@@ -401,81 +500,152 @@ private fun DocumentCard(
                 )
             }
 
+            // Coluna 1: Código (maior) e Título
             Column(
-                modifier = Modifier.weight(1f),
-                verticalArrangement = Arrangement.spacedBy(4.dp)
+                modifier = Modifier.weight(2f),
+                verticalArrangement = Arrangement.Center
             ) {
                 Text(
                     text = document.code,
-                    style = MaterialTheme.typography.labelMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.primary
                 )
-
+                Spacer(modifier = Modifier.height(4.dp))
                 Text(
                     text = document.title,
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.SemiBold
+                    style = MaterialTheme.typography.bodyMedium,
+                    maxLines = 2,
+                    color = MaterialTheme.colorScheme.onSurface
                 )
+            }
 
-                Row(
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    verticalAlignment = Alignment.CenterVertically
+            // Divisor vertical 1
+            VerticalDivider(
+                modifier = Modifier
+                    .height(56.dp)
+                    .width(1.dp),
+                color = MaterialTheme.colorScheme.outlineVariant
+            )
+
+            // Coluna 2: Time/Disciplina
+            Column(
+                modifier = Modifier.weight(1f),
+                verticalArrangement = Arrangement.Center,
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Text(
+                    text = "Time",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                Spacer(modifier = Modifier.height(4.dp))
+                Text(
+                    text = document.discipline?.displayName ?: "N/A",
+                    style = MaterialTheme.typography.bodyMedium,
+                    fontWeight = FontWeight.Medium,
+                    color = MaterialTheme.colorScheme.onSurface,
+                    maxLines = 1
+                )
+            }
+
+            // Divisor vertical 2
+            VerticalDivider(
+                modifier = Modifier
+                    .height(56.dp)
+                    .width(1.dp),
+                color = MaterialTheme.colorScheme.outlineVariant
+            )
+
+            // Coluna 3: Tipo
+            Column(
+                modifier = Modifier.weight(1f),
+                verticalArrangement = Arrangement.Center,
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Text(
+                    text = "Tipo",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                Spacer(modifier = Modifier.height(4.dp))
+                Text(
+                    text = document.type.displayName,
+                    style = MaterialTheme.typography.bodySmall,
+                    fontWeight = FontWeight.Medium,
+                    color = MaterialTheme.colorScheme.onSurface,
+                    maxLines = 2,
+                    textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                )
+            }
+
+            // Divisor vertical 3
+            VerticalDivider(
+                modifier = Modifier
+                    .height(56.dp)
+                    .width(1.dp),
+                color = MaterialTheme.colorScheme.outlineVariant
+            )
+
+            // Coluna 4: Status
+            Column(
+                modifier = Modifier.weight(1f),
+                verticalArrangement = Arrangement.Center,
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Text(
+                    text = "Status",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                Spacer(modifier = Modifier.height(4.dp))
+                Surface(
+                    color = getStatusColor(document.status),
+                    shape = RoundedCornerShape(4.dp)
                 ) {
-                    Surface(
-                        color = MaterialTheme.colorScheme.secondaryContainer,
-                        shape = RoundedCornerShape(4.dp)
-                    ) {
-                        Text(
-                            text = document.type.displayName,
-                            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
-                            style = MaterialTheme.typography.labelSmall,
-                            color = MaterialTheme.colorScheme.onSecondaryContainer
-                        )
-                    }
-
-                    Surface(
-                        color = getStatusColor(document.status),
-                        shape = RoundedCornerShape(4.dp)
-                    ) {
-                        Text(
-                            text = document.status.displayName,
-                            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
-                            style = MaterialTheme.typography.labelSmall,
-                            color = Color.White
-                        )
-                    }
+                    Text(
+                        text = document.status.displayName,
+                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                        style = MaterialTheme.typography.labelSmall,
+                        fontWeight = FontWeight.Medium,
+                        color = Color.White
+                    )
                 }
+            }
 
-                Row(
-                    horizontalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
+            // Divisor vertical 4
+            VerticalDivider(
+                modifier = Modifier
+                    .height(56.dp)
+                    .width(1.dp),
+                color = MaterialTheme.colorScheme.outlineVariant
+            )
+
+            // Coluna 5: Revisão e Data
+            Column(
+                modifier = Modifier.weight(1f),
+                verticalArrangement = Arrangement.Center,
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Text(
+                    text = "Rev. ${document.currentRevision}",
+                    style = MaterialTheme.typography.bodyMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+                Spacer(modifier = Modifier.height(2.dp))
+                Text(
+                    text = FormatUtils.formatDate(document.createdDate),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                if (document.fileSize != null) {
+                    Spacer(modifier = Modifier.height(2.dp))
                     Text(
-                        text = "Rev. ${document.currentRevision}",
-                        style = MaterialTheme.typography.bodySmall,
+                        text = formatFileSize(document.fileSize),
+                        style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
-                    Text(
-                        text = "•",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                    Text(
-                        text = FormatUtils.formatDate(document.createdDate),
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                    if (document.fileSize != null) {
-                        Text(
-                            text = "•",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                        Text(
-                            text = formatFileSize(document.fileSize),
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
                 }
             }
         }
