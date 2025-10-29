@@ -15,7 +15,9 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.project.taskmanagercivil.domain.models.Team
@@ -139,7 +141,7 @@ private fun TeamDetailContent(
 
         // Informações Gerais
         item {
-            GeneralInfoCard(team = team, membersCount = members.size, leader = leader)
+            GeneralInfoCard(team = team, membersCount = members.size, leader = leader, tasks = tasks)
         }
 
         // Quadro de Membros do Time
@@ -303,7 +305,14 @@ private fun TeamHeader(team: Team, leader: Employee?) {
 
 // Card de Informações Gerais
 @Composable
-private fun GeneralInfoCard(team: Team, membersCount: Int, leader: Employee?) {
+private fun GeneralInfoCard(team: Team, membersCount: Int, leader: Employee?, tasks: List<Task>) {
+    // Calcular progresso do time como média ponderada das tarefas
+    val teamProgress = if (tasks.isNotEmpty()) {
+        tasks.sumOf { it.progress.toDouble() }.toInt() / tasks.size
+    } else {
+        0
+    }
+
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(8.dp)
@@ -320,50 +329,89 @@ private fun GeneralInfoCard(team: Team, membersCount: Int, leader: Employee?) {
                 fontWeight = FontWeight.Bold
             )
 
-            // Departamento
-            StampRow(
-                label = "Departamento:",
-                value = team.department.displayName
-            )
-
+            // Escopo de Trabalho / Descrição
             if (team.description.isNotEmpty()) {
-                HorizontalDivider()
                 StampRow(
-                    label = "Descrição:",
+                    label = "Escopo de Trabalho da Equipe:",
                     value = team.description
                 )
+                HorizontalDivider()
             }
 
-            HorizontalDivider()
-
-            // Membros
-            StampRow(
-                label = "Quantidade de Membros:",
-                value = "$membersCount"
-            )
-
+            // Líder
             if (leader != null) {
-                HorizontalDivider()
                 StampRow(
                     label = "Líder:",
                     value = leader.fullName
                 )
+                HorizontalDivider()
             }
 
-            HorizontalDivider()
+            // Grid com 4 colunas
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                // Quantidade de Membros
+                StampCell(
+                    label = "Quantidade de Membros",
+                    value = membersCount.toString(),
+                    modifier = Modifier.weight(1f)
+                )
 
-            // Data de Criação
-            StampRow(
-                label = "Data de Criação:",
-                value = FormatUtils.formatDate(team.createdDate)
-            )
+                VerticalDivider(
+                    modifier = Modifier
+                        .height(56.dp)
+                        .padding(horizontal = 8.dp)
+                )
 
-            HorizontalDivider()
+                // Data de Criação
+                StampCell(
+                    label = "Data de Criação",
+                    value = FormatUtils.formatDate(team.createdDate),
+                    modifier = Modifier.weight(1f)
+                )
 
-            // Status
-            StampRow(
-                label = "Status:",
-                value = if (team.isActive) "Ativo" else "Inativo"
+                VerticalDivider(
+                    modifier = Modifier
+                        .height(56.dp)
+                        .padding(horizontal = 8.dp)
+                )
+
+                // Status
+                StampCell(
+                    label = "Status",
+                    value = if (team.isActive) "Ativo" else "Inativo",
+                    modifier = Modifier.weight(1f)
+                )
+
+                VerticalDivider(
+                    modifier = Modifier
+                        .height(56.dp)
+                        .padding(horizontal = 8.dp)
+                )
+
+                // Progresso
+                StampCell(
+                    label = "Progresso",
+                    value = "$teamProgress%",
+                    valueColor = when {
+                        teamProgress >= 75 -> Color(0xFF4CAF50) // Verde
+                        teamProgress >= 50 -> Color(0xFFFFC107) // Amarelo
+                        teamProgress >= 25 -> Color(0xFFFF9800) // Laranja
+                        else -> Color(0xFFF44336) // Vermelho
+                    },
+                    modifier = Modifier.weight(1f)
+                )
+            }
+
+            // Nota explicativa sobre o progresso
+            Text(
+                text = "* O progresso do time é calculado como média ponderada das tarefas atribuídas aos membros.",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
+                fontStyle = androidx.compose.ui.text.font.FontStyle.Italic,
+                modifier = Modifier.padding(top = 4.dp)
             )
         }
     }
@@ -392,6 +440,40 @@ private fun StampRow(
             text = value,
             style = MaterialTheme.typography.bodyLarge,
             color = MaterialTheme.colorScheme.onSurface
+        )
+    }
+}
+
+@Composable
+private fun StampCell(
+    label: String,
+    value: String,
+    modifier: Modifier = Modifier,
+    valueColor: Color? = null
+) {
+    Column(
+        modifier = modifier
+            .height(56.dp)
+            .padding(horizontal = 4.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center
+    ) {
+        Text(
+            text = label,
+            style = MaterialTheme.typography.titleSmall,
+            fontWeight = FontWeight.Bold,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            textAlign = TextAlign.Center,
+            maxLines = 2
+        )
+        Spacer(modifier = Modifier.height(4.dp))
+        Text(
+            text = value,
+            style = MaterialTheme.typography.titleLarge,
+            fontWeight = FontWeight.Bold,
+            color = valueColor ?: MaterialTheme.colorScheme.primary,
+            textAlign = TextAlign.Center,
+            maxLines = 1
         )
     }
 }
