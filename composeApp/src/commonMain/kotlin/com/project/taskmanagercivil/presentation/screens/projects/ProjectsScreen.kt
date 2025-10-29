@@ -164,6 +164,10 @@ fun ProjectsScreenContent(
                             ProjectsList(
                                 projects = uiState.filteredProjects,
                                 onProjectClick = onProjectClick,
+                                onEditProject = { project ->
+                                    projectToEdit = project
+                                    showProjectFormModal = true
+                                },
                                 modifier = Modifier.fillMaxSize()
                             )
                         }
@@ -365,6 +369,7 @@ private fun FiltersRow(
 private fun ProjectsList(
     projects: List<com.project.taskmanagercivil.domain.models.Project>,
     onProjectClick: (String) -> Unit,
+    onEditProject: (com.project.taskmanagercivil.domain.models.Project) -> Unit,
     modifier: Modifier = Modifier
 ) {
     LazyColumn(
@@ -375,7 +380,8 @@ private fun ProjectsList(
         items(projects, key = { it.id }) { project ->
             ProjectCard(
                 project = project,
-                onClick = { onProjectClick(project.id) }
+                onClick = { onProjectClick(project.id) },
+                onEdit = { onEditProject(project) }
             )
         }
     }
