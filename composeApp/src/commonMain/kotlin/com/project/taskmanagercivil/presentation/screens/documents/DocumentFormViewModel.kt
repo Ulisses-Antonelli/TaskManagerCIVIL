@@ -28,6 +28,7 @@ data class DocumentFormUiState(
     val type: DocumentType? = null,
     val category: DocumentCategory? = null,
     val discipline: DocumentDiscipline? = null,
+    val taskId: String? = null,
     val projectId: String? = null,
     val phase: ProjectPhase? = null,
     val status: DocumentStatus? = null,
@@ -83,6 +84,7 @@ class DocumentFormViewModel(
                                 type = document.type,
                                 category = document.category,
                                 discipline = document.discipline,
+                                taskId = document.taskId,
                                 projectId = document.projectId,
                                 phase = document.phase,
                                 status = document.status,
@@ -269,6 +271,7 @@ class DocumentFormViewModel(
                     type = currentState.type!!,
                     category = currentState.category!!,
                     discipline = currentState.discipline,
+                    taskId = currentState.taskId ?: "1", // TODO: Tornar obrigatório no formulário
                     projectId = currentState.projectId!!,
                     phase = currentState.phase!!,
                     status = currentState.status!!,

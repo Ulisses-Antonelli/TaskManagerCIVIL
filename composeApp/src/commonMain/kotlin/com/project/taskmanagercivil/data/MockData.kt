@@ -751,6 +751,7 @@ class MockData {
             type = DocumentType.ARCHITECTURAL_PLAN,
             category = DocumentCategory.PLANS_PROJECTS,
             discipline = DocumentDiscipline.ARCHITECTURE,
+            taskId = "2", // Estrutura - 1º ao 5º Andar
             projectId = "1", // Vista Verde
             phase = ProjectPhase.EXECUTIVE_PROJECT,
             status = DocumentStatus.APPROVED,
@@ -769,6 +770,7 @@ class MockData {
             type = DocumentType.STRUCTURAL_PLAN,
             category = DocumentCategory.PLANS_PROJECTS,
             discipline = DocumentDiscipline.STRUCTURE,
+            taskId = "2", // Estrutura - 1º ao 5º Andar
             projectId = "1", // Vista Verde
             phase = ProjectPhase.EXECUTIVE_PROJECT,
             status = DocumentStatus.APPROVED,
@@ -787,6 +789,7 @@ class MockData {
             type = DocumentType.HYDRAULIC_PLAN,
             category = DocumentCategory.PLANS_PROJECTS,
             discipline = DocumentDiscipline.HYDRAULIC,
+            taskId = "6", // Reforço Estrutural - Pilares
             projectId = "2", // Plaza
             phase = ProjectPhase.EXECUTIVE_PROJECT,
             status = DocumentStatus.IN_PROGRESS,
@@ -805,6 +808,7 @@ class MockData {
             type = DocumentType.ELECTRICAL_PLAN,
             category = DocumentCategory.PLANS_PROJECTS,
             discipline = DocumentDiscipline.ELECTRICAL,
+            taskId = "10", // Instalações Elétricas - Ala Norte
             projectId = "4", // Hospital
             phase = ProjectPhase.EXECUTIVE_PROJECT,
             status = DocumentStatus.APPROVED,
@@ -823,6 +827,7 @@ class MockData {
             type = DocumentType.FOUNDATION_PLAN,
             category = DocumentCategory.PLANS_PROJECTS,
             discipline = DocumentDiscipline.FOUNDATION,
+            taskId = "8", // Fundações - Pilares Centrais
             projectId = "3", // Ponte
             phase = ProjectPhase.EXECUTIVE_PROJECT,
             status = DocumentStatus.FOR_REVIEW,
@@ -843,6 +848,7 @@ class MockData {
             type = DocumentType.CALCULATION_MEMORY,
             category = DocumentCategory.TECHNICAL,
             discipline = DocumentDiscipline.STRUCTURE,
+            taskId = "1", // Fundação - Bloco A
             projectId = "1", // Vista Verde
             phase = ProjectPhase.EXECUTIVE_PROJECT,
             status = DocumentStatus.APPROVED,
@@ -861,6 +867,7 @@ class MockData {
             type = DocumentType.TECHNICAL_SPECIFICATION,
             category = DocumentCategory.TECHNICAL,
             discipline = null,
+            taskId = "7", // Nova Fachada - Design
             projectId = "2", // Plaza
             phase = ProjectPhase.CONSTRUCTION,
             status = DocumentStatus.IN_APPROVAL,
@@ -879,6 +886,7 @@ class MockData {
             type = DocumentType.TECHNICAL_REPORT,
             category = DocumentCategory.TECHNICAL,
             discipline = DocumentDiscipline.FOUNDATION,
+            taskId = "9", // Estudo de Viabilidade Estrutural
             projectId = "3", // Ponte
             phase = ProjectPhase.PRELIMINARY_STUDY,
             status = DocumentStatus.APPROVED,
@@ -899,6 +907,7 @@ class MockData {
             type = DocumentType.CONTRACT,
             category = DocumentCategory.LEGAL_CONTRACTUAL,
             discipline = null,
+            taskId = "1", // Fundação - Bloco A
             projectId = "1", // Vista Verde
             phase = ProjectPhase.PRELIMINARY_STUDY,
             status = DocumentStatus.APPROVED,
@@ -917,6 +926,7 @@ class MockData {
             type = DocumentType.LICENSE,
             category = DocumentCategory.LEGAL_CONTRACTUAL,
             discipline = null,
+            taskId = "11", // Aprovações e Licenças - Hospital
             projectId = "4", // Hospital
             phase = ProjectPhase.BASIC_PROJECT,
             status = DocumentStatus.APPROVED,
@@ -937,6 +947,7 @@ class MockData {
             type = DocumentType.MEASUREMENT,
             category = DocumentCategory.FINANCIAL,
             discipline = null,
+            taskId = "2", // Estrutura - 1º ao 5º Andar
             projectId = "1", // Vista Verde
             phase = ProjectPhase.CONSTRUCTION,
             status = DocumentStatus.IN_APPROVAL,
@@ -955,6 +966,7 @@ class MockData {
             type = DocumentType.INVOICE,
             category = DocumentCategory.FINANCIAL,
             discipline = null,
+            taskId = "6", // Reforço Estrutural - Pilares
             projectId = "2", // Plaza
             phase = ProjectPhase.CONSTRUCTION,
             status = DocumentStatus.APPROVED,
@@ -975,6 +987,7 @@ class MockData {
             type = DocumentType.SERVICE_VERIFICATION,
             category = DocumentCategory.QUALITY,
             discipline = DocumentDiscipline.STRUCTURE,
+            taskId = "2", // Estrutura - 1º ao 5º Andar
             projectId = "1", // Vista Verde
             phase = ProjectPhase.CONSTRUCTION,
             status = DocumentStatus.APPROVED,
@@ -993,6 +1006,7 @@ class MockData {
             type = DocumentType.CHECKLIST,
             category = DocumentCategory.QUALITY,
             discipline = null,
+            taskId = "12", // Implantação do Sistema de Segurança
             projectId = "4", // Hospital
             phase = ProjectPhase.CONSTRUCTION,
             status = DocumentStatus.FOR_REVIEW,
@@ -1013,6 +1027,7 @@ class MockData {
             type = DocumentType.DAILY_REPORT,
             category = DocumentCategory.CONSTRUCTION_SITE,
             discipline = null,
+            taskId = "2", // Estrutura - 1º ao 5º Andar
             projectId = "1", // Vista Verde
             phase = ProjectPhase.CONSTRUCTION,
             status = DocumentStatus.APPROVED,

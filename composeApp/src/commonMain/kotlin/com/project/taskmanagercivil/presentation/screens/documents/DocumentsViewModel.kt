@@ -6,8 +6,12 @@ import com.project.taskmanagercivil.domain.models.Document
 import com.project.taskmanagercivil.domain.models.DocumentCategory
 import com.project.taskmanagercivil.domain.models.DocumentStatus
 import com.project.taskmanagercivil.domain.models.DocumentType
+import com.project.taskmanagercivil.domain.models.Project
 import com.project.taskmanagercivil.domain.models.ProjectPhase
+import com.project.taskmanagercivil.domain.models.Task
 import com.project.taskmanagercivil.domain.repository.DocumentRepository
+import com.project.taskmanagercivil.domain.repository.ProjectRepository
+import com.project.taskmanagercivil.domain.repository.TaskRepository
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 
@@ -15,6 +19,8 @@ import kotlinx.coroutines.launch
 data class DocumentsUiState(
     val documents: List<Document> = emptyList(),
     val filteredDocuments: List<Document> = emptyList(),
+    val allProjects: List<Project> = emptyList(),
+    val allTasks: List<Task> = emptyList(),
     val searchQuery: String = "",
     val filterCategory: DocumentFilterCategory = DocumentFilterCategory.ALL,
     val filterType: DocumentType? = null,
@@ -47,7 +53,9 @@ enum class DocumentSortOrder(val displayName: String) {
 
 
 class DocumentsViewModel(
-    private val repository: DocumentRepository
+    private val repository: DocumentRepository,
+    private val projectRepository: ProjectRepository,
+    private val taskRepository: TaskRepository
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(DocumentsUiState())
@@ -55,6 +63,8 @@ class DocumentsViewModel(
 
     init {
         loadDocuments()
+        loadProjects()
+        loadTasks()
     }
 
     private fun loadDocuments() {
@@ -77,6 +87,28 @@ class DocumentsViewModel(
                         isLoading = false
                     )
                 }
+            }
+        }
+    }
+
+    private fun loadProjects() {
+        viewModelScope.launch {
+            try {
+                val projects = projectRepository.getAllProjects()
+                _uiState.update { it.copy(allProjects = projects) }
+            } catch (e: Exception) {
+                println("Error loading projects: ${e.message}")
+            }
+        }
+    }
+
+    private fun loadTasks() {
+        viewModelScope.launch {
+            try {
+                val tasks = taskRepository.getAllTasks()
+                _uiState.update { it.copy(allTasks = tasks) }
+            } catch (e: Exception) {
+                println("Error loading tasks: ${e.message}")
             }
         }
     }
@@ -234,6 +266,24 @@ class DocumentsViewModel(
         }
 
         return result
+    }
+
+    fun saveDocument(document: Document) {
+        viewModelScope.launch {
+            try {
+                if (document.id.isEmpty()) {
+                    // Criar novo documento com ID sequencial
+                    val maxId = _uiState.value.documents.mapNotNull { it.id.toIntOrNull() }.maxOrNull() ?: 0
+                    val newId = (maxId + 1).toString()
+                    repository.addDocument(document.copy(id = newId))
+                } else {
+                    // Atualizar documento existente
+                    repository.updateDocument(document)
+                }
+            } catch (e: Exception) {
+                println("Error saving document: ${e.message}")
+            }
+        }
     }
 
     fun deleteDocument(documentId: String) {

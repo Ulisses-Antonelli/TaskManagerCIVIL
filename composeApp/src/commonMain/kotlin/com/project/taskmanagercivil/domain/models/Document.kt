@@ -13,7 +13,8 @@ data class Document(
     val type: DocumentType, // Tipo de documento
     val category: DocumentCategory, // Categoria para organização
     val discipline: DocumentDiscipline?, // Disciplina (apenas para plantas/projetos)
-    val projectId: String, // ID do projeto/obra relacionado
+    val taskId: String, // ID da tarefa relacionada (documentos pertencem a tarefas)
+    val projectId: String, // ID do projeto/obra relacionado (herdado da tarefa)
     val phase: ProjectPhase, // Fase do projeto
     val status: DocumentStatus, // Status atual
     val currentRevision: String, // Revisão atual (R00, R01, etc)

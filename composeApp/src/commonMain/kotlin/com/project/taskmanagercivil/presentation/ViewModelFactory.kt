@@ -88,7 +88,7 @@ object ViewModelFactory {
     }
 
     fun createDocumentsViewModel(): DocumentsViewModel {
-        return DocumentsViewModel(documentRepository)
+        return DocumentsViewModel(documentRepository, projectRepository, taskRepository)
     }
 
     fun createDocumentDetailViewModel(documentId: String): DocumentDetailViewModel {

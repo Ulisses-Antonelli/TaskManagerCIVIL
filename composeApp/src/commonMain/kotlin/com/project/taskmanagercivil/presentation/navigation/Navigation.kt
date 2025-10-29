@@ -495,12 +495,10 @@ fun AppNavigation(
         composable(Screen.Documents.route) {
             val viewModel = ViewModelFactory.createDocumentsViewModel()
             DocumentsScreenContent(
+                navController = navController,
                 viewModel = viewModel,
                 onDocumentClick = { documentId ->
                     navController.navigate(Screen.DocumentDetail.createRoute(documentId))
-                },
-                onCreateDocument = {
-                    navController.navigate(Screen.DocumentCreate.route)
                 },
                 onNavigate = { route ->
                     navController.navigate(route) {
