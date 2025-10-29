@@ -196,7 +196,15 @@ class ProjectsViewModel(
     fun saveProject(project: Project) {
         viewModelScope.launch {
             try {
-                projectRepository.createProject(project)
+                // Verifica se é um projeto existente ou novo
+                val existingProject = projectRepository.getProjectById(project.id)
+                if (existingProject != null) {
+                    // Atualizar projeto existente
+                    projectRepository.updateProject(project)
+                } else {
+                    // Criar novo projeto
+                    projectRepository.createProject(project)
+                }
                 loadData()
             } catch (e: Exception) {
                 _uiState.update {
