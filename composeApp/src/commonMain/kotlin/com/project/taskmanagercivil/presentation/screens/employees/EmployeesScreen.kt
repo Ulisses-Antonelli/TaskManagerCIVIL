@@ -8,6 +8,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -148,6 +149,10 @@ fun EmployeesScreenContent(
                             EmployeesList(
                                 employees = uiState.filteredEmployees,
                                 onEmployeeClick = onEmployeeClick,
+                                onEditEmployee = { employee ->
+                                    employeeToEdit = employee
+                                    showEmployeeFormModal = true
+                                },
                                 modifier = Modifier.fillMaxSize()
                             )
                         }
@@ -316,6 +321,7 @@ private fun FiltersRow(
 private fun EmployeesList(
     employees: List<Employee>,
     onEmployeeClick: (String) -> Unit,
+    onEditEmployee: (Employee) -> Unit,
     modifier: Modifier = Modifier
 ) {
     LazyColumn(
@@ -326,7 +332,8 @@ private fun EmployeesList(
         items(employees, key = { it.id }) { employee ->
             EmployeeCard(
                 employee = employee,
-                onClick = { onEmployeeClick(employee.id) }
+                onClick = { onEmployeeClick(employee.id) },
+                onEdit = { onEditEmployee(employee) }
             )
         }
     }
@@ -335,7 +342,8 @@ private fun EmployeesList(
 @Composable
 private fun EmployeeCard(
     employee: Employee,
-    onClick: () -> Unit
+    onClick: () -> Unit,
+    onEdit: ((Employee) -> Unit)? = null
 ) {
     Surface(
         modifier = Modifier
@@ -346,13 +354,16 @@ private fun EmployeeCard(
         shadowElevation = 2.dp,
         color = MaterialTheme.colorScheme.surface
     ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
-            horizontalArrangement = Arrangement.spacedBy(16.dp),
-            verticalAlignment = Alignment.CenterVertically
+        Box(
+            modifier = Modifier.fillMaxWidth()
         ) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp),
+                horizontalArrangement = Arrangement.spacedBy(16.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
             // Avatar (iniciais)
             Box(
                 modifier = Modifier
@@ -558,6 +569,40 @@ private fun EmployeeCard(
                     color = MaterialTheme.colorScheme.onSurface,
                     textAlign = androidx.compose.ui.text.style.TextAlign.Center
                 )
+            }
+        }
+
+            // Botão Editar no canto superior direito (sobreposto)
+            if (onEdit != null) {
+                var showMenu by remember { mutableStateOf(false) }
+                Box(
+                    modifier = Modifier
+                        .align(Alignment.TopEnd)
+                        .padding(8.dp)
+                ) {
+                    IconButton(
+                        onClick = { showMenu = true },
+                        modifier = Modifier.size(32.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.MoreVert,
+                            contentDescription = "Mais opções",
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                    DropdownMenu(
+                        expanded = showMenu,
+                        onDismissRequest = { showMenu = false }
+                    ) {
+                        DropdownMenuItem(
+                            text = { Text("Editar") },
+                            onClick = {
+                                showMenu = false
+                                onEdit(employee)
+                            }
+                        )
+                    }
+                }
             }
         }
     }

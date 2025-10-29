@@ -8,6 +8,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -156,7 +157,11 @@ fun TeamsScreenContent(
                                 ) { team ->
                                     TeamCard(
                                         team = team,
-                                        onClick = { onTeamClick(team.id) }
+                                        onClick = { onTeamClick(team.id) },
+                                        onEdit = {
+                                            teamToEdit = team
+                                            showTeamFormModal = true
+                                        }
                                     )
                                 }
                             }
@@ -345,7 +350,8 @@ private fun FiltersRow(
 @Composable
 private fun TeamCard(
     team: Team,
-    onClick: () -> Unit
+    onClick: () -> Unit,
+    onEdit: ((Team) -> Unit)? = null
 ) {
     Surface(
         modifier = Modifier
@@ -356,7 +362,10 @@ private fun TeamCard(
         shadowElevation = 2.dp,
         color = MaterialTheme.colorScheme.surface
     ) {
-        Row(
+        Box(
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Row(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(16.dp),
@@ -545,6 +554,40 @@ private fun TeamCard(
                     color = MaterialTheme.colorScheme.primary,
                     textAlign = androidx.compose.ui.text.style.TextAlign.Center
                 )
+            }
+        }
+
+            // Botão Editar no canto superior direito (sobreposto)
+            if (onEdit != null) {
+                var showMenu by remember { mutableStateOf(false) }
+                Box(
+                    modifier = Modifier
+                        .align(Alignment.TopEnd)
+                        .padding(8.dp)
+                ) {
+                    IconButton(
+                        onClick = { showMenu = true },
+                        modifier = Modifier.size(32.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.MoreVert,
+                            contentDescription = "Mais opções",
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                    DropdownMenu(
+                        expanded = showMenu,
+                        onDismissRequest = { showMenu = false }
+                    ) {
+                        DropdownMenuItem(
+                            text = { Text("Editar") },
+                            onClick = {
+                                showMenu = false
+                                onEdit(team)
+                            }
+                        )
+                    }
+                }
             }
         }
     }
