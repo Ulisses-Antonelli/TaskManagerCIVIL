@@ -39,102 +39,193 @@ fun TaskCard (
         Column(
             modifier = Modifier.fillMaxWidth()
         ) {
-            // Conteúdo principal com padding
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(16.dp)
+            // Box para sobrepor o botão de editar no canto superior direito
+            Box(
+                modifier = Modifier.fillMaxWidth()
             ) {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.Top
-            ) {
-                Column(modifier = Modifier.weight(1f)) {
-                    Text(
-                        text = task.title,
-                        style = MaterialTheme.typography.titleMedium,
-                        maxLines = 2,
-                        overflow = TextOverflow.Ellipsis
-                    )
-                    Spacer(modifier = Modifier.height(4.dp))
-                    Text(
-                        text = task.project.name,
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
+                // Conteúdo principal com colunas e separadores verticais
                 Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp),
+                    horizontalArrangement = Arrangement.spacedBy(16.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    StatusBadge(status = task.status)
-                    if (onEdit != null) {
-                        var showMenu by remember { mutableStateOf(false) }
-                        Box {
-                            IconButton(
-                                onClick = { showMenu = true },
-                                modifier = Modifier.size(32.dp)
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Default.MoreVert,
-                                    contentDescription = "Mais opções",
-                                    tint = MaterialTheme.colorScheme.onSurfaceVariant
-                                )
-                            }
-                            DropdownMenu(
-                                expanded = showMenu,
-                                onDismissRequest = { showMenu = false }
-                            ) {
-                                DropdownMenuItem(
-                                    text = { Text("Editar") },
-                                    onClick = {
-                                        showMenu = false
-                                        onEdit(task)
-                                    }
-                                )
-                            }
+                    // Coluna 1: Título, Descrição e Projeto
+                    Column(
+                        modifier = Modifier.weight(2.5f),
+                        verticalArrangement = Arrangement.Center
+                    ) {
+                        Text(
+                            text = task.title,
+                            style = MaterialTheme.typography.titleLarge,
+                            fontWeight = androidx.compose.ui.text.font.FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.primary,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Text(
+                            text = task.description,
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurface,
+                            maxLines = 2,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Text(
+                            text = task.project.name,
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+
+                    // Divisor vertical 1
+                    VerticalDivider(
+                        modifier = Modifier
+                            .height(80.dp)
+                            .width(1.dp),
+                        color = MaterialTheme.colorScheme.outlineVariant
+                    )
+
+                    // Coluna 2: Status
+                    Column(
+                        modifier = Modifier.weight(1f),
+                        verticalArrangement = Arrangement.Center,
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Text(
+                            text = "Status",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                        Spacer(modifier = Modifier.height(4.dp))
+                        StatusBadge(status = task.status)
+                    }
+
+                    // Divisor vertical 2
+                    VerticalDivider(
+                        modifier = Modifier
+                            .height(80.dp)
+                            .width(1.dp),
+                        color = MaterialTheme.colorScheme.outlineVariant
+                    )
+
+                    // Coluna 3: Prioridade
+                    Column(
+                        modifier = Modifier.weight(1f),
+                        verticalArrangement = Arrangement.Center,
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Text(
+                            text = "Prioridade",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                        Spacer(modifier = Modifier.height(4.dp))
+                        PriorityChip(priority = task.priority)
+                    }
+
+                    // Divisor vertical 3
+                    VerticalDivider(
+                        modifier = Modifier
+                            .height(80.dp)
+                            .width(1.dp),
+                        color = MaterialTheme.colorScheme.outlineVariant
+                    )
+
+                    // Coluna 4: Responsável
+                    Column(
+                        modifier = Modifier.weight(1f),
+                        verticalArrangement = Arrangement.Center,
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Text(
+                            text = "Responsável",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                        Spacer(modifier = Modifier.height(4.dp))
+                        UserAvatar(
+                            user = task.assignedTo,
+                            size = 32.dp
+                        )
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Text(
+                            text = task.assignedTo.name,
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurface,
+                            textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+                            maxLines = 2
+                        )
+                    }
+
+                    // Divisor vertical 4
+                    VerticalDivider(
+                        modifier = Modifier
+                            .height(80.dp)
+                            .width(1.dp),
+                        color = MaterialTheme.colorScheme.outlineVariant
+                    )
+
+                    // Coluna 5: Prazo
+                    Column(
+                        modifier = Modifier.weight(1f),
+                        verticalArrangement = Arrangement.Center,
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Text(
+                            text = "Prazo",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Text(
+                            text = task.dueDate.toString(),
+                            style = MaterialTheme.typography.bodyMedium,
+                            fontWeight = androidx.compose.ui.text.font.FontWeight.Medium,
+                            color = MaterialTheme.colorScheme.onSurface,
+                            textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                        )
+                    }
+                }
+
+                // Botão Editar no canto superior direito (sobreposto)
+                if (onEdit != null) {
+                    var showMenu by remember { mutableStateOf(false) }
+                    Box(
+                        modifier = Modifier
+                            .align(Alignment.TopEnd)
+                            .padding(8.dp)
+                    ) {
+                        IconButton(
+                            onClick = { showMenu = true },
+                            modifier = Modifier.size(32.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.MoreVert,
+                                contentDescription = "Mais opções",
+                                tint = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                        DropdownMenu(
+                            expanded = showMenu,
+                            onDismissRequest = { showMenu = false }
+                        ) {
+                            DropdownMenuItem(
+                                text = { Text("Editar") },
+                                onClick = {
+                                    showMenu = false
+                                    onEdit(task)
+                                }
+                            )
                         }
                     }
                 }
             }
-            Spacer(modifier = Modifier.height(8.dp))
-            Text(
-                text = task.description,
-                style = MaterialTheme.typography.bodyMedium,
-                maxLines = 2,
-                overflow = TextOverflow.Ellipsis,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-            Spacer(modifier = Modifier.height(12.dp))
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                PriorityChip(priority = task.priority)
-                UserAvatar(
-                    user = task.assignedTo,
-                    size = 32.dp
-                )
-                Text(
-                    text = task.assignedTo.name,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
 
-                Text(
-                    text = "Prazo: ${task.dueDate}",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
-
-            // Barra de progresso separada (sem padding lateral para preencher até as bordas)
+            // Barra de progresso sem separador horizontal
             if (task.progress > 0) {
-                Spacer(modifier = Modifier.height(12.dp))
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
