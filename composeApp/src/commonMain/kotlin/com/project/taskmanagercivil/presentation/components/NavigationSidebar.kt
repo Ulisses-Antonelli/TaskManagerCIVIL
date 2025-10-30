@@ -16,21 +16,24 @@ import taskmanagercivil.composeapp.generated.resources.Logo_TMC
 import taskmanagercivil.composeapp.generated.resources.Res
 
 
-val menuItems = listOf(
+val baseMenuItems = listOf(
     "dashboard" to "Dashboard",
     "projects/NONE" to "Obras/Projetos",  // Navegação sem filtro
     "tasks" to "Tarefas",
     "users" to "Colaboradores",
     "teams" to "Times",
-    "documents" to "Documentos",
-    "reports" to "Relatórios",
-    "settings" to "Configurações"
+    "documents" to "Documentos"
+)
+
+val adminOnlyMenuItems = listOf(
+    "user_management" to "Gerenciar Usuários"
 )
 
 @Composable
 fun NavigationSidebar(
     currentRoute: String?,
     onMenuClick: (String) -> Unit,
+    currentUser: com.project.taskmanagercivil.domain.models.User? = null,
     modifier: Modifier = Modifier
 ) {
     // Versão simplificada - sempre mostra sidebar
@@ -38,14 +41,15 @@ fun NavigationSidebar(
         modifier = modifier.width(220.dp).fillMaxHeight(),
         tonalElevation = 2.dp
     ) {
-        SidebarContent(currentRoute, onMenuClick)
+        SidebarContent(currentRoute, onMenuClick, currentUser)
     }
 }
 
 @Composable
 private fun SidebarContent(
     currentRoute: String?,
-    onMenuClick: (String) -> Unit
+    onMenuClick: (String) -> Unit,
+    currentUser: com.project.taskmanagercivil.domain.models.User?
 ) {
     Column(
         modifier = Modifier
@@ -69,8 +73,8 @@ private fun SidebarContent(
             )
         }
 
-        // Menu items
-        for ((route, label) in menuItems) {
+        // Menu items padrão
+        for ((route, label) in baseMenuItems) {
             // Para Projects, verifica se a rota atual começa com "projects/"
             // Isso permite destacar o item mesmo com filtros diferentes (projects/TODO, projects/NONE, etc)
             val isSelected = if (route.startsWith("projects/")) {
@@ -84,6 +88,26 @@ private fun SidebarContent(
                 selected = isSelected,
                 onClick = { onMenuClick(route) }
             )
+        }
+
+        // Divider antes dos menus administrativos
+        if (com.project.taskmanagercivil.domain.models.PermissionChecker.isAdmin(currentUser)) {
+            Spacer(Modifier.height(8.dp))
+            HorizontalDivider(
+                modifier = Modifier.padding(vertical = 8.dp),
+                color = MaterialTheme.colorScheme.outlineVariant
+            )
+
+            // Menu items apenas para ADMIN
+            for ((route, label) in adminOnlyMenuItems) {
+                val isSelected = currentRoute == route
+
+                ModernNavigationItem(
+                    label = label,
+                    selected = isSelected,
+                    onClick = { onMenuClick(route) }
+                )
+            }
         }
     }
 }
