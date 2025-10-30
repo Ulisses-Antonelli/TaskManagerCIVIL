@@ -193,6 +193,7 @@ class DashboardRepositoryImpl : DashboardRepository {
                         TaskStatus.IN_REVIEW -> currentData.copy(inReviewCount = currentData.inReviewCount + 1)
                         TaskStatus.COMPLETED -> currentData.copy(completedCount = currentData.completedCount + 1)
                         TaskStatus.BLOCKED -> currentData.copy(blockedCount = currentData.blockedCount + 1)
+                        TaskStatus.INATIVA -> currentData // Não conta tarefas inativas
                     }
                 }
             }

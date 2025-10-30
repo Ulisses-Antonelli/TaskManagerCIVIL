@@ -807,6 +807,7 @@ private fun TeamTaskRow(
                 com.project.taskmanagercivil.domain.models.TaskStatus.IN_REVIEW -> MaterialTheme.colorScheme.secondaryContainer
                 com.project.taskmanagercivil.domain.models.TaskStatus.COMPLETED -> MaterialTheme.colorScheme.tertiaryContainer
                 com.project.taskmanagercivil.domain.models.TaskStatus.BLOCKED -> MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.7f)
+                com.project.taskmanagercivil.domain.models.TaskStatus.INATIVA -> Color(0xFFBDBDBD)
             },
             shape = RoundedCornerShape(4.dp),
             modifier = Modifier.weight(0.8f)
@@ -821,6 +822,7 @@ private fun TeamTaskRow(
                     com.project.taskmanagercivil.domain.models.TaskStatus.IN_REVIEW -> MaterialTheme.colorScheme.onSecondaryContainer
                     com.project.taskmanagercivil.domain.models.TaskStatus.COMPLETED -> MaterialTheme.colorScheme.onTertiaryContainer
                     com.project.taskmanagercivil.domain.models.TaskStatus.BLOCKED -> MaterialTheme.colorScheme.onErrorContainer
+                    com.project.taskmanagercivil.domain.models.TaskStatus.INATIVA -> Color(0xFF424242)
                 }
             )
         }

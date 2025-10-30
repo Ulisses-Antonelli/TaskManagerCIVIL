@@ -24,6 +24,7 @@ fun StatusBadge (
         TaskStatus.IN_REVIEW -> MaterialTheme.extendedColors.statusInReview
         TaskStatus.COMPLETED -> MaterialTheme.extendedColors.statusCompleted
         TaskStatus.BLOCKED -> MaterialTheme.extendedColors.statusBlocked
+        TaskStatus.INATIVA -> Color(0xFF757575) // Cinza para inativa
     }
 
     Text(

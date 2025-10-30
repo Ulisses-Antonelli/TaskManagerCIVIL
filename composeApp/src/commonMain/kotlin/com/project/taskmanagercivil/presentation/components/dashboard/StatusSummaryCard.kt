@@ -31,6 +31,7 @@ fun StatusSummaryCard(
         TaskStatus.IN_REVIEW -> extendedColors.statusInReview
         TaskStatus.COMPLETED -> extendedColors.statusCompleted
         TaskStatus.BLOCKED -> extendedColors.statusBlocked
+        TaskStatus.INATIVA -> Color(0xFF757575) // Cinza para inativa
     }
 
     Surface(

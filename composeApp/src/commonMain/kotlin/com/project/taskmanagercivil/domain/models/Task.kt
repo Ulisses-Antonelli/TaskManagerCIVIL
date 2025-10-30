@@ -17,7 +17,10 @@ data class Task(
     val dependencies: List<String> = emptyList(),
     val revisions: List<TaskRevision> = emptyList(),
     val partialDeliveries: List<PartialDelivery> = emptyList(),
-    val checklistItems: List<ChecklistItem> = emptyList()
+    val checklistItems: List<ChecklistItem> = emptyList(),
+    val aprovado: Boolean = false, // Aprovação final por Líder/Gestor
+    val aprovadoPor: String? = null, // Nome do aprovador
+    val dataAprovacao: LocalDate? = null // Data da aprovação
 )
 
 data class ChecklistItem(
@@ -41,7 +44,10 @@ data class PartialDelivery(
     val deliveryDate: LocalDate,
     val completedItems: Int,
     val totalItems: Int,
-    val isEdited: Boolean = false
+    val isEdited: Boolean = false,
+    val aprovado: Boolean = false, // Aprovação da entrega parcial
+    val aprovadoPor: String? = null, // Nome do aprovador (Líder/Gestor)
+    val dataAprovacao: LocalDate? = null // Data da aprovação
 )
 
 enum class TaskStatus(val label: String) {
@@ -49,7 +55,8 @@ enum class TaskStatus(val label: String) {
     IN_PROGRESS("EM ANDAMENTO"),
     IN_REVIEW("EM REVISÃO"),
     COMPLETED("CONCLUIDA"),
-    BLOCKED("BLOQUEADA")
+    BLOCKED("BLOQUEADA"),
+    INATIVA("INATIVA") // Tarefa desativada por Líder/Gestor (não aparece no dropdown normal)
 }
 
 enum class TaskPriority(val label: String) {
