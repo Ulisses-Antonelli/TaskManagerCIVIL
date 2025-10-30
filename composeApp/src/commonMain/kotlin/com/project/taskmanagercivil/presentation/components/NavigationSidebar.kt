@@ -53,6 +53,19 @@ private fun SidebarContent(
     onMenuClick: (String) -> Unit,
     currentUser: com.project.taskmanagercivil.domain.models.User?
 ) {
+    // TODO: Remover mock quando autenticação estiver integrada
+    // Mock temporário para permitir testar o menu de admin
+    val mockAdminUser = com.project.taskmanagercivil.domain.models.User(
+        id = "1",
+        name = "Admin Sistema",
+        email = "admin@taskmanager.com",
+        roles = listOf(com.project.taskmanagercivil.domain.models.Role.ADMIN),
+        isActive = true
+    )
+
+    // Usa o usuário fornecido, ou o mock admin como fallback
+    val userToUse = currentUser ?: mockAdminUser
+
     Column(
         modifier = Modifier
             .fillMaxHeight()
@@ -93,7 +106,7 @@ private fun SidebarContent(
         }
 
         // Divider antes dos menus administrativos
-        if (com.project.taskmanagercivil.domain.models.PermissionChecker.isAdmin(currentUser)) {
+        if (com.project.taskmanagercivil.domain.models.PermissionChecker.isAdmin(userToUse)) {
             Spacer(Modifier.height(8.dp))
             HorizontalDivider(
                 modifier = Modifier.padding(vertical = 8.dp),
