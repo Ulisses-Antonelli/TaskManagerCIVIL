@@ -57,7 +57,7 @@ fun EmployeeTasksTable(
             taskId = task.id,
             taskTitle = task.title,
             taskStatus = task.status,
-            teamName = task.assignedTo.role, // Disciplina do colaborador
+            teamName = task.assignedTo.primaryRoleDisplayName, // Papel do colaborador
             startDate = task.startDate.toString(),
             dueDate = task.dueDate.toString(),
             daysOverdue = calculateDaysOverdue(task),

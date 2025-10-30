@@ -118,21 +118,11 @@ private fun DashboardTopBar(
 ) {
     TopAppBar(
         title = {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-                Icon(
-                    imageVector = Icons.Default.Dashboard,
-                    contentDescription = "Dashboard",
-                    tint = MaterialTheme.colorScheme.primary
-                )
-                Text(
-                    text = "Dashboard",
-                    style = MaterialTheme.typography.headlineMedium,
-                    fontWeight = FontWeight.Bold
-                )
-            }
+            Text(
+                text = "TaskManagerCIVIL",
+                style = MaterialTheme.typography.displaySmall,
+                fontWeight = FontWeight.Bold
+            )
         },
         actions = {
             IconButton(onClick = onRefresh) {
@@ -162,7 +152,7 @@ private fun DashboardContent(
         modifier = modifier
             .fillMaxSize()
             .verticalScroll(scrollState)
-            .padding(24.dp),
+            .padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(24.dp)
     ) {
         // Seção 1: Cards de resumo de status

@@ -47,7 +47,13 @@ fun ProjectsScreenContent(
                 topBar = {
                     Column {
                         TopAppBar(
-                            title = { Text("Obras e Projetos") }
+                            title = {
+                                Text(
+                                    text = "TaskManagerCIVIL",
+                                    style = MaterialTheme.typography.displaySmall,
+                                    fontWeight = androidx.compose.ui.text.font.FontWeight.Bold
+                                )
+                            }
                         )
                         Row(
                             modifier = Modifier

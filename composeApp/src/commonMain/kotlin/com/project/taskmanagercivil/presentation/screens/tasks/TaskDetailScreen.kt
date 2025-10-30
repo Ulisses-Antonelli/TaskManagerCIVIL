@@ -494,10 +494,10 @@ private fun GeneralInfoCard(
                         .padding(horizontal = 8.dp)
                 )
 
-                // Disciplina
+                // Papel
                 InfoColumn(
-                    label = "Disciplina",
-                    value = task.assignedTo.role,
+                    label = "Papel",
+                    value = task.assignedTo.primaryRoleDisplayName,
                     modifier = Modifier.weight(1f)
                 )
 

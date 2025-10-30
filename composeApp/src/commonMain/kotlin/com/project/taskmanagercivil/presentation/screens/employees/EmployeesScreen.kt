@@ -53,7 +53,13 @@ fun EmployeesScreenContent(
                 topBar = {
                     Column {
                         TopAppBar(
-                            title = { Text("Colaboradores") }
+                            title = {
+                                Text(
+                                    text = "TaskManagerCIVIL",
+                                    style = MaterialTheme.typography.displaySmall,
+                                    fontWeight = FontWeight.Bold
+                                )
+                            }
                         )
                         Row(
                             modifier = Modifier

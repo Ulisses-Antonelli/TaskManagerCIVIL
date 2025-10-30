@@ -3,6 +3,7 @@ package com.project.taskmanagercivil.presentation.screens.tasks
 import com.project.taskmanagercivil.data.MockData
 import com.project.taskmanagercivil.domain.models.Employee
 import com.project.taskmanagercivil.domain.models.Project
+import com.project.taskmanagercivil.domain.models.Role
 import com.project.taskmanagercivil.domain.models.Task
 import com.project.taskmanagercivil.domain.models.TaskPriority
 import com.project.taskmanagercivil.domain.models.TaskStatus
@@ -92,8 +93,9 @@ class TasksViewModel(
                 id = employee.id,
                 name = employee.fullName,
                 email = employee.email,
-                role = employee.role,
-                avatarUrl = employee.avatarUrl
+                roles = listOf(Role.FUNCIONARIO), // Por padrão, funcionário
+                avatarUrl = employee.avatarUrl,
+                isActive = employee.isActive
             )
         }
     }

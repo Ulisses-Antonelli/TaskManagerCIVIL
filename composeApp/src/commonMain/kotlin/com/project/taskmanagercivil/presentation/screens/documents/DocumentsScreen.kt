@@ -51,7 +51,13 @@ fun DocumentsScreenContent(
                 topBar = {
                     Column {
                         TopAppBar(
-                            title = { Text("Documentos") }
+                            title = {
+                                Text(
+                                    text = "TaskManagerCIVIL",
+                                    style = MaterialTheme.typography.displaySmall,
+                                    fontWeight = FontWeight.Bold
+                                )
+                            }
                         )
 
                         Row(

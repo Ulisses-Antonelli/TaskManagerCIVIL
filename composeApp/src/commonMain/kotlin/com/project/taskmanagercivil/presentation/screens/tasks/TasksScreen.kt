@@ -49,7 +49,11 @@ fun TasksScreenContent(
                     Column {
                         TopAppBar(
                             title = {
-                                Text("TaskManager Civil")
+                                Text(
+                                    text = "TaskManagerCIVIL",
+                                    style = MaterialTheme.typography.displaySmall,
+                                    fontWeight = androidx.compose.ui.text.font.FontWeight.Bold
+                                )
                             },
                             actions = {
                                 IconButton(
@@ -338,7 +342,8 @@ private fun TasksList(
                     TaskCard(
                         task = task,
                         onClick = { onTaskClick(task) },
-                        onEdit = { onEditTask(it) }
+                        onEdit = { onEditTask(it) },
+                        isKanbanMode = false // Modo Lista
                     )
                 }
             }
@@ -445,7 +450,8 @@ private fun KanbanColumn(
                         TaskCard(
                             task = task,
                             onClick = { onTaskClick(task) },
-                            onEdit = { onEditTask(it) }
+                            onEdit = { onEditTask(it) },
+                            isKanbanMode = true
                         )
                     }
                 }

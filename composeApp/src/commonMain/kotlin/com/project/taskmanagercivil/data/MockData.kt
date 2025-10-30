@@ -6,31 +6,86 @@ import kotlinx.datetime.LocalDateTime
 
 class MockData {
     val users = listOf(
-    User(
-        "1",
-        "João Silva",
-        "Engenheiro Civil",
-        "joao.silva@construtora.com"),
-    User(
-        "2",
-        "Maria Santos",
-        "Arquiteta",
-        "maria.santos@construtora.com"),
-    User(
-        "3",
-        "Pedro Costa",
-        "Mestre de Obras",
-        "pedro.costa@construtora.com"),
-    User(
-        "4",
-        "Ana Oliveira",
-        "Técnica em Segurança",
-        "ana.oliveira@construtora.com"),
-    User(
-        "5",
-        "Carlos Ferreira",
-        "Encarregado",
-        "carlos.ferreira@construtora.com")
+        // ADMIN - Acesso total ao sistema
+        User(
+            id = "1",
+            name = "Admin Sistema",
+            email = "admin@construtora.com",
+            roles = listOf(Role.ADMIN),
+            isActive = true
+        ),
+        // GESTOR DE OBRAS - Gerencia projetos Vista Verde e Plaza
+        User(
+            id = "2",
+            name = "João Silva",
+            email = "joao.silva@construtora.com",
+            roles = listOf(Role.GESTOR_OBRAS),
+            isActive = true
+        ),
+        // GESTOR DE OBRAS - Gerencia projetos Ponte e Hospital
+        User(
+            id = "3",
+            name = "Maria Santos",
+            email = "maria.santos@construtora.com",
+            roles = listOf(Role.GESTOR_OBRAS),
+            isActive = true
+        ),
+        // LÍDER DE EQUIPE - Equipe de Execução
+        User(
+            id = "4",
+            name = "Pedro Costa",
+            email = "pedro.costa@construtora.com",
+            roles = listOf(Role.LIDER_EQUIPE),
+            isActive = true
+        ),
+        // LÍDER DE EQUIPE - Equipe de Segurança
+        User(
+            id = "5",
+            name = "Ana Oliveira",
+            email = "ana.oliveira@construtora.com",
+            roles = listOf(Role.LIDER_EQUIPE),
+            isActive = true
+        ),
+        // LÍDER + FUNCIONÁRIO - Líder de Instalações, mas também trabalha em campo
+        User(
+            id = "6",
+            name = "Carlos Ferreira",
+            email = "carlos.ferreira@construtora.com",
+            roles = listOf(Role.LIDER_EQUIPE, Role.FUNCIONARIO),
+            isActive = true
+        ),
+        // FUNCIONÁRIO - Eletricista
+        User(
+            id = "7",
+            name = "Ricardo Santos",
+            email = "ricardo.santos@construtora.com",
+            roles = listOf(Role.FUNCIONARIO),
+            isActive = true
+        ),
+        // FUNCIONÁRIO - Pedreiro
+        User(
+            id = "8",
+            name = "José Pereira",
+            email = "jose.pereira@construtora.com",
+            roles = listOf(Role.FUNCIONARIO),
+            isActive = true
+        ),
+        // FUNCIONÁRIO - Topógrafo
+        User(
+            id = "9",
+            name = "Roberto Mendes",
+            email = "roberto.mendes@construtora.com",
+            roles = listOf(Role.FUNCIONARIO),
+            isActive = true
+        ),
+        // FUNCIONÁRIO - Inativo (demitido)
+        User(
+            id = "10",
+            name = "Marcos Pereira",
+            email = "marcos.pereira@construtora.com",
+            roles = listOf(Role.FUNCIONARIO),
+            isActive = false
+        )
     )
 
     val employees = listOf(
@@ -250,7 +305,7 @@ class MockData {
             "Execução da fundação do Bloco A com estacas de 20m",
             TaskStatus.COMPLETED,
             TaskPriority.CRITICAL,
-            users[2],
+            users[5], // Carlos Ferreira - Líder/Funcionário // Ana Oliveira - Líder // Pedro Costa - Líder de Equipe
             projects[0],
             LocalDate(2024, 1, 20),
             LocalDate(2024, 2, 28),
@@ -298,7 +353,7 @@ class MockData {
             "Concretagem da estrutura dos primeiros 5 andares",
             TaskStatus.IN_PROGRESS,
             TaskPriority.HIGH,
-            users[0],
+            users[5], // Carlos Ferreira - Líder/Funcionário // Ana Oliveira - Líder // Pedro Costa - Líder // Maria Santos - Gestora // João Silva - Gestor
             projects[0],
             LocalDate(2024, 3, 1),
             LocalDate(2024, 5, 15),
@@ -312,7 +367,7 @@ class MockData {
             "Instalação da infraestrutura elétrica da torre sul",
             TaskStatus.IN_PROGRESS,
             TaskPriority.MEDIUM,
-            users[4],
+            users[5], // Carlos Ferreira - Líder/Funcionário
             projects[0],
             LocalDate(2024, 4, 1),
             LocalDate(2024, 6, 30),
@@ -325,7 +380,7 @@ class MockData {
             "Submissão e acompanhamento da aprovação do PPCI",
             TaskStatus.IN_REVIEW,
             TaskPriority.HIGH,
-            users[3],
+            users[5], // Carlos Ferreira - Líder/Funcionário // Ana Oliveira - Líder
             projects[0],
             LocalDate(2024, 2, 1),
             LocalDate(2024, 3, 15),
@@ -355,7 +410,7 @@ class MockData {
             "Demolição controlada da estrutura antiga",
             TaskStatus.COMPLETED,
             TaskPriority.HIGH,
-            users[2],
+            users[5], // Carlos Ferreira - Líder/Funcionário // Ana Oliveira - Líder // Pedro Costa - Líder
             projects[1],
             LocalDate(2024, 3, 1),
             LocalDate(2024, 3, 20),
@@ -378,7 +433,7 @@ class MockData {
             "Reforço dos pilares principais do shopping",
             TaskStatus.IN_PROGRESS,
             TaskPriority.CRITICAL,
-            users[0],
+            users[5], // Carlos Ferreira - Líder/Funcionário // Ana Oliveira - Líder // Pedro Costa - Líder // Maria Santos - Gestora // João Silva - Gestor
             projects[1],
             LocalDate(2024, 4, 1),
             LocalDate(2024, 5, 30),
@@ -392,7 +447,7 @@ class MockData {
             "Projeto e detalhamento da nova fachada",
             TaskStatus.TODO,
             TaskPriority.MEDIUM,
-            users[1],
+            users[5], // Carlos Ferreira - Líder/Funcionário // Ana Oliveira - Líder // Pedro Costa - Líder // Maria Santos - Gestora
             projects[1],
             LocalDate(2024, 5, 1),
             LocalDate(2024, 6, 15),
@@ -405,7 +460,7 @@ class MockData {
             "Instalação do novo sistema de climatização",
             TaskStatus.BLOCKED,
             TaskPriority.MEDIUM,
-            users[4],
+            users[5], // Carlos Ferreira - Líder/Funcionário
             projects[1],
             LocalDate(2024, 6, 1),
             LocalDate(2024, 8, 30),
@@ -419,7 +474,7 @@ class MockData {
             "Execução de fundação profunda para pilares da ponte",
             TaskStatus.IN_PROGRESS,
             TaskPriority.CRITICAL,
-            users[2],
+            users[5], // Carlos Ferreira - Líder/Funcionário // Ana Oliveira - Líder // Pedro Costa - Líder
             projects[2],
             LocalDate(2024, 2, 15),
             LocalDate(2024, 8, 30),
@@ -432,7 +487,7 @@ class MockData {
             "Sistema hidráulico completo da ala norte do hospital",
             TaskStatus.TODO,
             TaskPriority.HIGH,
-            users[4],
+            users[5], // Carlos Ferreira - Líder/Funcionário
             projects[3],
             LocalDate(2024, 6, 1),
             LocalDate(2024, 9, 30),
@@ -445,7 +500,7 @@ class MockData {
             "Concretagem das estruturas das primeiras duas torres",
             TaskStatus.IN_PROGRESS,
             TaskPriority.HIGH,
-            users[0],
+            users[5], // Carlos Ferreira - Líder/Funcionário // Ana Oliveira - Líder // Pedro Costa - Líder // Maria Santos - Gestora // João Silva - Gestor
             projects[4],
             LocalDate(2024, 2, 1),
             LocalDate(2024, 7, 15),
@@ -458,7 +513,7 @@ class MockData {
             "Preparação do terreno para construção do viaduto",
             TaskStatus.COMPLETED,
             TaskPriority.CRITICAL,
-            users[2],
+            users[5], // Carlos Ferreira - Líder/Funcionário // Ana Oliveira - Líder // Pedro Costa - Líder
             projects[5],
             LocalDate(2024, 5, 1),
             LocalDate(2024, 6, 15),
@@ -500,7 +555,7 @@ class MockData {
             "Execução dos pilares principais do viaduto",
             TaskStatus.IN_PROGRESS,
             TaskPriority.CRITICAL,
-            users[0],
+            users[5], // Carlos Ferreira - Líder/Funcionário // Ana Oliveira - Líder // Pedro Costa - Líder // Maria Santos - Gestora // João Silva - Gestor
             projects[5],
             LocalDate(2024, 6, 20),
             LocalDate(2024, 10, 30),
@@ -513,7 +568,7 @@ class MockData {
             "Fundação da ala principal do hospital",
             TaskStatus.COMPLETED,
             TaskPriority.CRITICAL,
-            users[2],
+            users[5], // Carlos Ferreira - Líder/Funcionário // Ana Oliveira - Líder // Pedro Costa - Líder
             projects[3],
             LocalDate(2024, 4, 5),
             LocalDate(2024, 5, 20),
@@ -554,7 +609,7 @@ class MockData {
             "Concretagem da estrutura da ala sul",
             TaskStatus.IN_PROGRESS,
             TaskPriority.HIGH,
-            users[0],
+            users[5], // Carlos Ferreira - Líder/Funcionário // Ana Oliveira - Líder // Pedro Costa - Líder // Maria Santos - Gestora // João Silva - Gestor
             projects[3],
             LocalDate(2024, 5, 25),
             LocalDate(2024, 8, 15),
@@ -567,7 +622,7 @@ class MockData {
             "Instalações hidráulicas e elétricas das torres 3 e 4",
             TaskStatus.TODO,
             TaskPriority.MEDIUM,
-            users[4],
+            users[5], // Carlos Ferreira - Líder/Funcionário
             projects[4],
             LocalDate(2024, 7, 20),
             LocalDate(2024, 10, 30),
@@ -580,7 +635,7 @@ class MockData {
             "Licença ambiental para construção da ponte",
             TaskStatus.IN_REVIEW,
             TaskPriority.CRITICAL,
-            users[3],
+            users[5], // Carlos Ferreira - Líder/Funcionário // Ana Oliveira - Líder
             projects[2],
             LocalDate(2024, 2, 1),
             LocalDate(2024, 4, 30),
@@ -593,7 +648,7 @@ class MockData {
             "Estudo complementar do solo para ampliação",
             TaskStatus.IN_REVIEW,
             TaskPriority.HIGH,
-            users[3],
+            users[5], // Carlos Ferreira - Líder/Funcionário // Ana Oliveira - Líder
             projects[3],
             LocalDate(2024, 4, 10),
             LocalDate(2024, 5, 15),
@@ -606,7 +661,7 @@ class MockData {
             "Execução de alvenaria das torres 5 e 6",
             TaskStatus.BLOCKED,
             TaskPriority.HIGH,
-            users[2],
+            users[5], // Carlos Ferreira - Líder/Funcionário // Ana Oliveira - Líder // Pedro Costa - Líder
             projects[4],
             LocalDate(2024, 8, 1),
             LocalDate(2024, 11, 30),
@@ -620,7 +675,7 @@ class MockData {
             "Acabamento final das áreas comuns do shopping",
             TaskStatus.TODO,
             TaskPriority.LOW,
-            users[1],
+            users[5], // Carlos Ferreira - Líder/Funcionário // Ana Oliveira - Líder // Pedro Costa - Líder // Maria Santos - Gestora
             projects[1],
             LocalDate(2024, 9, 1),
             LocalDate(2024, 11, 30),

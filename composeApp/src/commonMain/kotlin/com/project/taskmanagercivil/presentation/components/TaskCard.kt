@@ -24,6 +24,214 @@ fun TaskCard (
     task: Task,
     onClick: () -> Unit,
     onEdit: ((Task) -> Unit)? = null,
+    isKanbanMode: Boolean = false,
+    modifier: Modifier = Modifier
+) {
+    if (isKanbanMode) {
+        TaskCardKanban(task = task, onClick = onClick, onEdit = onEdit, modifier = modifier)
+    } else {
+        TaskCardList(task = task, onClick = onClick, onEdit = onEdit, modifier = modifier)
+    }
+}
+
+// Layout para modo Kanban (vertical, compacto)
+@Composable
+private fun TaskCardKanban(
+    task: Task,
+    onClick: () -> Unit,
+    onEdit: ((Task) -> Unit)? = null,
+    modifier: Modifier = Modifier
+) {
+    Surface(
+        modifier = modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(8.dp))
+            .clickable(onClick = onClick),
+        tonalElevation = 1.dp,
+        shadowElevation = 2.dp,
+        color = MaterialTheme.colorScheme.surface
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(12.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            // Header com título e botão editar
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.Top
+            ) {
+                Text(
+                    text = task.title,
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = androidx.compose.ui.text.font.FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.primary,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier.weight(1f)
+                )
+
+                if (onEdit != null) {
+                    var showMenu by remember { mutableStateOf(false) }
+                    Box {
+                        IconButton(
+                            onClick = { showMenu = true },
+                            modifier = Modifier.size(24.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.MoreVert,
+                                contentDescription = "Mais opções",
+                                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                                modifier = Modifier.size(18.dp)
+                            )
+                        }
+                        DropdownMenu(
+                            expanded = showMenu,
+                            onDismissRequest = { showMenu = false }
+                        ) {
+                            DropdownMenuItem(
+                                text = { Text("Editar") },
+                                onClick = {
+                                    showMenu = false
+                                    onEdit(task)
+                                }
+                            )
+                        }
+                    }
+                }
+            }
+
+            // Descrição
+            if (task.description.isNotEmpty()) {
+                Text(
+                    text = task.description,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis
+                )
+            }
+
+            // Projeto
+            Text(
+                text = task.project.name,
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+
+            HorizontalDivider()
+
+            // Prioridade
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "Prioridade",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                PriorityChip(priority = task.priority)
+            }
+
+            // Responsável
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "Responsável",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(4.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    UserAvatar(
+                        user = task.assignedTo,
+                        size = 20.dp
+                    )
+                    Text(
+                        text = task.assignedTo.name,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurface,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                }
+            }
+
+            // Prazo
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "Prazo",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                Text(
+                    text = task.dueDate.toString(),
+                    style = MaterialTheme.typography.bodySmall,
+                    fontWeight = androidx.compose.ui.text.font.FontWeight.Medium,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+            }
+
+            // Barra de progresso
+            if (task.progress > 0) {
+                Column(
+                    verticalArrangement = Arrangement.spacedBy(4.dp)
+                ) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Text(
+                            text = "Progresso",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                        Text(
+                            text = "${(task.progress * 100).toInt()}%",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                    }
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(4.dp)
+                            .clip(RoundedCornerShape(2.dp))
+                            .background(MaterialTheme.colorScheme.surfaceVariant)
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxHeight()
+                                .fillMaxWidth(task.progress)
+                                .clip(RoundedCornerShape(2.dp))
+                                .background(MaterialTheme.colorScheme.primary)
+                        )
+                    }
+                }
+            }
+        }
+    }
+}
+
+// Layout para modo Lista (horizontal, com colunas e divisores)
+@Composable
+private fun TaskCardList(
+    task: Task,
+    onClick: () -> Unit,
+    onEdit: ((Task) -> Unit)? = null,
     modifier: Modifier = Modifier
 ) {
     // Card customizado com cantos menos arredondados

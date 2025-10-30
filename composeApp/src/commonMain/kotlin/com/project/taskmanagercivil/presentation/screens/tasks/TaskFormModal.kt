@@ -194,7 +194,7 @@ fun TaskFormModal(
                                         )
                                         if (selectedUser != null) {
                                             Text(
-                                                text = selectedUser!!.role,
+                                                text = selectedUser!!.primaryRoleDisplayName,
                                                 style = MaterialTheme.typography.bodySmall,
                                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                                             )
@@ -558,7 +558,7 @@ fun TaskFormModal(
         SelectionDialog(
             title = "Selecionar Colaborador",
             items = users,
-            itemText = { "${it.name} - ${it.role}" },
+            itemText = { "${it.name} - ${it.primaryRoleDisplayName}" },
             onItemClick = {
                 selectedUser = it
                 showUserPicker = false

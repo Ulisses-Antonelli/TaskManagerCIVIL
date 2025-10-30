@@ -9,6 +9,8 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import androidx.navigation.toRoute
 import com.project.taskmanagercivil.presentation.ViewModelFactory
+import com.project.taskmanagercivil.presentation.screens.auth.ForgotPasswordScreen
+import com.project.taskmanagercivil.presentation.screens.auth.LoginScreen
 import com.project.taskmanagercivil.presentation.screens.dashboard.DashboardScreenContent
 import com.project.taskmanagercivil.presentation.screens.documents.DocumentDetailScreen
 import com.project.taskmanagercivil.presentation.screens.documents.DocumentFormScreen
@@ -38,6 +40,8 @@ object NavigationState {
 }
 
 sealed class Screen(val route: String) {
+    object Login : Screen("login")
+    object ForgotPassword : Screen("forgot_password")
     object Dashboard : Screen("dashboard")
     object Tasks : Screen("tasks")
     object TaskDetail : Screen("task_detail/{taskId}") {
@@ -86,10 +90,43 @@ sealed class Screen(val route: String) {
 fun AppNavigation(
     navController: NavHostController = rememberNavController()
 ) {
+    // Sincroniza navegação com URL do navegador (apenas no Wasm)
+    BrowserNavigationSync(navController)
+
     NavHost(
         navController = navController,
-        startDestination = Screen.Dashboard.route
+        startDestination = Screen.Login.route
     ) {
+
+        // Tela de Login
+        composable(Screen.Login.route) {
+            val viewModel = ViewModelFactory.createAuthViewModel()
+            LoginScreen(
+                viewModel = viewModel,
+                onLoginSuccess = {
+                    navController.navigate(Screen.Dashboard.route) {
+                        popUpTo(Screen.Login.route) {
+                            inclusive = true
+                        }
+                        launchSingleTop = true
+                    }
+                },
+                onForgotPasswordClick = {
+                    navController.navigate(Screen.ForgotPassword.route)
+                }
+            )
+        }
+
+        // Tela de Recuperação de Senha
+        composable(Screen.ForgotPassword.route) {
+            val viewModel = ViewModelFactory.createAuthViewModel()
+            ForgotPasswordScreen(
+                viewModel = viewModel,
+                onBackToLogin = {
+                    navController.popBackStack()
+                }
+            )
+        }
 
         // Tela de Dashboard
         composable(Screen.Dashboard.route) {
