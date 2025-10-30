@@ -22,7 +22,9 @@ val baseMenuItems = listOf(
     "tasks" to "Tarefas",
     "users" to "Colaboradores",
     "teams" to "Times",
-    "documents" to "Documentos"
+    "documents" to "Documentos",
+    "reports" to "Relatórios",
+    "settings" to "Configurações"
 )
 
 val adminOnlyMenuItems = listOf(
