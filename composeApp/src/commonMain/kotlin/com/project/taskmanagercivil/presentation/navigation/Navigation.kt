@@ -21,6 +21,7 @@ import com.project.taskmanagercivil.presentation.screens.employees.EmployeesScre
 import com.project.taskmanagercivil.presentation.screens.projects.ProjectDetailScreen
 import com.project.taskmanagercivil.presentation.screens.projects.ProjectsScreenContent
 import com.project.taskmanagercivil.presentation.screens.tasks.TasksScreenContent
+import com.project.taskmanagercivil.presentation.screens.settings.UserManagementScreen
 import com.project.taskmanagercivil.presentation.screens.teams.TeamDetailScreen
 import com.project.taskmanagercivil.presentation.screens.teams.TeamFormScreen
 import com.project.taskmanagercivil.presentation.screens.teams.TeamsScreenContent
@@ -84,6 +85,7 @@ sealed class Screen(val route: String) {
     object DocumentEdit : Screen("document_edit/{documentId}") {
         fun createRoute(documentId: String) = "document_edit/$documentId"
     }
+    object UserManagement : Screen("user_management")
 }
 
 @Composable
@@ -601,6 +603,14 @@ fun AppNavigation(
                 onSaveSuccess = {
                     navController.popBackStack()
                 }
+            )
+        }
+
+        // Tela de Gerenciamento de Usuários (apenas para ADMIN)
+        composable(Screen.UserManagement.route) {
+            UserManagementScreen(
+                navController = navController,
+                currentUser = null // TODO: passar usuário autenticado
             )
         }
     }
