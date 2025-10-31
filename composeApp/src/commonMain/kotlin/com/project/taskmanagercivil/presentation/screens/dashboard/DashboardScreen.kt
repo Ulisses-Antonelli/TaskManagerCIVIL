@@ -116,6 +116,15 @@ fun DashboardScreenContent(
 private fun DashboardTopBar(
     onRefresh: () -> Unit
 ) {
+    // TODO: Remover mock quando autenticação estiver integrada
+    val mockUser = com.project.taskmanagercivil.domain.models.User(
+        id = "1",
+        name = "Admin Sistema",
+        email = "admin@taskmanager.com",
+        roles = listOf(com.project.taskmanagercivil.domain.models.Role.ADMIN),
+        isActive = true
+    )
+
     TopAppBar(
         title = {
             Text(
@@ -125,6 +134,18 @@ private fun DashboardTopBar(
             )
         },
         actions = {
+            // Avatar do usuário com menu
+            com.project.taskmanagercivil.presentation.components.UserMenuAvatar(
+                user = mockUser,
+                onLogout = {
+                    // TODO: Implementar logout
+                },
+                onSettings = {
+                    // TODO: Navegar para configurações
+                }
+            )
+
+            // Ícone de refresh
             IconButton(onClick = onRefresh) {
                 Icon(
                     imageVector = Icons.Default.Refresh,
