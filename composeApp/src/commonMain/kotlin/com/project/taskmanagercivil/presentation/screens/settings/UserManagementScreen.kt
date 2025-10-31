@@ -135,31 +135,27 @@ fun UserManagementScreen(
                 }
             }
 
-            // Lista de usuários
-            Card(
-                modifier = Modifier.fillMaxSize(),
-                elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
-            ) {
-                LazyColumn(
-                    modifier = Modifier.fillMaxSize(),
-                    contentPadding = PaddingValues(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
-                    items(uiState.filteredUsers) { user ->
-                        UserCard(
-                            user = user,
-                            onEditClick = {
-                                selectedUser = user
-                                showUserFormDialog = true
-                            },
-                            onToggleActiveClick = {
-                                viewModel.toggleUserActive(user)
-                            },
-                            canEdit = currentUser?.id != user.id // Não pode editar a si mesmo
-                        )
+            // Tabela de usuários
+            com.project.taskmanagercivil.presentation.components.UserManagementTable(
+                users = uiState.filteredUsers,
+                onUserClick = { userId ->
+                    val user = uiState.users.find { it.id == userId }
+                    if (user != null && currentUser?.id != user.id) {
+                        selectedUser = user
+                        showUserFormDialog = true
                     }
-                }
-            }
+                },
+                onRolesChange = { userId, newRoles ->
+                    viewModel.updateUserRoles(userId, newRoles)
+                },
+                onStatusChange = { userId, isActive ->
+                    val user = uiState.users.find { it.id == userId }
+                    if (user != null && currentUser?.id != user.id) {
+                        viewModel.setUserActive(user, isActive)
+                    }
+                },
+                modifier = Modifier.fillMaxSize()
+            )
         }
     }
 

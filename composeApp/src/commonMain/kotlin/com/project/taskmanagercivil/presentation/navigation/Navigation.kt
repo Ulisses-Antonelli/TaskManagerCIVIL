@@ -608,9 +608,18 @@ fun AppNavigation(
 
         // Tela de Gerenciamento de Usuários (apenas para ADMIN)
         composable(Screen.UserManagement.route) {
+            // TODO: Remover mock quando autenticação estiver integrada
+            val mockAdminUser = com.project.taskmanagercivil.domain.models.User(
+                id = "1",
+                name = "Admin Sistema",
+                email = "admin@taskmanager.com",
+                roles = listOf(com.project.taskmanagercivil.domain.models.Role.ADMIN),
+                isActive = true
+            )
+
             UserManagementScreen(
                 navController = navController,
-                currentUser = null // TODO: passar usuário autenticado
+                currentUser = mockAdminUser
             )
         }
     }

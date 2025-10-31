@@ -72,6 +72,30 @@ class UserManagementViewModel {
         saveUser(updatedUser)
     }
 
+    fun setUserActive(user: User, isActive: Boolean) {
+        val updatedUser = user.copy(isActive = isActive)
+        saveUser(updatedUser)
+    }
+
+    fun updateUserRoles(userId: String, newRoles: List<Role>) {
+        _uiState.update { currentState ->
+            val updatedUsers = currentState.users.map { user ->
+                if (user.id == userId) {
+                    user.copy(roles = newRoles)
+                } else {
+                    user
+                }
+            }
+
+            val filtered = filterUsers(updatedUsers, currentState.selectedRoleFilter)
+
+            currentState.copy(
+                users = updatedUsers,
+                filteredUsers = filtered
+            )
+        }
+    }
+
     private fun filterUsers(users: List<User>, roleFilter: Role?): List<User> {
         return if (roleFilter == null) {
             users
