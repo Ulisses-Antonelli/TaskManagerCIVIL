@@ -30,6 +30,7 @@ import com.project.taskmanagercivil.presentation.screens.tasks.TasksViewModel
 import com.project.taskmanagercivil.presentation.screens.teams.TeamDetailViewModel
 import com.project.taskmanagercivil.presentation.screens.teams.TeamFormViewModel
 import com.project.taskmanagercivil.presentation.screens.teams.TeamsViewModel
+import com.project.taskmanagercivil.presentation.screens.settings.UserManagementViewModel
 
 /**
  * Factory simples para criação de ViewModels com injeção de dependência por construtor
@@ -43,8 +44,22 @@ object ViewModelFactory {
     private val teamRepository: TeamRepository = TeamRepositoryImpl()
     private val documentRepository: DocumentRepository = DocumentRepositoryImpl()
 
+    // Instância singleton do AuthViewModel (compartilhada globalmente)
+    private var authViewModelInstance: AuthViewModel? = null
+
     fun createAuthViewModel(): AuthViewModel {
-        return AuthViewModel(authRepository)
+        if (authViewModelInstance == null) {
+            authViewModelInstance = AuthViewModel(authRepository)
+        }
+        return authViewModelInstance!!
+    }
+
+    /**
+     * Retorna o AuthViewModel singleton global
+     * Usado para acessar o usuário logado em qualquer tela
+     */
+    fun getAuthViewModel(): AuthViewModel {
+        return createAuthViewModel()
     }
 
     fun createDashboardViewModel(): DashboardViewModel {
@@ -105,5 +120,9 @@ object ViewModelFactory {
 
     fun createDocumentFormViewModel(documentId: String? = null): DocumentFormViewModel {
         return DocumentFormViewModel(documentId, documentRepository, projectRepository, employeeRepository)
+    }
+
+    fun createUserManagementViewModel(): UserManagementViewModel {
+        return UserManagementViewModel(employeeRepository)
     }
 }

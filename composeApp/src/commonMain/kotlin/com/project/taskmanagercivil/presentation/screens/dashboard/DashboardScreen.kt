@@ -8,8 +8,12 @@ import androidx.compose.material.icons.filled.Dashboard
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
@@ -52,7 +56,8 @@ fun DashboardScreenContent(
                 topBar = {
                     Column {
                         DashboardTopBar(
-                            onRefresh = { viewModel.refresh() }
+                            onRefresh = { viewModel.refresh() },
+                            navController = navController
                         )
                         DynamicBreadcrumbs(
                             navController = navController,
@@ -114,16 +119,27 @@ fun DashboardScreenContent(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun DashboardTopBar(
-    onRefresh: () -> Unit
+    onRefresh: () -> Unit,
+    navController: NavController
 ) {
-    // TODO: Remover mock quando autenticação estiver integrada
-    val mockUser = com.project.taskmanagercivil.domain.models.User(
-        id = "1",
-        name = "Admin Sistema",
-        email = "admin@taskmanager.com",
-        roles = listOf(com.project.taskmanagercivil.domain.models.Role.ADMIN),
-        isActive = true
-    )
+    // Obtém o AuthViewModel singleton global
+    val authViewModel = com.project.taskmanagercivil.presentation.ViewModelFactory.getAuthViewModel()
+    val authState by authViewModel.uiState.collectAsState()
+
+    // Controla se o logout foi solicitado
+    var logoutRequested by remember { mutableStateOf(false) }
+
+    // Observa mudanças no estado de autenticação
+    LaunchedEffect(authState.currentUser) {
+        // Se logout foi solicitado E usuário ficou null, navega para login
+        if (logoutRequested && authState.currentUser == null) {
+            navController.navigate("login") {
+                popUpTo(0) { inclusive = true }
+                launchSingleTop = true
+            }
+            logoutRequested = false // Reset
+        }
+    }
 
     TopAppBar(
         title = {
@@ -136,12 +152,16 @@ private fun DashboardTopBar(
         actions = {
             // Avatar do usuário com menu
             com.project.taskmanagercivil.presentation.components.UserMenuAvatar(
-                user = mockUser,
+                user = authState.currentUser,
                 onLogout = {
-                    // TODO: Implementar logout
+                    logoutRequested = true
+                    authViewModel.logout()
+                    // LaunchedEffect vai observar e navegar quando currentUser ficar null
                 },
                 onSettings = {
-                    // TODO: Navegar para configurações
+                    navController.navigate("settings") {
+                        launchSingleTop = true
+                    }
                 }
             )
 

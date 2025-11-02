@@ -1,6 +1,8 @@
 package com.project.taskmanagercivil.presentation.navigation
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
@@ -608,18 +610,13 @@ fun AppNavigation(
 
         // Tela de Gerenciamento de Usuários (apenas para ADMIN)
         composable(Screen.UserManagement.route) {
-            // TODO: Remover mock quando autenticação estiver integrada
-            val mockAdminUser = com.project.taskmanagercivil.domain.models.User(
-                id = "1",
-                name = "Admin Sistema",
-                email = "admin@taskmanager.com",
-                roles = listOf(com.project.taskmanagercivil.domain.models.Role.ADMIN),
-                isActive = true
-            )
+            // Obtém o usuário autenticado do AuthViewModel global
+            val authViewModel = ViewModelFactory.getAuthViewModel()
+            val authState by authViewModel.uiState.collectAsState()
 
             UserManagementScreen(
                 navController = navController,
-                currentUser = mockAdminUser
+                currentUser = authState.currentUser
             )
         }
     }

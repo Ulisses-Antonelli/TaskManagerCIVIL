@@ -32,7 +32,23 @@ fun DocumentsScreenContent(
     onDocumentClick: (String) -> Unit,
     onNavigate: (String) -> Unit
 ) {
+    val authViewModel = com.project.taskmanagercivil.presentation.ViewModelFactory.getAuthViewModel()
+    val authState by authViewModel.uiState.collectAsState()
     val uiState by viewModel.uiState.collectAsState()
+
+    // Controla se o logout foi solicitado
+    var logoutRequested by remember { mutableStateOf(false) }
+
+    // Observa mudanças no estado de autenticação
+    LaunchedEffect(authState.currentUser) {
+        if (logoutRequested && authState.currentUser == null) {
+            navController.navigate("login") {
+                popUpTo(0) { inclusive = true }
+                launchSingleTop = true
+            }
+            logoutRequested = false
+        }
+    }
 
     // Estado do modal
     var showDocumentFormModal by remember { mutableStateOf(false) }
@@ -57,7 +73,25 @@ fun DocumentsScreenContent(
                                     style = MaterialTheme.typography.displaySmall,
                                     fontWeight = FontWeight.Bold
                                 )
-                            }
+                            },
+                            actions = {
+                                // Avatar do usuário com menu
+                                com.project.taskmanagercivil.presentation.components.UserMenuAvatar(
+                                    user = authState.currentUser,
+                                    onLogout = {
+                                        logoutRequested = true
+                                        authViewModel.logout()
+                                    },
+                                    onSettings = {
+                                        navController.navigate("settings") {
+                                            launchSingleTop = true
+                                        }
+                                    }
+                                )
+                            },
+                            colors = TopAppBarDefaults.topAppBarColors(
+                                containerColor = MaterialTheme.colorScheme.surface
+                            )
                         )
 
                         Row(

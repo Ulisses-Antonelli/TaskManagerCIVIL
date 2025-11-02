@@ -33,7 +33,24 @@ fun TasksScreenContent(
     onTaskClick: (com.project.taskmanagercivil.domain.models.Task) -> Unit = {},
     onNavigate: (String) -> Unit = {}
 ) {
+    val authViewModel = com.project.taskmanagercivil.presentation.ViewModelFactory.getAuthViewModel()
+    val authState by authViewModel.uiState.collectAsState()
     val uiState by viewModel.uiState.collectAsState()
+
+    // Controla se o logout foi solicitado
+    var logoutRequested by remember { mutableStateOf(false) }
+
+    // Observa mudanças no estado de autenticação
+    LaunchedEffect(authState.currentUser) {
+        if (logoutRequested && authState.currentUser == null) {
+            navController.navigate("login") {
+                popUpTo(0) { inclusive = true }
+                launchSingleTop = true
+            }
+            logoutRequested = false
+        }
+    }
+
     Row(modifier = Modifier.fillMaxSize()) {
         NavigationSidebar(
             currentRoute = "tasks",
@@ -56,6 +73,18 @@ fun TasksScreenContent(
                                 )
                             },
                             actions = {
+                                com.project.taskmanagercivil.presentation.components.UserMenuAvatar(
+                                    user = authState.currentUser,
+                                    onLogout = {
+                                        logoutRequested = true
+                                        authViewModel.logout()
+                                    },
+                                    onSettings = {
+                                        navController.navigate("settings") {
+                                            launchSingleTop = true
+                                        }
+                                    }
+                                )
                                 IconButton(
                                     onClick = {
                                         val newMode = if (uiState.viewMode == ViewMode.LIST) ViewMode.KANBAN else ViewMode.LIST
@@ -67,8 +96,12 @@ fun TasksScreenContent(
                                         contentDescription = if (uiState.viewMode == ViewMode.LIST) "Visualização Kanban" else "Visualização em Lista"
                                     )
                                 }
-                            }
+                            },
+                            colors = TopAppBarDefaults.topAppBarColors(
+                                containerColor = MaterialTheme.colorScheme.surface
+                            )
                         )
+
                         DynamicBreadcrumbs(
                             navController = navController,
                             currentRoot = NavigationState.currentRoot

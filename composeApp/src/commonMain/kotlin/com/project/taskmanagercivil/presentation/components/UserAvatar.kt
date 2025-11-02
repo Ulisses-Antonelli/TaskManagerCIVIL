@@ -70,7 +70,7 @@ fun UserMenuAvatar(
         Row(
             modifier = Modifier
                 .clickable { expanded = true }
-                .padding(horizontal = 12.dp, vertical = 8.dp),
+                .padding(start = 12.dp, end = 16.dp, bottom = 8.dp, top = 8.dp),
             horizontalArrangement = Arrangement.spacedBy(12.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {

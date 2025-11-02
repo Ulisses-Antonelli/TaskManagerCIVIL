@@ -29,25 +29,42 @@ import com.project.taskmanagercivil.presentation.navigation.NavigationState
 fun TeamsScreenContent(
     navController: NavController,
     viewModel: TeamsViewModel,
-    onTeamClick: (String) -> Unit,
+    onTeamClick: (String) -> Unit = {},
     onCreateTeam: () -> Unit = {},
-    onNavigate: (String) -> Unit
+    onNavigate: (String) -> Unit = {}
 ) {
+    val authViewModel = com.project.taskmanagercivil.presentation.ViewModelFactory.getAuthViewModel()
+    val authState by authViewModel.uiState.collectAsState()
     val uiState by viewModel.uiState.collectAsState()
 
-    // Estado do modal (antes do Scaffold para acessibilidade)
-    var showTeamFormModal by remember { mutableStateOf(false) }
-    var teamToEdit by remember { mutableStateOf<Team?>(null) }
+    // Controla se o logout foi solicitado
+    var logoutRequested by remember { mutableStateOf(false) }
+
+    // Observa mudanças no estado de autenticação
+    LaunchedEffect(authState.currentUser) {
+        if (logoutRequested && authState.currentUser == null) {
+            navController.navigate("login") {
+                popUpTo(0) { inclusive = true }
+                launchSingleTop = true
+            }
+            logoutRequested = false
+        }
+    }
 
     Row(modifier = Modifier.fillMaxSize()) {
         NavigationSidebar(
             currentRoute = "teams",
-            onMenuClick = onNavigate
+            onMenuClick = onNavigate,
+            modifier = Modifier
         )
 
         HorizontalDivider(modifier = Modifier.fillMaxHeight().width(1.dp))
 
         Column(modifier = Modifier.weight(1f)) {
+            // Estado do modal (antes do Scaffold para ser acessível no TopAppBar)
+            var showTeamFormModal by remember { mutableStateOf(false) }
+            var teamToEdit by remember { mutableStateOf<Team?>(null) }
+
             Scaffold(
                 topBar = {
                     Column {
@@ -58,7 +75,24 @@ fun TeamsScreenContent(
                                     style = MaterialTheme.typography.displaySmall,
                                     fontWeight = FontWeight.Bold
                                 )
-                            }
+                            },
+                            actions = {
+                                com.project.taskmanagercivil.presentation.components.UserMenuAvatar(
+                                    user = authState.currentUser,
+                                    onLogout = {
+                                        logoutRequested = true
+                                        authViewModel.logout()
+                                    },
+                                    onSettings = {
+                                        navController.navigate("settings") {
+                                            launchSingleTop = true
+                                        }                  
+                                    }
+                                )
+                            },
+                            colors = TopAppBarDefaults.topAppBarColors(
+                                containerColor = MaterialTheme.colorScheme.surface
+                            )
                         )
 
                         Row(
@@ -87,7 +121,7 @@ fun TeamsScreenContent(
                             ) {
                                 Icon(
                                     imageVector = Icons.Default.Add,
-                                    contentDescription = "Criar novo time",
+                                    contentDescription = "Criar nova equipe",
                                     modifier = Modifier.size(24.dp)
                                 )
                             }
@@ -100,7 +134,6 @@ fun TeamsScreenContent(
                         .fillMaxSize()
                         .padding(paddingValues)
                 ) {
-                    // Barra de pesquisa
                     SearchBar(
                         query = uiState.searchQuery,
                         onQueryChange = viewModel::onSearchQueryChange,
@@ -109,7 +142,6 @@ fun TeamsScreenContent(
                             .padding(horizontal = 16.dp, vertical = 8.dp)
                     )
 
-                    // Filtros
                     FiltersRow(
                         uiState = uiState,
                         viewModel = viewModel,
@@ -118,7 +150,6 @@ fun TeamsScreenContent(
 
                     Spacer(modifier = Modifier.height(8.dp))
 
-                    // Lista de times
                     when {
                         uiState.isLoading -> {
                             Box(
@@ -129,7 +160,7 @@ fun TeamsScreenContent(
                             }
                         }
 
-                        uiState.filteredTeams.isEmpty() -> {
+                        uiState.teams.isEmpty() -> {
                             Box(
                                 modifier = Modifier.fillMaxSize(),
                                 contentAlignment = Alignment.Center
@@ -138,12 +169,12 @@ fun TeamsScreenContent(
                                     horizontalAlignment = Alignment.CenterHorizontally
                                 ) {
                                     Text(
-                                        text = "Nenhum time encontrado",
+                                        text = "Nenhuma equipe encontrada",
                                         style = MaterialTheme.typography.headlineSmall
                                     )
                                     Spacer(modifier = Modifier.height(8.dp))
                                     Text(
-                                        text = "Tente ajustar os filtros",
+                                        text = "Crie sua primeira equipe",
                                         style = MaterialTheme.typography.bodyMedium,
                                         color = MaterialTheme.colorScheme.onSurfaceVariant
                                     )
@@ -168,13 +199,12 @@ fun TeamsScreenContent(
                                             teamToEdit = team
                                             showTeamFormModal = true
                                         }
-                                    )
+                                    )                                  
                                 }
-                            }
+                            }                         
                         }
                     }
-
-                    // Modal de formulário de time
+                    // Modal de formulário de equipe
                     if (showTeamFormModal) {
                         TeamFormModal(
                             team = teamToEdit,
@@ -209,7 +239,7 @@ private fun SearchBar(
         modifier = modifier,
         placeholder = { Text("Buscar por nome ou descrição...") },
         singleLine = true,
-        shape = RoundedCornerShape(8.dp)
+        shape = RoundedCornerShape(8.dp)      
     )
 }
 

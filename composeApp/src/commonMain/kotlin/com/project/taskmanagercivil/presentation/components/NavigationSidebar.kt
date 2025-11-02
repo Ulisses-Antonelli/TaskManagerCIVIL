@@ -7,6 +7,8 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -53,18 +55,12 @@ private fun SidebarContent(
     onMenuClick: (String) -> Unit,
     currentUser: com.project.taskmanagercivil.domain.models.User?
 ) {
-    // TODO: Remover mock quando autenticação estiver integrada
-    // Mock temporário para permitir testar o menu de admin
-    val mockAdminUser = com.project.taskmanagercivil.domain.models.User(
-        id = "1",
-        name = "Admin Sistema",
-        email = "admin@taskmanager.com",
-        roles = listOf(com.project.taskmanagercivil.domain.models.Role.ADMIN),
-        isActive = true
-    )
+    // Obtém o usuário autenticado do AuthViewModel global
+    val authViewModel = com.project.taskmanagercivil.presentation.ViewModelFactory.getAuthViewModel()
+    val authState by authViewModel.uiState.collectAsState()
 
-    // Usa o usuário fornecido, ou o mock admin como fallback
-    val userToUse = currentUser ?: mockAdminUser
+    // Usa o usuário autenticado ou o fornecido como parâmetro (para compatibilidade)
+    val userToUse = currentUser ?: authState.currentUser
 
     Column(
         modifier = Modifier

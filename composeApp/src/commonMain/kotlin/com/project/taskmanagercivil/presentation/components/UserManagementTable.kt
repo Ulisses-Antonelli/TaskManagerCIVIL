@@ -36,7 +36,7 @@ fun UserManagementTable(
     modifier: Modifier = Modifier
 ) {
     Card(
-        modifier = modifier.fillMaxWidth(),
+        modifier = modifier.fillMaxWidth().padding(16.dp),
         shape = RoundedCornerShape(8.dp)
     ) {
         Column(

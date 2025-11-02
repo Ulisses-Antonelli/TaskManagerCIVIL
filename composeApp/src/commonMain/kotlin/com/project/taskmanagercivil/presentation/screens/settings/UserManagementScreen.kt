@@ -22,7 +22,11 @@ import androidx.navigation.NavController
 import com.project.taskmanagercivil.domain.models.PermissionChecker
 import com.project.taskmanagercivil.domain.models.Role
 import com.project.taskmanagercivil.domain.models.User
-import com.project.taskmanagercivil.presentation.components.ScreenLayout
+import com.project.taskmanagercivil.presentation.components.DynamicBreadcrumbs
+import com.project.taskmanagercivil.presentation.components.NavigationSidebar
+import com.project.taskmanagercivil.presentation.navigation.NavigationState
+//import androidx.compose.ui.tooling.preview.Preview
+import org.jetbrains.compose.ui.tooling.preview.Preview
 
 /**
  * Tela de Gerenciamento de Usuários
@@ -30,17 +34,37 @@ import com.project.taskmanagercivil.presentation.components.ScreenLayout
  * Permite criar, editar, desativar usuários e atribuir papéis
  */
 @OptIn(ExperimentalMaterial3Api::class)
+
+
+@Preview
 @Composable
 fun UserManagementScreen(
     navController: NavController,
     currentUser: User?,
-    viewModel: UserManagementViewModel = remember { UserManagementViewModel() }
+    viewModel: UserManagementViewModel = remember { com.project.taskmanagercivil.presentation.ViewModelFactory.createUserManagementViewModel() }
 ) {
+    val authViewModel = com.project.taskmanagercivil.presentation.ViewModelFactory.getAuthViewModel()
+    val authState by authViewModel.uiState.collectAsState()
+
     val uiState by viewModel.uiState.collectAsState()
     var showUserFormDialog by remember { mutableStateOf(false) }
     var selectedUser by remember { mutableStateOf<User?>(null) }
     var showDeleteConfirmDialog by remember { mutableStateOf(false) }
     var userToDelete by remember { mutableStateOf<User?>(null) }
+
+    // Controla se o logout foi solicitado
+    var logoutRequested by remember { mutableStateOf(false) }
+
+    // Observa mudanças no estado de autenticação
+    LaunchedEffect(authState.currentUser) {
+        if (logoutRequested && authState.currentUser == null) {
+            navController.navigate("login") {
+                popUpTo(0) { inclusive = true }
+                launchSingleTop = true
+            }
+            logoutRequested = false
+        }
+    }
 
     // Verificar permissão de acesso
     if (!PermissionChecker.canManageUsers(currentUser)) {
@@ -78,84 +102,130 @@ fun UserManagementScreen(
         return
     }
 
-    ScreenLayout(navController = navController) {
-        Column(
+    Row(modifier = Modifier.fillMaxSize()) {
+        NavigationSidebar(
+            currentRoute = "user_management",
+            onMenuClick = { route -> navController.navigate(route) },
             modifier = Modifier
-                .fillMaxSize()
-                .padding(24.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
-        ) {
-            // Header com botão de adicionar
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Column {
-                    Text(
-                        text = "Usuários do Sistema",
-                        style = MaterialTheme.typography.headlineSmall,
-                        fontWeight = FontWeight.Bold
-                    )
-                    Text(
-                        text = "${uiState.users.size} usuários cadastrados",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
+        )
 
-                Button(
-                    onClick = {
-                        selectedUser = null
-                        showUserFormDialog = true
+        HorizontalDivider(modifier = Modifier.fillMaxHeight().width(1.dp))
+
+        Column(modifier = Modifier.weight(1f)) {
+            Scaffold(
+                topBar = {
+                    Column {
+                        TopAppBar(
+                            title = {
+                                Text(
+                                    text = "TaskManagerCIVIL",
+                                    style = MaterialTheme.typography.displaySmall,
+                                    fontWeight = FontWeight.Bold
+                                )
+                            },
+                            actions = {
+                                com.project.taskmanagercivil.presentation.components.UserMenuAvatar(
+                                    user = authState.currentUser,
+                                    onLogout = {
+                                        logoutRequested = true
+                                        authViewModel.logout()
+                                    },
+                                    onSettings = {
+                                        navController.navigate("settings") {
+                                            launchSingleTop = true
+                                        }
+                                    }
+                                )
+                            },
+                            colors = TopAppBarDefaults.topAppBarColors(
+                                containerColor = MaterialTheme.colorScheme.surface
+                            )
+                        )
+
+                        // Breadcrumbs + filtros + botão de adicionar
+                        Column(
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(end = 16.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                DynamicBreadcrumbs(
+                                    navController = navController,
+                                    currentRoot = NavigationState.currentRoot,
+                                    modifier = Modifier.weight(1f)
+                                )
+
+                                // Botão de adicionar (alinhado com breadcrumbs)
+                                IconButton(
+                                    onClick = {
+                                        selectedUser = null
+                                        showUserFormDialog = true
+                                    },
+                                    modifier = Modifier.size(40.dp),
+                                    colors = IconButtonDefaults.iconButtonColors(
+                                        containerColor = MaterialTheme.colorScheme.surfaceVariant,
+                                        contentColor = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.Add,
+                                        contentDescription = "Criar novo usuário",
+                                        modifier = Modifier.size(24.dp)
+                                    )
+                                }
+                            }
+
+                            // Filtros abaixo dos breadcrumbs
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(horizontal = 16.dp, vertical = 8.dp),
+                                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                            ) {
+                                FilterChip(
+                                    selected = uiState.selectedRoleFilter == null,
+                                    onClick = { viewModel.setRoleFilter(null) },
+                                    label = { Text("Todos") }
+                                )
+                                Role.entries.forEach { role ->
+                                    FilterChip(
+                                        selected = uiState.selectedRoleFilter == role,
+                                        onClick = { viewModel.setRoleFilter(role) },
+                                        label = { Text(role.displayName) }
+                                    )
+                                }
+                            }
+                        }
                     }
-                ) {
-                    Icon(Icons.Default.Add, contentDescription = null)
-                    Spacer(Modifier.width(8.dp))
-                    Text("Novo Usuário")
                 }
-            }
-
-            // Filtros
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-                FilterChip(
-                    selected = uiState.selectedRoleFilter == null,
-                    onClick = { viewModel.setRoleFilter(null) },
-                    label = { Text("Todos") }
+            ) { paddingValues ->
+                // Tabela de usuários
+                com.project.taskmanagercivil.presentation.components.UserManagementTable(
+                    users = uiState.filteredUsers,
+                    onUserClick = { userId ->
+                        val user = uiState.users.find { it.id == userId }
+                        if (user != null && currentUser?.id != user.id) {
+                            selectedUser = user
+                            showUserFormDialog = true
+                        }
+                    },
+                    onRolesChange = { userId, newRoles ->
+                        viewModel.updateUserRoles(userId, newRoles)
+                    },
+                    onStatusChange = { userId, isActive ->
+                        val user = uiState.users.find { it.id == userId }
+                        if (user != null && currentUser?.id != user.id) {
+                            viewModel.setUserActive(user, isActive)
+                        }
+                    },
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(paddingValues)
                 )
-                Role.entries.forEach { role ->
-                    FilterChip(
-                        selected = uiState.selectedRoleFilter == role,
-                        onClick = { viewModel.setRoleFilter(role) },
-                        label = { Text(role.displayName) }
-                    )
-                }
             }
-
-            // Tabela de usuários
-            com.project.taskmanagercivil.presentation.components.UserManagementTable(
-                users = uiState.filteredUsers,
-                onUserClick = { userId ->
-                    val user = uiState.users.find { it.id == userId }
-                    if (user != null && currentUser?.id != user.id) {
-                        selectedUser = user
-                        showUserFormDialog = true
-                    }
-                },
-                onRolesChange = { userId, newRoles ->
-                    viewModel.updateUserRoles(userId, newRoles)
-                },
-                onStatusChange = { userId, isActive ->
-                    val user = uiState.users.find { it.id == userId }
-                    if (user != null && currentUser?.id != user.id) {
-                        viewModel.setUserActive(user, isActive)
-                    }
-                },
-                modifier = Modifier.fillMaxSize()
-            )
         }
     }
 
@@ -184,8 +254,10 @@ private fun UserCard(
     canEdit: Boolean
 ) {
     Card(
-        modifier = Modifier.fillMaxWidth(),
-        colors = if (!user.isActive) {
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp),
+            colors = if (!user.isActive) {
             CardDefaults.cardColors(
                 containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
             )
@@ -307,3 +379,6 @@ private fun RoleBadge(role: Role) {
         )
     }
 }
+
+
+
