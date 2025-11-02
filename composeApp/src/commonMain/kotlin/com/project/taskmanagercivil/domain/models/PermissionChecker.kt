@@ -21,6 +21,13 @@ object PermissionChecker {
     }
 
     /**
+     * Verifica se o usuário é gestor de obras
+     */
+    fun isGestorObras(user: User?): Boolean {
+        return user?.roles?.contains(Role.GESTOR_OBRAS) ?: false
+    }
+
+    /**
      * Verifica se o usuário tem um dos papéis especificados
      */
     fun hasAnyRole(user: User?, vararg roles: Role): Boolean {

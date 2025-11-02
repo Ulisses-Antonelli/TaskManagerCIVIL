@@ -25,8 +25,12 @@ val baseMenuItems = listOf(
     "users" to "Colaboradores",
     "teams" to "Times",
     "documents" to "Documentos",
-    "reports" to "Relatórios",
     "settings" to "Configurações"
+)
+
+// Menu items para Admin e Gestor de Obras
+val adminGestorMenuItems = listOf(
+    "financial" to "Financeiro"
 )
 
 val adminOnlyMenuItems = listOf(
@@ -101,7 +105,28 @@ private fun SidebarContent(
             )
         }
 
-        // Divider antes dos menus administrativos
+        // Menu Financeiro - apenas para Admin e Gestor
+        if (com.project.taskmanagercivil.domain.models.PermissionChecker.isAdmin(userToUse) ||
+            com.project.taskmanagercivil.domain.models.PermissionChecker.isGestorObras(userToUse)) {
+
+            Spacer(Modifier.height(8.dp))
+            HorizontalDivider(
+                modifier = Modifier.padding(vertical = 8.dp),
+                color = MaterialTheme.colorScheme.outlineVariant
+            )
+
+            for ((route, label) in adminGestorMenuItems) {
+                val isSelected = currentRoute == route
+
+                ModernNavigationItem(
+                    label = label,
+                    selected = isSelected,
+                    onClick = { onMenuClick(route) }
+                )
+            }
+        }
+
+        // Divider antes dos menus administrativos (apenas Admin)
         if (com.project.taskmanagercivil.domain.models.PermissionChecker.isAdmin(userToUse)) {
             Spacer(Modifier.height(8.dp))
             HorizontalDivider(

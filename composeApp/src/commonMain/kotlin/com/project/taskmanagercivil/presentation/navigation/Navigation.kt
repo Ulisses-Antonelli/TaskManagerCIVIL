@@ -88,6 +88,10 @@ sealed class Screen(val route: String) {
         fun createRoute(documentId: String) = "document_edit/$documentId"
     }
     object UserManagement : Screen("user_management")
+    object Financial : Screen("financial")
+    object FinancialTasks : Screen("financial/tasks")
+    object FinancialProjects : Screen("financial/projects")
+    object FinancialCompany : Screen("financial/company")
 }
 
 @Composable
