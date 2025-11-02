@@ -15,6 +15,8 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.project.taskmanagercivil.presentation.components.DynamicBreadcrumbs
 import com.project.taskmanagercivil.presentation.components.NavigationSidebar
+import com.project.taskmanagercivil.presentation.components.FinancialTasksTable
+import com.project.taskmanagercivil.presentation.components.FinancialTaskRow
 import com.project.taskmanagercivil.presentation.navigation.NavigationState
 
 /**
@@ -231,11 +233,91 @@ private fun TasksFinancialPanel() {
                 }
             }
 
-            // Tabela simplificada (estrutura para expandir depois)
-            Text(
-                text = "Tabela de Tarefas - Em desenvolvimento",
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
+            // Tabela de Tarefas com dados mockados
+            val mockTasks = listOf(
+                FinancialTaskRow(
+                    number = 1,
+                    taskName = "Projeto Estrutural",
+                    projectName = "Ed. Alpha",
+                    responsibleName = "Marcos",
+                    estimatedDays = 5,
+                    actualDays = 4,
+                    estimatedCost = 1800.00,
+                    actualCost = 1440.00,
+                    profitLoss = 360.00,
+                    revisions = 0,
+                    status = "Concluída"
+                ),
+                FinancialTaskRow(
+                    number = 2,
+                    taskName = "Elétrica - 1º Pavto",
+                    projectName = "Ed. Alpha",
+                    responsibleName = "Carla",
+                    estimatedDays = 3,
+                    actualDays = 5,
+                    estimatedCost = 1100.00,
+                    actualCost = 1780.00,
+                    profitLoss = -680.00,
+                    revisions = 2,
+                    status = "Concluída"
+                ),
+                FinancialTaskRow(
+                    number = 3,
+                    taskName = "Hidráulica - 2º Pavto",
+                    projectName = "Ed. Beta",
+                    responsibleName = "João",
+                    estimatedDays = 4,
+                    actualDays = 4,
+                    estimatedCost = 1250.00,
+                    actualCost = 1250.00,
+                    profitLoss = 0.00,
+                    revisions = 1,
+                    status = "Em revisão"
+                ),
+                FinancialTaskRow(
+                    number = 4,
+                    taskName = "Arquitetônico - Layout",
+                    projectName = "Ed. Beta",
+                    responsibleName = "Ana",
+                    estimatedDays = 6,
+                    actualDays = null,
+                    estimatedCost = 2900.00,
+                    actualCost = null,
+                    profitLoss = null,
+                    revisions = 0,
+                    status = "Em curso"
+                ),
+                FinancialTaskRow(
+                    number = 5,
+                    taskName = "PPCI",
+                    projectName = "Ed. Gamma",
+                    responsibleName = "Pedro",
+                    estimatedDays = 2,
+                    actualDays = 1,
+                    estimatedCost = 900.00,
+                    actualCost = 450.00,
+                    profitLoss = 450.00,
+                    revisions = 0,
+                    status = "Concluída"
+                ),
+                FinancialTaskRow(
+                    number = 6,
+                    taskName = "Sanitário - Revisão",
+                    projectName = "Ed. Alpha",
+                    responsibleName = "Carla",
+                    estimatedDays = 1,
+                    actualDays = 2,
+                    estimatedCost = 350.00,
+                    actualCost = 700.00,
+                    profitLoss = -350.00,
+                    revisions = 1,
+                    status = "Concluída"
+                )
+            )
+
+            FinancialTasksTable(
+                tasks = mockTasks,
+                modifier = Modifier.fillMaxWidth()
             )
         }
     }
