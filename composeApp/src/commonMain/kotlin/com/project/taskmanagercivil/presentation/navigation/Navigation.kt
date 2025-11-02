@@ -27,6 +27,7 @@ import com.project.taskmanagercivil.presentation.screens.settings.UserManagement
 import com.project.taskmanagercivil.presentation.screens.teams.TeamDetailScreen
 import com.project.taskmanagercivil.presentation.screens.teams.TeamFormScreen
 import com.project.taskmanagercivil.presentation.screens.teams.TeamsScreenContent
+import com.project.taskmanagercivil.presentation.screens.financial.FinancialScreenContent
 
 
 /**
@@ -608,6 +609,19 @@ fun AppNavigation(
                 onBack = { navController.popBackStack() },
                 onSaveSuccess = {
                     navController.popBackStack()
+                }
+            )
+        }
+
+        // Tela de Financeiro (apenas para ADMIN e GESTOR_OBRAS)
+        composable(Screen.Financial.route) {
+            NavigationState.currentRoot = "financial"
+            FinancialScreenContent(
+                navController = navController,
+                onNavigate = { route ->
+                    navController.navigate(route) {
+                        launchSingleTop = true
+                    }
                 }
             )
         }
