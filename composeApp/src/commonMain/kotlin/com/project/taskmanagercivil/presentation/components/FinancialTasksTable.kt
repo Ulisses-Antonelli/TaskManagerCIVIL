@@ -40,49 +40,42 @@ fun FinancialTasksTable(
     tasks: List<FinancialTaskRow>,
     modifier: Modifier = Modifier
 ) {
-    Card(
-        modifier = modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(8.dp)
+    Column(
+        modifier = modifier.fillMaxWidth()
     ) {
-        Column(
+        // Cabeçalhos da tabela
+        FinancialTableHeader()
+
+        Spacer(modifier = Modifier.height(8.dp))
+
+        // Linhas da tabela
+        LazyColumn(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(16.dp)
+                .heightIn(max = 400.dp),
+            verticalArrangement = Arrangement.spacedBy(4.dp)
         ) {
-            // Cabeçalhos da tabela
-            FinancialTableHeader()
-
-            Spacer(modifier = Modifier.height(8.dp))
-
-            // Linhas da tabela
-            LazyColumn(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .heightIn(max = 400.dp),
-                verticalArrangement = Arrangement.spacedBy(4.dp)
-            ) {
-                itemsIndexed(tasks) { index, row ->
-                    FinancialTableRow(row = row)
-                }
+            itemsIndexed(tasks) { index, row ->
+                FinancialTableRow(row = row)
             }
+        }
 
-            Spacer(modifier = Modifier.height(12.dp))
+        Spacer(modifier = Modifier.height(12.dp))
 
-            // Legendas
-            Column(
-                verticalArrangement = Arrangement.spacedBy(4.dp)
-            ) {
-                Text(
-                    text = "Legenda Lucro/Prejuízo: (+) Lucro   (-) Prejuízo",
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-                Text(
-                    text = "Legenda Status: Em curso / Em revisão / Concluída / Atrasada",
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
+        // Legendas
+        Column(
+            verticalArrangement = Arrangement.spacedBy(4.dp)
+        ) {
+            Text(
+                text = "Legenda Lucro/Prejuízo: (+) Lucro   (-) Prejuízo",
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+            Text(
+                text = "Legenda Status: Em curso / Em revisão / Concluída / Atrasada",
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
         }
     }
 }
