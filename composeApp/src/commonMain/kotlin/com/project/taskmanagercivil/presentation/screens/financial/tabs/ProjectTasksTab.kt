@@ -5,12 +5,13 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.project.taskmanagercivil.data.mock.FinancialMockData
+import com.project.taskmanagercivil.domain.models.ProjectFinancials
 import com.project.taskmanagercivil.presentation.components.FinancialTasksTable
+import com.project.taskmanagercivil.presentation.screens.financial.toTaskRows
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ProjectTasksTab() {
+fun ProjectTasksTab(projectFinancials: ProjectFinancials) {
     Column(
         modifier = Modifier.fillMaxWidth(),
         verticalArrangement = Arrangement.spacedBy(16.dp)
@@ -110,10 +111,13 @@ fun ProjectTasksTab() {
             }
         }
 
-        // Tabela de Tarefas da Obra usando dados mockados
-        FinancialTasksTable(
-            tasks = FinancialMockData.projectTasksTabTasks,
-            modifier = Modifier.fillMaxWidth()
+        // Tabela de Tarefas da Obra
+        // TODO: Este tab precisa receber a lista filtrada de tarefas do ViewModel
+        // Por enquanto mostra uma mensagem placeholder
+        Text(
+            text = "Carregando tarefas do projeto...",
+            style = MaterialTheme.typography.bodyMedium,
+            modifier = Modifier.padding(16.dp)
         )
     }
 }

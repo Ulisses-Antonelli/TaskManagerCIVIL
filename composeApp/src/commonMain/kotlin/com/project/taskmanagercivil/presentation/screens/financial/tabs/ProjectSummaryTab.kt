@@ -8,10 +8,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.project.taskmanagercivil.domain.models.ProjectFinancials
 import com.project.taskmanagercivil.presentation.components.*
 
 @Composable
-fun ProjectSummaryTab() {
+fun ProjectSummaryTab(projectFinancials: ProjectFinancials) {
     Column(
         modifier = Modifier.fillMaxWidth(),
         verticalArrangement = Arrangement.spacedBy(16.dp)
@@ -39,11 +40,11 @@ fun ProjectSummaryTab() {
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                InfoRow("Cliente:", "Construtora XYZ", Modifier.weight(1f))
+                InfoRow("Cliente:", projectFinancials.client, Modifier.weight(1f))
                 VerticalDivider(modifier = Modifier.height(50.dp))
-                InfoRow("Responsável Técnico:", "Eng. Marcos", Modifier.weight(1f))
+                InfoRow("Responsável Técnico:", projectFinancials.technicalManager, Modifier.weight(1f))
                 VerticalDivider(modifier = Modifier.height(50.dp))
-                InfoRow("Início:", "05/08/2025", Modifier.weight(1f))
+                InfoRow("Início:", projectFinancials.startDate, Modifier.weight(1f))
             }
 
             HorizontalDivider(
@@ -56,11 +57,16 @@ fun ProjectSummaryTab() {
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                InfoRow("Status:", "Em Execução", Modifier.weight(1f))
+                InfoRow("Status:", projectFinancials.status, Modifier.weight(1f))
                 VerticalDivider(modifier = Modifier.height(50.dp))
-                InfoRow("Prazo Previsto:", "90 dias", Modifier.weight(1f))
+                InfoRow("Prazo Previsto:", "${projectFinancials.estimatedDuration} dias", Modifier.weight(1f))
                 VerticalDivider(modifier = Modifier.height(50.dp))
-                InfoRow("Prazo Real:", "102 dias (-12)", Modifier.weight(1f), isAlert = true)
+                val durationText = if (projectFinancials.actualDuration != null && projectFinancials.durationDelta != null) {
+                    "${projectFinancials.actualDuration} dias (${projectFinancials.durationDelta})"
+                } else {
+                    "Em andamento"
+                }
+                InfoRow("Prazo Real:", durationText, Modifier.weight(1f), isAlert = projectFinancials.durationDelta != null && projectFinancials.durationDelta!! < 0)
             }
         }
 
@@ -85,11 +91,11 @@ fun ProjectSummaryTab() {
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                ProjectKPIItem("Progresso Físico:", "68%", Modifier.weight(1f))
+                ProjectKPIItem("Progresso Físico:", "${(projectFinancials.physicalProgress * 100).toInt()}%", Modifier.weight(1f))
                 VerticalDivider(modifier = Modifier.height(50.dp))
-                ProjectKPIItem("Disciplinas:", "4", Modifier.weight(1f))
+                ProjectKPIItem("Disciplinas:", "${projectFinancials.disciplines}", Modifier.weight(1f))
                 VerticalDivider(modifier = Modifier.height(50.dp))
-                ProjectKPIItem("Tarefas:", "32 (22 concl. / 10)", Modifier.weight(1f))
+                ProjectKPIItem("Tarefas:", "${projectFinancials.totalTasks} (${projectFinancials.completedTasks} concl. / ${projectFinancials.pendingTasks})", Modifier.weight(1f))
             }
 
             HorizontalDivider(
@@ -101,11 +107,13 @@ fun ProjectSummaryTab() {
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                ProjectKPIItem("Progresso Financeiro:", "64%", Modifier.weight(1f))
+                ProjectKPIItem("Progresso Financeiro:", "${(projectFinancials.financialProgress * 100).toInt()}%", Modifier.weight(1f))
                 VerticalDivider(modifier = Modifier.height(50.dp))
-                ProjectKPIItem("Eficiência Média:", "1.12x", Modifier.weight(1f))
+                val intPart = projectFinancials.averageEfficiency.toInt()
+                val decimal = ((projectFinancials.averageEfficiency - intPart) * 100).toInt()
+                ProjectKPIItem("Eficiência Média:", "$intPart.${decimal.toString().padStart(2, '0')}x", Modifier.weight(1f))
                 VerticalDivider(modifier = Modifier.height(50.dp))
-                ProjectKPIItem("Retrabalho:", "9%", Modifier.weight(1f))
+                ProjectKPIItem("Retrabalho:", "${(projectFinancials.reworkPercentage * 100).toInt()}%", Modifier.weight(1f))
             }
         }
 
@@ -126,8 +134,8 @@ fun ProjectSummaryTab() {
                 fontWeight = FontWeight.Bold
             )
 
-            ProgressBarRow("Físico:", 0.68f, "68%")
-            ProgressBarRow("Financeiro:", 0.64f, "64%")
+            ProgressBarRow("Físico:", projectFinancials.physicalProgress.toFloat(), "${(projectFinancials.physicalProgress * 100).toInt()}%")
+            ProgressBarRow("Financeiro:", projectFinancials.financialProgress.toFloat(), "${(projectFinancials.financialProgress * 100).toInt()}%")
         }
 
         // Disciplinas (Distribuição de Tarefas)
@@ -151,13 +159,13 @@ fun ProjectSummaryTab() {
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceEvenly
             ) {
-                DisciplineItem("Arquitetura:", "10")
-                VerticalDivider(modifier = Modifier.height(40.dp))
-                DisciplineItem("Estrutural:", "8")
-                VerticalDivider(modifier = Modifier.height(40.dp))
-                DisciplineItem("Elétrica:", "7")
-                VerticalDivider(modifier = Modifier.height(40.dp))
-                DisciplineItem("Hidráulica:", "7")
+                val disciplines = projectFinancials.disciplineDistribution.entries.toList()
+                disciplines.forEachIndexed { index, (disciplineName, taskCount) ->
+                    DisciplineItem("$disciplineName:", "$taskCount")
+                    if (index < disciplines.size - 1) {
+                        VerticalDivider(modifier = Modifier.height(40.dp))
+                    }
+                }
             }
         }
     }

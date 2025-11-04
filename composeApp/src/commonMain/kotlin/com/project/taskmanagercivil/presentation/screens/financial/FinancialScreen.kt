@@ -19,7 +19,6 @@ import com.project.taskmanagercivil.presentation.components.NavigationSidebar
 import com.project.taskmanagercivil.presentation.components.FinancialTasksTable
 import com.project.taskmanagercivil.presentation.components.KPIColumn
 import com.project.taskmanagercivil.presentation.navigation.NavigationState
-import com.project.taskmanagercivil.data.mock.FinancialMockData
 import com.project.taskmanagercivil.presentation.screens.financial.tabs.ProjectSummaryTab
 import com.project.taskmanagercivil.presentation.screens.financial.tabs.ProjectFinancialTab
 import com.project.taskmanagercivil.presentation.screens.financial.tabs.ProjectTasksTab
@@ -36,10 +35,14 @@ import com.project.taskmanagercivil.presentation.screens.financial.CompanyFinanc
 @Composable
 fun FinancialScreenContent(
     navController: NavController,
+    viewModel: FinancialViewModel,
     onNavigate: (String) -> Unit = {}
 ) {
     val authViewModel = com.project.taskmanagercivil.presentation.ViewModelFactory.getAuthViewModel()
     val authState by authViewModel.uiState.collectAsState()
+
+    // Estado do ViewModel
+    val uiState by viewModel.uiState.collectAsState()
 
     // Controla se o logout foi solicitado
     var logoutRequested by remember { mutableStateOf(false) }
@@ -113,7 +116,12 @@ fun FinancialScreenContent(
                     )
 
                     // Painel 1: Tarefas (Nível Micro)
-                    TasksFinancialPanel()
+                    TasksFinancialPanel(
+                        tasks = uiState.tasksPanelTasks,
+                        onFilterChange = { project, discipline, responsible, status, period ->
+                            viewModel.onFilterChange(project, discipline, responsible, status, period)
+                        }
+                    )
 
                     HorizontalDivider(
                         thickness = 2.dp,
@@ -121,7 +129,10 @@ fun FinancialScreenContent(
                     )
 
                     // Painel 2: Obras/Projetos (Nível Meso)
-                    ProjectsFinancialPanel()
+                    ProjectsFinancialPanel(
+                        projectFinancials = uiState.projectFinancials,
+                        onProjectSelected = { projectId -> viewModel.onProjectSelected(projectId) }
+                    )
 
                     HorizontalDivider(
                         thickness = 2.dp,
@@ -129,8 +140,10 @@ fun FinancialScreenContent(
                     )
 
                     // Painel 3: Empresa (Nível Macro)
-                    // TODO: Passar dados do ViewModel
-                    CompanyFinancialPanel(companyFinancials = null)
+                    CompanyFinancialPanel(
+                        companyFinancials = uiState.companyFinancials,
+                        onPeriodChange = { period -> viewModel.onCompanyPeriodChange(period) }
+                    )
                 }
             }
         }
@@ -139,12 +152,21 @@ fun FinancialScreenContent(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun TasksFinancialPanel() {
+private fun TasksFinancialPanel(
+    tasks: List<com.project.taskmanagercivil.domain.models.FinancialTask>,
+    onFilterChange: (String?, String?, String?, String?, String?) -> Unit
+) {
     var obraExpanded by remember { mutableStateOf(false) }
     var disciplinaExpanded by remember { mutableStateOf(false) }
     var colaboradorExpanded by remember { mutableStateOf(false) }
     var statusExpanded by remember { mutableStateOf(false) }
     var periodoExpanded by remember { mutableStateOf(false) }
+
+    var selectedObra by remember { mutableStateOf<String?>(null) }
+    var selectedDisciplina by remember { mutableStateOf<String?>(null) }
+    var selectedColaborador by remember { mutableStateOf<String?>(null) }
+    var selectedStatus by remember { mutableStateOf<String?>(null) }
+    var selectedPeriodo by remember { mutableStateOf<String?>(null) }
 
     Card(
         modifier = Modifier
@@ -364,9 +386,9 @@ private fun TasksFinancialPanel() {
                 }
             }
 
-            // Tabela de Tarefas com dados mockados
+            // Tabela de Tarefas
             FinancialTasksTable(
-                tasks = FinancialMockData.tasksPanelTasks,
+                tasks = tasks.toTaskRows(),
                 modifier = Modifier.fillMaxWidth()
             )
         }
@@ -375,7 +397,10 @@ private fun TasksFinancialPanel() {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun ProjectsFinancialPanel() {
+private fun ProjectsFinancialPanel(
+    projectFinancials: com.project.taskmanagercivil.domain.models.ProjectFinancials?,
+    onProjectSelected: (String) -> Unit
+) {
     var selectedTab by remember { mutableStateOf(0) }
     var obraExpanded by remember { mutableStateOf(false) }
 
@@ -513,11 +538,20 @@ private fun ProjectsFinancialPanel() {
             }
 
             // Conteúdo da aba
-            when (selectedTab) {
-                0 -> ProjectSummaryTab()
-                1 -> ProjectFinancialTab()
-                2 -> ProjectTasksTab()
-                3 -> ProjectRevisionsTab()
+            if (projectFinancials != null) {
+                when (selectedTab) {
+                    0 -> ProjectSummaryTab(projectFinancials)
+                    1 -> ProjectFinancialTab(projectFinancials)
+                    2 -> ProjectTasksTab(projectFinancials)
+                    3 -> ProjectRevisionsTab(projectFinancials)
+                }
+            } else {
+                Box(
+                    modifier = Modifier.fillMaxWidth().padding(32.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    CircularProgressIndicator()
+                }
             }
         }
     }

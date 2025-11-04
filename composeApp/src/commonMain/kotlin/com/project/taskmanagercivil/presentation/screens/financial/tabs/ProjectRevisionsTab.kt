@@ -7,10 +7,11 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.project.taskmanagercivil.domain.models.ProjectFinancials
 import com.project.taskmanagercivil.presentation.components.*
 
 @Composable
-fun ProjectRevisionsTab() {
+fun ProjectRevisionsTab(projectFinancials: ProjectFinancials) {
     Column(
         modifier = Modifier.fillMaxWidth(),
         verticalArrangement = Arrangement.spacedBy(16.dp)
@@ -37,11 +38,11 @@ fun ProjectRevisionsTab() {
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                InfoRow("Total de Revisões:", "7", Modifier.weight(1f))
+                InfoRow("Total de Revisões:", "${projectFinancials.totalRevisions}", Modifier.weight(1f))
                 VerticalDivider(modifier = Modifier.height(50.dp))
-                InfoRow("Custo Total de Revisões:", "R$ 5.900,00", Modifier.weight(1f))
+                InfoRow("Custo Total de Revisões:", formatCurrency(projectFinancials.revisionCost), Modifier.weight(1f))
                 VerticalDivider(modifier = Modifier.height(50.dp))
-                InfoRow("Impacto no Prazo:", "+14 dias", Modifier.weight(1f), isAlert = true)
+                InfoRow("Impacto no Prazo:", "+${projectFinancials.scheduleImpactDays} dias", Modifier.weight(1f), isAlert = true)
             }
         }
 
@@ -67,13 +68,13 @@ fun ProjectRevisionsTab() {
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceEvenly
             ) {
-                DisciplineItem("Arquitetura:", "2")
-                VerticalDivider(modifier = Modifier.height(40.dp))
-                DisciplineItem("Elétrica:", "3")
-                VerticalDivider(modifier = Modifier.height(40.dp))
-                DisciplineItem("Hidráulica:", "2")
-                VerticalDivider(modifier = Modifier.height(40.dp))
-                DisciplineItem("Estrutural:", "0")
+                val revisionsByDiscipline = projectFinancials.revisionsByDiscipline.entries.toList()
+                revisionsByDiscipline.forEachIndexed { index, (disciplineName, revisionCount) ->
+                    DisciplineItem("$disciplineName:", "$revisionCount")
+                    if (index < revisionsByDiscipline.size - 1) {
+                        VerticalDivider(modifier = Modifier.height(40.dp))
+                    }
+                }
             }
         }
 
@@ -98,10 +99,19 @@ fun ProjectRevisionsTab() {
                 modifier = Modifier.fillMaxWidth(),
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                RevisionCauseItem(1, "Mudança solicitada pelo cliente", "4")
-                RevisionCauseItem(2, "Erro de compatibilização", "2")
-                RevisionCauseItem(3, "Falha de comunicação", "1")
+                projectFinancials.revisionCauses.forEachIndexed { index, revisionCause ->
+                    RevisionCauseItem(index + 1, revisionCause.cause, "${revisionCause.count}")
+                }
             }
         }
     }
+}
+
+private fun formatCurrency(value: Double): String {
+    val intPart = value.toInt()
+    val intStr = intPart.toString()
+    val formattedInt = if (intStr.length > 3) {
+        intStr.reversed().chunked(3).joinToString(".").reversed()
+    } else { intStr }
+    return "R$ $formattedInt,00"
 }

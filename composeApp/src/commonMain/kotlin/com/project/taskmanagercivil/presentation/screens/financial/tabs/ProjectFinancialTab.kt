@@ -7,10 +7,11 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.project.taskmanagercivil.domain.models.ProjectFinancials
 import com.project.taskmanagercivil.presentation.components.*
 
 @Composable
-fun ProjectFinancialTab() {
+fun ProjectFinancialTab(projectFinancials: ProjectFinancials) {
     Column(
         modifier = Modifier.fillMaxWidth(),
         verticalArrangement = Arrangement.spacedBy(16.dp)
@@ -38,11 +39,11 @@ fun ProjectFinancialTab() {
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                InfoRow("Valor Contratado:", "R$ 95.000,00", Modifier.weight(1f))
+                InfoRow("Valor Contratado:", formatCurrency(projectFinancials.contractValue), Modifier.weight(1f))
                 VerticalDivider(modifier = Modifier.height(50.dp))
-                InfoRow("Custo Previsto da Obra:", "R$ 62.500,00", Modifier.weight(1f))
+                InfoRow("Custo Previsto da Obra:", formatCurrency(projectFinancials.estimatedCost), Modifier.weight(1f))
                 VerticalDivider(modifier = Modifier.height(50.dp))
-                InfoRow("Custo Real Atual:", "R$ 64.800,00", Modifier.weight(1f))
+                InfoRow("Custo Real Atual:", formatCurrency(projectFinancials.actualCost), Modifier.weight(1f))
             }
 
             HorizontalDivider(
@@ -55,9 +56,11 @@ fun ProjectFinancialTab() {
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                InfoRow("Resultado Previsto:", "+R$ 32.500,00", Modifier.weight(1f))
+                val estimatedSign = if (projectFinancials.estimatedProfit >= 0) "+" else ""
+                InfoRow("Resultado Previsto:", "$estimatedSign${formatCurrency(projectFinancials.estimatedProfit)}", Modifier.weight(1f))
                 VerticalDivider(modifier = Modifier.height(50.dp))
-                InfoRow("Resultado Atual Projetado:", "+R$ 30.200,00", Modifier.weight(1f))
+                val projectedSign = if (projectFinancials.projectedProfit >= 0) "+" else ""
+                InfoRow("Resultado Atual Projetado:", "$projectedSign${formatCurrency(projectFinancials.projectedProfit)}", Modifier.weight(1f))
                 VerticalDivider(modifier = Modifier.height(50.dp))
                 Column(modifier = Modifier.weight(1f)) {
                     // Vazio para manter o alinhamento
@@ -74,9 +77,11 @@ fun ProjectFinancialTab() {
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                InfoRow("Margem Prevista:", "34%", Modifier.weight(1f))
+                InfoRow("Margem Prevista:", "${(projectFinancials.estimatedMargin * 100).toInt()}%", Modifier.weight(1f))
                 VerticalDivider(modifier = Modifier.height(50.dp))
-                InfoRow("Margem Atual:", "31.8%", Modifier.weight(1f))
+                val actualMarginInt = projectFinancials.actualMargin.toInt()
+                val actualMarginDecimal = ((projectFinancials.actualMargin - actualMarginInt) * 1000).toInt()
+                InfoRow("Margem Atual:", "$actualMarginInt.${actualMarginDecimal.toString().padStart(1, '0')}%", Modifier.weight(1f))
                 VerticalDivider(modifier = Modifier.height(50.dp))
                 Column(modifier = Modifier.weight(1f)) {
                     // Vazio para manter o alinhamento
@@ -106,10 +111,10 @@ fun ProjectFinancialTab() {
                 modifier = Modifier.fillMaxWidth(),
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                CostCategoryItem("Mão de Obra Interna:", "R$ 49.300,00")
-                CostCategoryItem("Retrabalho/Revisões:", "R$ 5.900,00")
-                CostCategoryItem("Terceirizados:", "R$ 7.800,00")
-                CostCategoryItem("Deslocamentos / Taxas:", "R$ 1.800,00")
+                CostCategoryItem("Mão de Obra Interna:", formatCurrency(projectFinancials.internalLaborCost))
+                CostCategoryItem("Retrabalho/Revisões:", formatCurrency(projectFinancials.reworkCost))
+                CostCategoryItem("Terceirizados:", formatCurrency(projectFinancials.outsourcedCost))
+                CostCategoryItem("Deslocamentos / Taxas:", formatCurrency(projectFinancials.travelTaxesCost))
             }
         }
 
@@ -131,7 +136,16 @@ fun ProjectFinancialTab() {
             )
 
             ProgressBarRow("Previsto:", 0.72f, "72%")
-            ProgressBarRow("Real:", 0.64f, "64%")
+            ProgressBarRow("Real:", projectFinancials.financialProgress.toFloat(), "${(projectFinancials.financialProgress * 100).toInt()}%")
         }
     }
+}
+
+private fun formatCurrency(value: Double): String {
+    val intPart = value.toInt()
+    val intStr = intPart.toString()
+    val formattedInt = if (intStr.length > 3) {
+        intStr.reversed().chunked(3).joinToString(".").reversed()
+    } else { intStr }
+    return "R$ $formattedInt,00"
 }

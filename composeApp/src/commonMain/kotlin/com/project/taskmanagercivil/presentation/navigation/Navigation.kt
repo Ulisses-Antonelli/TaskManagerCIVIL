@@ -3,6 +3,7 @@ package com.project.taskmanagercivil.presentation.navigation
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
@@ -616,8 +617,10 @@ fun AppNavigation(
         // Tela de Financeiro (apenas para ADMIN e GESTOR_OBRAS)
         composable(Screen.Financial.route) {
             NavigationState.currentRoot = "financial"
+            val financialViewModel = remember { ViewModelFactory.createFinancialViewModel() }
             FinancialScreenContent(
                 navController = navController,
+                viewModel = financialViewModel,
                 onNavigate = { route ->
                     navController.navigate(route) {
                         launchSingleTop = true
