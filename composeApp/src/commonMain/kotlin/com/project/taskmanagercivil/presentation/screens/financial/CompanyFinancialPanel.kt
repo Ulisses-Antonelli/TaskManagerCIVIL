@@ -182,9 +182,9 @@ fun CompanyFinancialPanel(
                     fontWeight = FontWeight.Bold
                 )
 
-                ResultProgressBar("Faturamento:", 0.85f, "R$ 840.000")
-                ResultProgressBar("Custos:", 0.65f, "R$ 546.000")
-                ResultProgressBar("Lucro Líquido:", 0.45f, "R$ 294.000")
+                ResultProgressBar("Faturamento:", 0.85f, formatCurrency(companyFinancials.revenueLastSixMonths))
+                ResultProgressBar("Custos:", 0.65f, formatCurrency(companyFinancials.costsLastSixMonths))
+                ResultProgressBar("Lucro Líquido:", 0.45f, formatCurrency(companyFinancials.profitLastSixMonths))
             }
 
             // Ranking das Obras
@@ -245,17 +245,17 @@ fun CompanyFinancialPanel(
                     verticalArrangement = Arrangement.spacedBy(4.dp)
                 ) {
                     Text(
-                        text = "Receitas do Mês: R$ 142.000,00",
+                        text = "Receitas do Mês: ${formatCurrency(companyFinancials.revenueBreakdown.total)},00",
                         style = MaterialTheme.typography.bodyLarge,
                         fontWeight = FontWeight.Bold,
                         color = Color(0xFF4CAF50)
                     )
                     Text(
-                        text = "  - Obras: R$ 138.000,00",
+                        text = "  - Obras: ${formatCurrency(companyFinancials.revenueBreakdown.fromProjects)},00",
                         style = MaterialTheme.typography.bodyMedium
                     )
                     Text(
-                        text = "  - Outras Receitas: R$ 4.000,00",
+                        text = "  - Outras Receitas: ${formatCurrency(companyFinancials.revenueBreakdown.otherRevenue)},00",
                         style = MaterialTheme.typography.bodyMedium
                     )
                 }
@@ -268,21 +268,21 @@ fun CompanyFinancialPanel(
                     verticalArrangement = Arrangement.spacedBy(4.dp)
                 ) {
                     Text(
-                        text = "Despesas do Mês: R$ 98.400,00",
+                        text = "Despesas do Mês: ${formatCurrency(companyFinancials.expenseBreakdown.total)},00",
                         style = MaterialTheme.typography.bodyLarge,
                         fontWeight = FontWeight.Bold,
                         color = Color(0xFFF44336)
                     )
                     Text(
-                        text = "  - Custos com Obras: R$ 78.500,00",
+                        text = "  - Custos com Obras: ${formatCurrency(companyFinancials.expenseBreakdown.projectCosts)},00",
                         style = MaterialTheme.typography.bodyMedium
                     )
                     Text(
-                        text = "  - Administrativos: R$ 12.700,00",
+                        text = "  - Administrativos: ${formatCurrency(companyFinancials.expenseBreakdown.administrative)},00",
                         style = MaterialTheme.typography.bodyMedium
                     )
                     Text(
-                        text = "  - Impostos/Taxas: R$ 7.200,00",
+                        text = "  - Impostos/Taxas: ${formatCurrency(companyFinancials.expenseBreakdown.taxesFees)},00",
                         style = MaterialTheme.typography.bodyMedium
                     )
                 }
@@ -290,11 +290,13 @@ fun CompanyFinancialPanel(
                 HorizontalDivider(thickness = 1.dp)
 
                 // Resultado
+                val resultStatus = if (companyFinancials.netProfit >= 0) "(Positivo)" else "(Negativo)"
+                val resultColor = if (companyFinancials.netProfit >= 0) Color(0xFF4CAF50) else Color(0xFFF44336)
                 Text(
-                    text = "Resultado Líquido: R$ 43.600,00 (Positivo)",
+                    text = "Resultado Líquido: ${formatCurrency(companyFinancials.netProfit)},00 $resultStatus",
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
-                    color = Color(0xFF4CAF50)
+                    color = resultColor
                 )
             }
 
@@ -316,8 +318,8 @@ fun CompanyFinancialPanel(
                     color = MaterialTheme.colorScheme.onPrimaryContainer
                 )
 
-                CashFlowItem("Contas a Receber (30 dias):", "R$ 52.300")
-                CashFlowItem("Contas a Pagar (30 dias):", "R$ 27.900")
+                CashFlowItem("Contas a Receber (30 dias):", formatCurrency(companyFinancials.cashFlow.accountsReceivable30Days))
+                CashFlowItem("Contas a Pagar (30 dias):", formatCurrency(companyFinancials.cashFlow.accountsPayable30Days))
 
                 HorizontalDivider(thickness = 1.dp, color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.3f))
 
@@ -333,7 +335,7 @@ fun CompanyFinancialPanel(
                         color = MaterialTheme.colorScheme.onPrimaryContainer
                     )
                     Text(
-                        text = "R$ 24.400",
+                        text = formatCurrency(companyFinancials.cashFlow.projectedBalance),
                         style = MaterialTheme.typography.titleLarge,
                         fontWeight = FontWeight.Bold,
                         color = Color(0xFF4CAF50)
@@ -358,18 +360,30 @@ fun CompanyFinancialPanel(
                     fontWeight = FontWeight.Bold
                 )
 
-                CashForecastBar("Mês Atual:", 0.55f)
-                CashForecastBar("+1 Mês:", 0.65f)
-                CashForecastBar("+2 Meses:", 0.51f)
+                CashForecastBar("Mês Atual:", companyFinancials.cashForecast.currentMonth.toFloat())
+                CashForecastBar("+1 Mês:", companyFinancials.cashForecast.nextMonth.toFloat())
+                CashForecastBar("+2 Meses:", companyFinancials.cashForecast.twoMonthsAhead.toFloat())
 
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.Center
                 ) {
+                    val trendText = when(companyFinancials.cashForecast.trend) {
+                        "growing" -> "↑ tendência de crescimento"
+                        "stable" -> "→ tendência estável"
+                        "declining" -> "↓ tendência de queda"
+                        else -> "~ tendência indefinida"
+                    }
+                    val trendColor = when(companyFinancials.cashForecast.trend) {
+                        "growing" -> Color(0xFF4CAF50)
+                        "stable" -> Color(0xFF2196F3)
+                        "declining" -> Color(0xFFF44336)
+                        else -> MaterialTheme.colorScheme.onSurface
+                    }
                     Text(
-                        text = "↑ tendência leve de crescimento",
+                        text = trendText,
                         style = MaterialTheme.typography.bodySmall,
-                        color = Color(0xFF4CAF50),
+                        color = trendColor,
                         fontWeight = FontWeight.Medium
                     )
                 }
@@ -397,9 +411,9 @@ fun CompanyFinancialPanel(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
-                    ComplementaryIndicator("Custo Médio por Tarefa:", "R$ 1.780", Modifier.weight(1f))
+                    ComplementaryIndicator("Custo Médio por Tarefa:", formatCurrency(companyFinancials.complementaryIndicators.averageCostPerTask), Modifier.weight(1f))
                     VerticalDivider(modifier = Modifier.height(50.dp))
-                    ComplementaryIndicator("Ticket Médio por Obra:", "R$ 47.300", Modifier.weight(1f))
+                    ComplementaryIndicator("Ticket Médio por Obra:", formatCurrency(companyFinancials.complementaryIndicators.averageTicketPerProject), Modifier.weight(1f))
                 }
 
                 HorizontalDivider(thickness = 1.dp, color = MaterialTheme.colorScheme.onTertiaryContainer.copy(alpha = 0.2f))
@@ -408,9 +422,9 @@ fun CompanyFinancialPanel(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
-                    ComplementaryIndicator("% Tarefas no Prazo:", "74%", Modifier.weight(1f))
+                    ComplementaryIndicator("% Tarefas no Prazo:", formatPercentage(companyFinancials.complementaryIndicators.tasksOnTimePercentage), Modifier.weight(1f))
                     VerticalDivider(modifier = Modifier.height(50.dp))
-                    ComplementaryIndicator("% Obras no Prazo:", "61%", Modifier.weight(1f))
+                    ComplementaryIndicator("% Obras no Prazo:", formatPercentage(companyFinancials.complementaryIndicators.projectsOnTimePercentage), Modifier.weight(1f))
                 }
 
                 HorizontalDivider(thickness = 1.dp, color = MaterialTheme.colorScheme.onTertiaryContainer.copy(alpha = 0.2f))
@@ -419,9 +433,9 @@ fun CompanyFinancialPanel(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
-                    ComplementaryIndicator("% de Retrabalho da Empresa:", "8%", Modifier.weight(1f))
+                    ComplementaryIndicator("% de Retrabalho da Empresa:", formatPercentage(companyFinancials.complementaryIndicators.companyReworkPercentage), Modifier.weight(1f))
                     VerticalDivider(modifier = Modifier.height(50.dp))
-                    ComplementaryIndicator("Meta de Retrabalho:", "<= 5%", Modifier.weight(1f))
+                    ComplementaryIndicator("Meta de Retrabalho:", "<= ${formatPercentage(companyFinancials.complementaryIndicators.reworkTarget)}", Modifier.weight(1f))
                 }
 
                 HorizontalDivider(thickness = 1.dp, color = MaterialTheme.colorScheme.onTertiaryContainer.copy(alpha = 0.2f))
@@ -436,7 +450,7 @@ fun CompanyFinancialPanel(
                         color = MaterialTheme.colorScheme.onTertiaryContainer
                     )
                     Text(
-                        text = "3,8 dias",
+                        text = "${formatDecimal(companyFinancials.complementaryIndicators.averageTaskExecutionDays)} dias",
                         style = MaterialTheme.typography.titleLarge,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.onTertiaryContainer
