@@ -20,7 +20,7 @@ data class ExtendedColorScheme(
     val statusBlocked: Color
 )
 
-val LightExtendedColorScheme = ExtendedColorScheme(
+val DefaultLightExtendedColorScheme = ExtendedColorScheme(
     priorityCritical = Color(0xFFD32F2F),
     priorityHigh = Color(0xFFF57C00),
     priorityMedium = Color(0xFFFBC02D),
@@ -29,6 +29,18 @@ val LightExtendedColorScheme = ExtendedColorScheme(
     statusInProgress = Color(0xFF1976D2),
     statusInReview = Color(0xFF9C27B0),
     statusCompleted = Color(0xFF388E3C),
+    statusBlocked = Color(0xFFD32F2F)
+)
+
+val Palette1ExtendedColorScheme = ExtendedColorScheme(
+    priorityCritical = Color(0xFFD32F2F),
+    priorityHigh = Color(0xFFffcb47),      // Amarelo da paleta
+    priorityMedium = Color(0xFF8aa1b1),    // Azul acinzentado
+    priorityLow = Color(0xFF9ac2c9),       // Azul suave
+    statusTodo = Color(0xFF4a5043),        // Cinza escuro
+    statusInProgress = Color(0xFF9ac2c9),  // Azul suave
+    statusInReview = Color(0xFF8aa1b1),    // Azul acinzentado
+    statusCompleted = Color(0xFFb9d8c2),   // Verde claro
     statusBlocked = Color(0xFFD32F2F)
 )
 
@@ -44,7 +56,7 @@ val DarkExtendedColorScheme = ExtendedColorScheme(
     statusBlocked = Color(0xFFEF5350)
 )
 
-internal val LocalExtendedColorScheme = staticCompositionLocalOf { LightExtendedColorScheme }
+internal val LocalExtendedColorScheme = staticCompositionLocalOf { DefaultLightExtendedColorScheme }
 
 val MaterialTheme.extendedColors: ExtendedColorScheme
     @Composable

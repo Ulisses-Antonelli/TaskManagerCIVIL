@@ -8,6 +8,7 @@ import com.project.taskmanagercivil.data.repository.FinancialRepositoryImpl
 import com.project.taskmanagercivil.data.repository.ProjectRepositoryImpl
 import com.project.taskmanagercivil.data.repository.TaskRepositoryImpl
 import com.project.taskmanagercivil.data.repository.TeamRepositoryImpl
+import com.project.taskmanagercivil.data.repository.ThemeRepositoryImpl
 import com.project.taskmanagercivil.domain.repositories.AuthRepository
 import com.project.taskmanagercivil.domain.repository.DashboardRepository
 import com.project.taskmanagercivil.domain.repository.DocumentRepository
@@ -16,6 +17,7 @@ import com.project.taskmanagercivil.domain.repository.FinancialRepository
 import com.project.taskmanagercivil.domain.repository.ProjectRepository
 import com.project.taskmanagercivil.domain.repository.TaskRepository
 import com.project.taskmanagercivil.domain.repository.TeamRepository
+import com.project.taskmanagercivil.domain.repository.ThemeRepository
 import com.project.taskmanagercivil.presentation.screens.auth.AuthViewModel
 import com.project.taskmanagercivil.presentation.screens.dashboard.DashboardViewModel
 import com.project.taskmanagercivil.presentation.screens.documents.DocumentDetailViewModel
@@ -34,6 +36,7 @@ import com.project.taskmanagercivil.presentation.screens.teams.TeamFormViewModel
 import com.project.taskmanagercivil.presentation.screens.teams.TeamsViewModel
 import com.project.taskmanagercivil.presentation.screens.settings.UserManagementViewModel
 import com.project.taskmanagercivil.presentation.screens.financial.FinancialViewModel
+import com.project.taskmanagercivil.presentation.theme.ThemeViewModel
 
 /**
  * Factory simples para criação de ViewModels com injeção de dependência por construtor
@@ -47,9 +50,13 @@ object ViewModelFactory {
     private val teamRepository: TeamRepository = TeamRepositoryImpl()
     private val documentRepository: DocumentRepository = DocumentRepositoryImpl()
     private val financialRepository: FinancialRepository = FinancialRepositoryImpl()
+    private val themeRepository: ThemeRepository = ThemeRepositoryImpl()
 
     // Instância singleton do AuthViewModel (compartilhada globalmente)
     private var authViewModelInstance: AuthViewModel? = null
+
+    // Instância singleton do ThemeViewModel (compartilhada globalmente)
+    private var themeViewModelInstance: ThemeViewModel? = null
 
     fun createAuthViewModel(): AuthViewModel {
         if (authViewModelInstance == null) {
@@ -132,5 +139,20 @@ object ViewModelFactory {
 
     fun createFinancialViewModel(): FinancialViewModel {
         return FinancialViewModel(financialRepository)
+    }
+
+    fun createThemeViewModel(): ThemeViewModel {
+        if (themeViewModelInstance == null) {
+            themeViewModelInstance = ThemeViewModel(themeRepository)
+        }
+        return themeViewModelInstance!!
+    }
+
+    /**
+     * Retorna o ThemeViewModel singleton global
+     * Usado para acessar e alterar o tema em qualquer tela
+     */
+    fun getThemeViewModel(): ThemeViewModel {
+        return createThemeViewModel()
     }
 }

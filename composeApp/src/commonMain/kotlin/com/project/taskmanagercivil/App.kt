@@ -1,12 +1,18 @@
 package com.project.taskmanagercivil
 
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import com.project.taskmanagercivil.presentation.ViewModelFactory
 import com.project.taskmanagercivil.presentation.navigation.AppNavigation
+import com.project.taskmanagercivil.presentation.theme.TaskManagerTheme
 
 @Composable
 fun App() {
-    MaterialTheme {
+    val themeViewModel = ViewModelFactory.getThemeViewModel()
+    val themeSettings by themeViewModel.themeSettings.collectAsState()
+
+    TaskManagerTheme(appTheme = themeSettings.selectedTheme) {
         AppNavigation()
     }
 }

@@ -24,6 +24,7 @@ import com.project.taskmanagercivil.presentation.screens.employees.EmployeesScre
 import com.project.taskmanagercivil.presentation.screens.projects.ProjectDetailScreen
 import com.project.taskmanagercivil.presentation.screens.projects.ProjectsScreenContent
 import com.project.taskmanagercivil.presentation.screens.tasks.TasksScreenContent
+import com.project.taskmanagercivil.presentation.screens.settings.SettingsScreenContent
 import com.project.taskmanagercivil.presentation.screens.settings.UserManagementScreen
 import com.project.taskmanagercivil.presentation.screens.teams.TeamDetailScreen
 import com.project.taskmanagercivil.presentation.screens.teams.TeamFormScreen
@@ -94,6 +95,7 @@ sealed class Screen(val route: String) {
     object FinancialTasks : Screen("financial/tasks")
     object FinancialProjects : Screen("financial/projects")
     object FinancialCompany : Screen("financial/company")
+    object Settings : Screen("settings")
 }
 
 @Composable
@@ -638,6 +640,19 @@ fun AppNavigation(
             UserManagementScreen(
                 navController = navController,
                 currentUser = authState.currentUser
+            )
+        }
+
+        // Tela de Configurações
+        composable(Screen.Settings.route) {
+            NavigationState.currentRoot = "settings"
+            SettingsScreenContent(
+                navController = navController,
+                onNavigate = { route ->
+                    navController.navigate(route) {
+                        launchSingleTop = true
+                    }
+                }
             )
         }
     }
