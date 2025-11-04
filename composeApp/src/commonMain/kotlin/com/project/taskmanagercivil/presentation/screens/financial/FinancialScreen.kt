@@ -91,7 +91,10 @@ fun FinancialScreenContent(
                                         }
                                     }
                                 )
-                            }
+                            },
+                            colors = TopAppBarDefaults.topAppBarColors(
+                                containerColor = MaterialTheme.colorScheme.background
+                            )
                         )
                         DynamicBreadcrumbs(
                             navController = navController,
