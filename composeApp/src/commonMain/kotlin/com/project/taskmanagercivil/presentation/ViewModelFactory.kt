@@ -4,6 +4,7 @@ import com.project.taskmanagercivil.data.repositories.AuthRepositoryImpl
 import com.project.taskmanagercivil.data.repository.DashboardRepositoryImpl
 import com.project.taskmanagercivil.data.repository.DocumentRepositoryImpl
 import com.project.taskmanagercivil.data.repository.EmployeeRepositoryImpl
+import com.project.taskmanagercivil.data.repository.FinancialRepositoryImpl
 import com.project.taskmanagercivil.data.repository.ProjectRepositoryImpl
 import com.project.taskmanagercivil.data.repository.TaskRepositoryImpl
 import com.project.taskmanagercivil.data.repository.TeamRepositoryImpl
@@ -11,6 +12,7 @@ import com.project.taskmanagercivil.domain.repositories.AuthRepository
 import com.project.taskmanagercivil.domain.repository.DashboardRepository
 import com.project.taskmanagercivil.domain.repository.DocumentRepository
 import com.project.taskmanagercivil.domain.repository.EmployeeRepository
+import com.project.taskmanagercivil.domain.repository.FinancialRepository
 import com.project.taskmanagercivil.domain.repository.ProjectRepository
 import com.project.taskmanagercivil.domain.repository.TaskRepository
 import com.project.taskmanagercivil.domain.repository.TeamRepository
@@ -31,6 +33,7 @@ import com.project.taskmanagercivil.presentation.screens.teams.TeamDetailViewMod
 import com.project.taskmanagercivil.presentation.screens.teams.TeamFormViewModel
 import com.project.taskmanagercivil.presentation.screens.teams.TeamsViewModel
 import com.project.taskmanagercivil.presentation.screens.settings.UserManagementViewModel
+import com.project.taskmanagercivil.presentation.screens.financial.FinancialViewModel
 
 /**
  * Factory simples para criação de ViewModels com injeção de dependência por construtor
@@ -43,6 +46,7 @@ object ViewModelFactory {
     private val employeeRepository: EmployeeRepository = EmployeeRepositoryImpl()
     private val teamRepository: TeamRepository = TeamRepositoryImpl()
     private val documentRepository: DocumentRepository = DocumentRepositoryImpl()
+    private val financialRepository: FinancialRepository = FinancialRepositoryImpl()
 
     // Instância singleton do AuthViewModel (compartilhada globalmente)
     private var authViewModelInstance: AuthViewModel? = null
@@ -124,5 +128,9 @@ object ViewModelFactory {
 
     fun createUserManagementViewModel(): UserManagementViewModel {
         return UserManagementViewModel(employeeRepository)
+    }
+
+    fun createFinancialViewModel(): FinancialViewModel {
+        return FinancialViewModel(financialRepository)
     }
 }
