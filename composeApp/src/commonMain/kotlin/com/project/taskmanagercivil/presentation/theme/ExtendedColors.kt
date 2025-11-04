@@ -34,14 +34,26 @@ val DefaultLightExtendedColorScheme = ExtendedColorScheme(
 
 val Palette1ExtendedColorScheme = ExtendedColorScheme(
     priorityCritical = Color(0xFFD32F2F),
-    priorityHigh = Color(0xFFffcb47),      // Amarelo da paleta
-    priorityMedium = Color(0xFF8aa1b1),    // Azul acinzentado
-    priorityLow = Color(0xFF9ac2c9),       // Azul suave
-    statusTodo = Color(0xFF4a5043),        // Cinza escuro
-    statusInProgress = Color(0xFF9ac2c9),  // Azul suave
-    statusInReview = Color(0xFF8aa1b1),    // Azul acinzentado
-    statusCompleted = Color(0xFFb9d8c2),   // Verde claro
+    priorityHigh = Color(0xFFE5B940),      // Amarelo saturado
+    priorityMedium = Color(0xFF7B8FA0),    // Azul acinzentado
+    priorityLow = Color(0xFF6B9CA8),       // Azul suave
+    statusTodo = Color(0xFF5A6B5E),        // Cinza escuro
+    statusInProgress = Color(0xFF6B9CA8),  // Azul suave
+    statusInReview = Color(0xFF7B8FA0),    // Azul acinzentado
+    statusCompleted = Color(0xFF88B297),   // Verde médio
     statusBlocked = Color(0xFFD32F2F)
+)
+
+val NavyOrangeExtendedColorScheme = ExtendedColorScheme(
+    priorityCritical = Color(0xFFBA1A1A),
+    priorityHigh = Color(0xFFfca311),      // Laranja vibrante
+    priorityMedium = Color(0xFF2A4A6F),    // Azul médio
+    priorityLow = Color(0xFF4A6FA5),       // Azul claro
+    statusTodo = Color(0xFF6B7280),        // Cinza
+    statusInProgress = Color(0xFF14213d),  // Azul marinho
+    statusInReview = Color(0xFF2A4A6F),    // Azul médio
+    statusCompleted = Color(0xFF059669),   // Verde
+    statusBlocked = Color(0xFFBA1A1A)
 )
 
 val DarkExtendedColorScheme = ExtendedColorScheme(

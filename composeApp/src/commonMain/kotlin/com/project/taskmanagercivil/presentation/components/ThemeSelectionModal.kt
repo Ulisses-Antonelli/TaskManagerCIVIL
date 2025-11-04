@@ -86,18 +86,32 @@ fun ThemeSelectionModal(
                         onClick = { selectedTheme = AppTheme.DEFAULT }
                     )
 
-                    // Paleta 1 - Verde-Azul
+                    // Paleta 1 - Verde-Azul Suave
                     ThemeOption(
                         theme = AppTheme.PALETTE_1,
                         isSelected = selectedTheme == AppTheme.PALETTE_1,
                         colors = listOf(
                             Color(0xFFb9d8c2),  // Verde claro
-                            Color(0xFF9ac2c9),  // Azul suave
-                            Color(0xFF8aa1b1),  // Azul acinzentado
+                            Color(0xFF6B9CA8),  // Azul saturado
+                            Color(0xFF7B8FA0),  // Azul acinzentado
                             Color(0xFF4a5043),  // Cinza escuro
-                            Color(0xFFffcb47)   // Amarelo
+                            Color(0xFFE5B940)   // Amarelo saturado
                         ),
                         onClick = { selectedTheme = AppTheme.PALETTE_1 }
+                    )
+
+                    // Paleta Azul Marinho e Laranja
+                    ThemeOption(
+                        theme = AppTheme.NAVY_ORANGE,
+                        isSelected = selectedTheme == AppTheme.NAVY_ORANGE,
+                        colors = listOf(
+                            Color(0xFF14213d),  // Azul marinho
+                            Color(0xFFfca311),  // Laranja vibrante
+                            Color(0xFFe5e5e5),  // Cinza claro
+                            Color(0xFFffffff),  // Branco
+                            Color(0xFF2A4A6F)   // Azul médio
+                        ),
+                        onClick = { selectedTheme = AppTheme.NAVY_ORANGE }
                     )
 
                     // Tema Escuro
@@ -105,11 +119,11 @@ fun ThemeSelectionModal(
                         theme = AppTheme.DARK,
                         isSelected = selectedTheme == AppTheme.DARK,
                         colors = listOf(
-                            Color(0xFF6B9CAE),  // Azul médio
-                            Color(0xFF7BA591),  // Verde escurecido
-                            Color(0xFFFFB74D),  // Amarelo suave
-                            Color(0xFF3A4D52),  // Azul escuro
-                            Color(0xFF2D3E35)   // Verde escuro
+                            Color(0xFF7DB8CC),  // Azul claro vibrante
+                            Color(0xFF88C9A8),  // Verde claro vibrante
+                            Color(0xFFFFB874),  // Laranja suave
+                            Color(0xFF1A1C1E),  // Background escuro
+                            Color(0xFF2D2F31)   // Surface escuro
                         ),
                         onClick = { selectedTheme = AppTheme.DARK }
                     )
