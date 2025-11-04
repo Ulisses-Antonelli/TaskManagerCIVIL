@@ -129,7 +129,8 @@ fun FinancialScreenContent(
                     )
 
                     // Painel 3: Empresa (Nível Macro)
-                    CompanyFinancialPanel()
+                    // TODO: Passar dados do ViewModel
+                    CompanyFinancialPanel(companyFinancials = null)
                 }
             }
         }

@@ -11,11 +11,25 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.project.taskmanagercivil.domain.models.CompanyFinancials
 import com.project.taskmanagercivil.presentation.components.KPIColumn
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun CompanyFinancialPanel() {
+fun CompanyFinancialPanel(
+    companyFinancials: CompanyFinancials?,
+    onPeriodChange: (String) -> Unit = {}
+) {
+    if (companyFinancials == null) {
+        // Loading state
+        Box(
+            modifier = Modifier.fillMaxWidth().padding(32.dp),
+            contentAlignment = Alignment.Center
+        ) {
+            CircularProgressIndicator()
+        }
+        return
+    }
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -52,17 +66,41 @@ fun CompanyFinancialPanel() {
                         onClick = { periodoExpanded = true },
                         modifier = Modifier.menuAnchor()
                     ) {
-                        Text("Mês Atual")
+                        Text(companyFinancials.period)
                         Icon(Icons.Default.ArrowDropDown, null)
                     }
                     ExposedDropdownMenu(
                         expanded = periodoExpanded,
                         onDismissRequest = { periodoExpanded = false }
                     ) {
-                        DropdownMenuItem(text = { Text("Mês Atual") }, onClick = { periodoExpanded = false })
-                        DropdownMenuItem(text = { Text("Último Mês") }, onClick = { periodoExpanded = false })
-                        DropdownMenuItem(text = { Text("Últimos 3 Meses") }, onClick = { periodoExpanded = false })
-                        DropdownMenuItem(text = { Text("Ano Atual") }, onClick = { periodoExpanded = false })
+                        DropdownMenuItem(
+                            text = { Text("Mês Atual") },
+                            onClick = {
+                                onPeriodChange("current_month")
+                                periodoExpanded = false
+                            }
+                        )
+                        DropdownMenuItem(
+                            text = { Text("Último Mês") },
+                            onClick = {
+                                onPeriodChange("last_month")
+                                periodoExpanded = false
+                            }
+                        )
+                        DropdownMenuItem(
+                            text = { Text("Últimos 3 Meses") },
+                            onClick = {
+                                onPeriodChange("last_3_months")
+                                periodoExpanded = false
+                            }
+                        )
+                        DropdownMenuItem(
+                            text = { Text("Ano Atual") },
+                            onClick = {
+                                onPeriodChange("current_year")
+                                periodoExpanded = false
+                            }
+                        )
                     }
                 }
             }
@@ -89,11 +127,11 @@ fun CompanyFinancialPanel() {
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
-                    KPIColumn("Faturamento:", "R$ 142.000", Modifier.weight(1f))
+                    KPIColumn("Faturamento:", formatCurrency(companyFinancials.revenue), Modifier.weight(1f))
                     VerticalDivider(modifier = Modifier.height(50.dp))
-                    KPIColumn("Custos Totais:", "R$ 98.400", Modifier.weight(1f))
+                    KPIColumn("Custos Totais:", formatCurrency(companyFinancials.totalCosts), Modifier.weight(1f))
                     VerticalDivider(modifier = Modifier.height(50.dp))
-                    KPIColumn("Lucro Líquido:", "R$ 43.600", Modifier.weight(1f), valueColor = Color(0xFF4CAF50))
+                    KPIColumn("Lucro Líquido:", formatCurrency(companyFinancials.netProfit), Modifier.weight(1f), valueColor = Color(0xFF4CAF50))
                 }
 
                 HorizontalDivider(
@@ -105,9 +143,9 @@ fun CompanyFinancialPanel() {
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
-                    KPIColumn("Margem Líquida:", "30.7%", Modifier.weight(1f))
-                    KPIColumn("Obras Ativas:", "6", Modifier.weight(1f))
-                    KPIColumn("Obras Finalizadas:", "2", Modifier.weight(1f))
+                    KPIColumn("Margem Líquida:", formatPercentage(companyFinancials.netMargin), Modifier.weight(1f))
+                    KPIColumn("Obras Ativas:", companyFinancials.activeProjects.toString(), Modifier.weight(1f))
+                    KPIColumn("Obras Finalizadas:", companyFinancials.completedProjects.toString(), Modifier.weight(1f))
                 }
 
                 HorizontalDivider(
@@ -119,9 +157,9 @@ fun CompanyFinancialPanel() {
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
-                    KPIColumn("Média de Retrabalho:", "8%", Modifier.weight(1f))
+                    KPIColumn("Média de Retrabalho:", formatPercentage(companyFinancials.averageRework), Modifier.weight(1f))
                     VerticalDivider(modifier = Modifier.height(50.dp))
-                    KPIColumn("Eficiência Geral:", "1.14x", Modifier.weight(1f))
+                    KPIColumn("Eficiência Geral:", "${formatDecimal(companyFinancials.overallEfficiency)}x", Modifier.weight(1f))
                     VerticalDivider(modifier = Modifier.height(50.dp))
                     Column(modifier = Modifier.weight(1f)) {}
                 }
@@ -167,15 +205,21 @@ fun CompanyFinancialPanel() {
                     color = MaterialTheme.colorScheme.onSecondaryContainer
                 )
 
-                RankingItem(1, "Edifício Alpha", "+R$ 30.200", isPositive = true)
-                HorizontalDivider(thickness = 1.dp, color = MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.2f))
-                RankingItem(2, "Resid. Porto Azul", "+R$ 18.900", isPositive = true)
-                HorizontalDivider(thickness = 1.dp, color = MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.2f))
-                RankingItem(3, "Clínica Sorriso Feliz", "+R$ 7.400", isPositive = true)
-                HorizontalDivider(thickness = 1.dp, color = MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.2f))
-                RankingItem(4, "Condomínio Serra Nova", "-R$ 3.200", isPositive = false, label = "(prejuízo)")
-                HorizontalDivider(thickness = 1.dp, color = MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.2f))
-                RankingItem(5, "Reforma Casa Garcia", "-R$ 9.800", isPositive = false, label = "(prejuízo)")
+                companyFinancials.projectRankings.forEachIndexed { index, ranking ->
+                    if (index > 0) {
+                        HorizontalDivider(thickness = 1.dp, color = MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.2f))
+                    }
+                    val isPositive = ranking.profit >= 0
+                    val sign = if (isPositive) "+" else ""
+                    val label = if (!isPositive) "(prejuízo)" else ""
+                    RankingItem(
+                        ranking.position,
+                        ranking.projectName,
+                        "$sign${formatCurrency(ranking.profit)}",
+                        isPositive,
+                        label
+                    )
+                }
             }
 
             // Receitas x Despesas
@@ -539,4 +583,26 @@ private fun ComplementaryIndicator(label: String, value: String, modifier: Modif
             color = MaterialTheme.colorScheme.onTertiaryContainer
         )
     }
+}
+
+// Helper functions
+private fun formatCurrency(value: Double): String {
+    val intPart = value.toInt()
+    val intStr = intPart.toString()
+    val formattedInt = if (intStr.length > 3) {
+        intStr.reversed().chunked(3).joinToString(".").reversed()
+    } else {
+        intStr
+    }
+    return "R$ $formattedInt"
+}
+
+private fun formatPercentage(value: Double): String {
+    return "${(value * 100).toInt()}%"
+}
+
+private fun formatDecimal(value: Double): String {
+    val intPart = value.toInt()
+    val decimal = ((value - intPart) * 100).toInt()
+    return "$intPart.${decimal.toString().padStart(2, '0')}"
 }
