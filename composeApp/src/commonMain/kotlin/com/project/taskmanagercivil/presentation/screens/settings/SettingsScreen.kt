@@ -1,5 +1,6 @@
 package com.project.taskmanagercivil.presentation.screens.settings
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -63,6 +64,7 @@ fun SettingsScreenContent(
             modifier = Modifier
                 .weight(1f)
                 .fillMaxHeight()
+                .background(MaterialTheme.colorScheme.background)
                 .padding(24.dp)
                 .verticalScroll(rememberScrollState())
         ) {

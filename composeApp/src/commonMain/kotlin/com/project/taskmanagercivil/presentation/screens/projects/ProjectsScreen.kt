@@ -52,7 +52,6 @@ fun ProjectsScreenContent(
             modifier = Modifier
         )
 
-        HorizontalDivider(modifier = Modifier.fillMaxHeight().width(1.dp))
 
         Column(modifier = Modifier.weight(1f)) {
             // Estado do modal (antes do Scaffold para ser acessível no TopAppBar)

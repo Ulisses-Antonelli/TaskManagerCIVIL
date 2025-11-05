@@ -64,7 +64,6 @@ fun FinancialScreenContent(
             onMenuClick = onNavigate
         )
 
-        HorizontalDivider(modifier = Modifier.fillMaxHeight().width(1.dp))
 
         Column(modifier = Modifier.weight(1f)) {
             Scaffold(

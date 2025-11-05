@@ -4,7 +4,7 @@ package com.project.taskmanagercivil.domain.models
  * Representa as configurações de tema da aplicação
  */
 data class ThemeSettings(
-    val selectedTheme: AppTheme = AppTheme.DEFAULT
+    val selectedTheme: AppTheme = AppTheme.DARK
 )
 
 /**

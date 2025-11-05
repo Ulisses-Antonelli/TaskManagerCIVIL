@@ -47,7 +47,8 @@ fun NavigationSidebar(
     // Versão simplificada - sempre mostra sidebar
     Surface(
         modifier = modifier.width(220.dp).fillMaxHeight(),
-        tonalElevation = 2.dp
+        tonalElevation = 0.dp,
+        color = MaterialTheme.colorScheme.background
     ) {
         SidebarContent(currentRoute, onMenuClick, currentUser)
     }
@@ -158,13 +159,13 @@ private fun ModernNavigationItem(
     val backgroundColor = if (selected) {
         MaterialTheme.colorScheme.primaryContainer
     } else {
-        MaterialTheme.colorScheme.surface
+        MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
     }
 
     val contentColor = if (selected) {
         MaterialTheme.colorScheme.onPrimaryContainer
     } else {
-        MaterialTheme.colorScheme.onSurfaceVariant
+        MaterialTheme.colorScheme.onSurface
     }
 
     Box(
