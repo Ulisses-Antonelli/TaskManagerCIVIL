@@ -70,6 +70,11 @@ class TeamsViewModel(
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true) }
 
+            // Carrega dados do backend se for TeamRepositoryImpl
+            if (repository is com.project.taskmanagercivil.data.repository.TeamRepositoryImpl) {
+                repository.loadTeams()
+            }
+
             repository.getAllTeams().collect { teams ->
                 _uiState.update { currentState ->
                     currentState.copy(

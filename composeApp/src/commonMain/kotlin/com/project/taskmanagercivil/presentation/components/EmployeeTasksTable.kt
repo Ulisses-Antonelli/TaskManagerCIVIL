@@ -7,8 +7,11 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -18,6 +21,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.project.taskmanagercivil.domain.models.Task
 import com.project.taskmanagercivil.domain.models.TaskStatus
+import com.project.taskmanagercivil.domain.models.Team
 import com.project.taskmanagercivil.presentation.theme.extendedColors
 import kotlinx.datetime.Clock
 import kotlinx.datetime.TimeZone
@@ -46,19 +50,26 @@ data class EmployeeTaskRow(
 @Composable
 fun EmployeeTasksTable(
     tasks: List<Task>,
+    availableTeams: List<Team> = emptyList(),
     onEmployeeClick: (String) -> Unit = {},
     onTeamClick: (String) -> Unit = {},
+    onEditTaskAssignment: (String, String, String) -> Unit = { _, _, _ -> }, // taskId, employeeId, teamId
     modifier: Modifier = Modifier
 ) {
     // Agrupa tarefas por colaborador
     val employeeTaskRows = tasks.map { task ->
+        // Busca o time do colaborador
+        val employeeTeam = availableTeams.find { team ->
+            team.memberIds.contains(task.assignedTo.id)
+        }
+
         EmployeeTaskRow(
             employeeId = task.assignedTo.id,
             employeeName = task.assignedTo.name,
             taskId = task.id,
             taskTitle = task.title,
             taskStatus = task.status,
-            teamName = task.assignedTo.primaryRoleDisplayName, // Papel do colaborador
+            teamName = employeeTeam?.name ?: "Sem time", // Nome do departamento/time
             startDate = task.startDate.toString(),
             dueDate = task.dueDate.toString(),
             daysOverdue = calculateDaysOverdue(task),
@@ -99,7 +110,8 @@ fun EmployeeTasksTable(
                     TableRow(
                         row = row,
                         onEmployeeClick = onEmployeeClick,
-                        onTeamClick = onTeamClick
+                        onTeamClick = onTeamClick,
+                        onEditClick = { onEditTaskAssignment(row.taskId, row.employeeId, row.employeeId) }
                     )
                 }
             }
@@ -112,6 +124,7 @@ private fun TableHeader() {
     Row(
         modifier = Modifier
             .fillMaxWidth()
+            .height(56.dp)
             .background(
                 MaterialTheme.colorScheme.surfaceVariant,
                 RoundedCornerShape(4.dp)
@@ -124,7 +137,7 @@ private fun TableHeader() {
 
         VerticalDivider(
             modifier = Modifier
-                .height(20.dp)
+                .height(32.dp)
                 .padding(horizontal = 4.dp)
         )
 
@@ -132,7 +145,7 @@ private fun TableHeader() {
 
         VerticalDivider(
             modifier = Modifier
-                .height(20.dp)
+                .height(32.dp)
                 .padding(horizontal = 4.dp)
         )
 
@@ -140,7 +153,7 @@ private fun TableHeader() {
 
         VerticalDivider(
             modifier = Modifier
-                .height(20.dp)
+                .height(32.dp)
                 .padding(horizontal = 4.dp)
         )
 
@@ -148,7 +161,7 @@ private fun TableHeader() {
 
         VerticalDivider(
             modifier = Modifier
-                .height(20.dp)
+                .height(32.dp)
                 .padding(horizontal = 4.dp)
         )
 
@@ -156,7 +169,7 @@ private fun TableHeader() {
 
         VerticalDivider(
             modifier = Modifier
-                .height(20.dp)
+                .height(32.dp)
                 .padding(horizontal = 4.dp)
         )
 
@@ -164,7 +177,7 @@ private fun TableHeader() {
 
         VerticalDivider(
             modifier = Modifier
-                .height(20.dp)
+                .height(32.dp)
                 .padding(horizontal = 4.dp)
         )
 
@@ -172,11 +185,19 @@ private fun TableHeader() {
 
         VerticalDivider(
             modifier = Modifier
-                .height(20.dp)
+                .height(32.dp)
                 .padding(horizontal = 4.dp)
         )
 
         HeaderCell("Progresso", Modifier.weight(0.5f))
+
+        VerticalDivider(
+            modifier = Modifier
+                .height(32.dp)
+                .padding(horizontal = 4.dp)
+        )
+
+        HeaderCell("Ações", Modifier.width(48.dp))
     }
 }
 
@@ -195,7 +216,8 @@ private fun HeaderCell(text: String, modifier: Modifier = Modifier) {
 private fun TableRow(
     row: EmployeeTaskRow,
     onEmployeeClick: (String) -> Unit,
-    onTeamClick: (String) -> Unit
+    onTeamClick: (String) -> Unit,
+    onEditClick: () -> Unit
 ) {
     Row(
         modifier = Modifier
@@ -209,37 +231,41 @@ private fun TableRow(
         verticalAlignment = Alignment.CenterVertically
     ) {
         // Colaborador (clicável)
-        Row(
-            modifier = Modifier
-                .weight(1f)
-                .clip(RoundedCornerShape(4.dp))
-                .clickable { onEmployeeClick(row.employeeId) }
-                .padding(4.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        Box(
+            modifier = Modifier.weight(1f),
+            contentAlignment = Alignment.CenterStart
         ) {
-            // Avatar placeholder
-            Box(
+            Row(
                 modifier = Modifier
-                    .size(32.dp)
-                    .background(MaterialTheme.colorScheme.primary, CircleShape),
-                contentAlignment = Alignment.Center
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(4.dp))
+                    .clickable { onEmployeeClick(row.employeeId) }
+                    .padding(horizontal = 4.dp, vertical = 2.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(6.dp)
             ) {
+                // Avatar placeholder
+                Box(
+                    modifier = Modifier
+                        .size(28.dp)
+                        .background(MaterialTheme.colorScheme.primary, CircleShape),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = row.employeeName.take(1).uppercase(),
+                        style = MaterialTheme.typography.labelSmall,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onPrimary
+                    )
+                }
+
                 Text(
-                    text = row.employeeName.take(1).uppercase(),
-                    style = MaterialTheme.typography.labelMedium,
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onPrimary
+                    text = row.employeeName,
+                    style = MaterialTheme.typography.bodySmall,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
                 )
             }
-
-            Text(
-                text = row.employeeName,
-                style = MaterialTheme.typography.bodySmall,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-                modifier = Modifier.weight(1f)
-            )
         }
 
         VerticalDivider(
@@ -249,13 +275,17 @@ private fun TableRow(
         )
 
         // Tarefa
-        Text(
-            text = row.taskTitle,
-            style = MaterialTheme.typography.bodySmall,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
-            modifier = Modifier.weight(2f)
-        )
+        Box(
+            modifier = Modifier.weight(2f),
+            contentAlignment = Alignment.CenterStart
+        ) {
+            Text(
+                text = row.taskTitle,
+                style = MaterialTheme.typography.bodySmall,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
+        }
 
         VerticalDivider(
             modifier = Modifier
@@ -264,10 +294,15 @@ private fun TableRow(
         )
 
         // Status
-        StatusChip(
-            status = row.taskStatus,
-            modifier = Modifier.weight(1f)
-        )
+        Box(
+            modifier = Modifier.weight(1f),
+            contentAlignment = Alignment.CenterStart
+        ) {
+            StatusChip(
+                status = row.taskStatus,
+                modifier = Modifier.fillMaxWidth()
+            )
+        }
 
         VerticalDivider(
             modifier = Modifier
@@ -276,18 +311,23 @@ private fun TableRow(
         )
 
         // Time (clicável)
-        Text(
-            text = row.teamName,
-            style = MaterialTheme.typography.bodySmall,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
-            color = MaterialTheme.colorScheme.primary,
-            modifier = Modifier
-                .weight(1f)
-                .clip(RoundedCornerShape(4.dp))
-                .clickable { onTeamClick(row.employeeId) } // Em produção seria teamId
-                .padding(4.dp)
-        )
+        Box(
+            modifier = Modifier.weight(1f),
+            contentAlignment = Alignment.CenterStart
+        ) {
+            Text(
+                text = row.teamName,
+                style = MaterialTheme.typography.bodySmall,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                color = MaterialTheme.colorScheme.primary,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(4.dp))
+                    .clickable { onTeamClick(row.employeeId) } // Em produção seria teamId
+                    .padding(horizontal = 4.dp, vertical = 2.dp)
+            )
+        }
 
         VerticalDivider(
             modifier = Modifier
@@ -296,11 +336,15 @@ private fun TableRow(
         )
 
         // Data Início
-        Text(
-            text = row.startDate.take(10),
-            style = MaterialTheme.typography.bodySmall,
-            modifier = Modifier.weight(0.8f)
-        )
+        Box(
+            modifier = Modifier.weight(0.8f),
+            contentAlignment = Alignment.CenterStart
+        ) {
+            Text(
+                text = row.startDate.take(10),
+                style = MaterialTheme.typography.bodySmall
+            )
+        }
 
         VerticalDivider(
             modifier = Modifier
@@ -309,11 +353,15 @@ private fun TableRow(
         )
 
         // Data Entrega
-        Text(
-            text = row.dueDate.take(10),
-            style = MaterialTheme.typography.bodySmall,
-            modifier = Modifier.weight(0.8f)
-        )
+        Box(
+            modifier = Modifier.weight(0.8f),
+            contentAlignment = Alignment.CenterStart
+        ) {
+            Text(
+                text = row.dueDate.take(10),
+                style = MaterialTheme.typography.bodySmall
+            )
+        }
 
         VerticalDivider(
             modifier = Modifier
@@ -322,13 +370,17 @@ private fun TableRow(
         )
 
         // Dias de Atraso
-        Text(
-            text = if (row.daysOverdue > 0) "+${row.daysOverdue}" else "0",
-            style = MaterialTheme.typography.bodySmall,
-            fontWeight = if (row.daysOverdue > 0) FontWeight.Bold else FontWeight.Normal,
-            color = if (row.daysOverdue > 0) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurface,
-            modifier = Modifier.weight(0.6f)
-        )
+        Box(
+            modifier = Modifier.weight(0.6f),
+            contentAlignment = Alignment.CenterStart
+        ) {
+            Text(
+                text = if (row.daysOverdue > 0) "+${row.daysOverdue}" else "0",
+                style = MaterialTheme.typography.bodySmall,
+                fontWeight = if (row.daysOverdue > 0) FontWeight.Bold else FontWeight.Normal,
+                color = if (row.daysOverdue > 0) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurface
+            )
+        }
 
         VerticalDivider(
             modifier = Modifier
@@ -337,12 +389,39 @@ private fun TableRow(
         )
 
         // Progresso
-        Text(
-            text = "${row.progress.toInt()}%",
-            style = MaterialTheme.typography.bodySmall,
-            fontWeight = FontWeight.Medium,
-            modifier = Modifier.weight(0.5f)
+        Box(
+            modifier = Modifier.weight(0.5f),
+            contentAlignment = Alignment.CenterStart
+        ) {
+            Text(
+                text = "${row.progress.toInt()}%",
+                style = MaterialTheme.typography.bodySmall,
+                fontWeight = FontWeight.Medium
+            )
+        }
+
+        VerticalDivider(
+            modifier = Modifier
+                .height(32.dp)
+                .padding(horizontal = 4.dp)
         )
+
+        // Ações
+        Box(
+            modifier = Modifier.width(48.dp),
+            contentAlignment = Alignment.Center
+        ) {
+            IconButton(
+                onClick = onEditClick,
+                modifier = Modifier.size(40.dp)
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Edit,
+                    contentDescription = "Editar colaborador/equipe",
+                    tint = MaterialTheme.colorScheme.primary
+                )
+            }
+        }
     }
 }
 

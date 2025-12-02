@@ -85,6 +85,32 @@ class EmployeeDetailViewModel(
         }
     }
 
+    fun updateEmployeeGeneralInfo(fullName: String, role: String, email: String, phone: String?, cpf: String?) {
+        viewModelScope.launch {
+            try {
+                val currentEmployee = _uiState.value.employee ?: return@launch
+
+                val updatedEmployee = currentEmployee.copy(
+                    fullName = fullName,
+                    role = role,
+                    email = email,
+                    phone = phone,
+                    cpf = cpf
+                )
+
+                // TODO: Implementar no repository quando backend estiver pronto
+                // employeeRepository.updateEmployee(updatedEmployee)
+
+                // Por enquanto, atualiza localmente
+                _uiState.update { it.copy(employee = updatedEmployee) }
+            } catch (e: Exception) {
+                _uiState.update {
+                    it.copy(errorMessage = "Erro ao atualizar informações: ${e.message}")
+                }
+            }
+        }
+    }
+
     fun deleteEmployee(employeeId: String) {
         viewModelScope.launch {
             employeeRepository.deleteEmployee(employeeId)

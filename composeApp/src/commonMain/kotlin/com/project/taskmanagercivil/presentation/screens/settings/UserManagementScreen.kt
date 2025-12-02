@@ -40,9 +40,12 @@ import org.jetbrains.compose.ui.tooling.preview.Preview
 @Composable
 fun UserManagementScreen(
     navController: NavController,
-    currentUser: User?,
-    viewModel: UserManagementViewModel = remember { com.project.taskmanagercivil.presentation.ViewModelFactory.createUserManagementViewModel() }
+    currentUser: User?
 ) {
+    val viewModelScope = rememberCoroutineScope()
+    val viewModel: UserManagementViewModel = remember {
+        com.project.taskmanagercivil.presentation.ViewModelFactory.createUserManagementViewModel(viewModelScope)
+    }
     val authViewModel = com.project.taskmanagercivil.presentation.ViewModelFactory.getAuthViewModel()
     val authState by authViewModel.uiState.collectAsState()
 

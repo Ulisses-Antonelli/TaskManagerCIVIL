@@ -224,6 +224,7 @@ fun UserFormDialog(
                                     id = generateUserId(),
                                     name = name,
                                     email = email,
+                                    username = email.substringBefore("@"),
                                     roles = selectedRoles.toList(),
                                     isActive = true
                                 )

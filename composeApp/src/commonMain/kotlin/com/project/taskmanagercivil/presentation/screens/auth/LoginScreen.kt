@@ -215,12 +215,12 @@ fun LoginScreen(
                             color = MaterialTheme.colorScheme.onSecondaryContainer
                         )
                         Text(
-                            text = "Email: admin@taskmanager.com\nSenha: admin123",
+                            text = "Usuário: admin (ou admin@taskmanager.com)\nSenha: admin123",
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSecondaryContainer
                         )
                         Text(
-                            text = "Email: joao.silva@taskmanager.com\nSenha: senha123",
+                            text = "Usuário: joao.silva (ou joao.silva@taskmanager.com)\nSenha: senha123",
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSecondaryContainer
                         )

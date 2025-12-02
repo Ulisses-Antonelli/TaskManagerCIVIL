@@ -103,6 +103,33 @@ class TeamDetailViewModel(
         }
     }
 
+    fun updateTeamGeneralInfo(description: String, leaderId: String?, memberIds: List<String>) {
+        viewModelScope.launch {
+            try {
+                val currentTeam = _uiState.value.team ?: return@launch
+
+                val updatedTeam = currentTeam.copy(
+                    description = description,
+                    leaderId = leaderId,
+                    memberIds = memberIds
+                )
+
+                // TODO: Implementar no repository quando backend estiver pronto
+                // teamRepository.updateTeam(updatedTeam)
+
+                // Por enquanto, atualiza localmente
+                _uiState.update { it.copy(team = updatedTeam) }
+
+                // Recarrega os detalhes para atualizar líder e membros
+                loadTeamDetails()
+            } catch (e: Exception) {
+                _uiState.update {
+                    it.copy(errorMessage = "Erro ao atualizar informações: ${e.message}")
+                }
+            }
+        }
+    }
+
     fun deleteTeam(teamId: String) {
         viewModelScope.launch {
             teamRepository.deleteTeam(teamId)

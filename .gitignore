@@ -44,5 +44,28 @@ TASKCARD_IMPROVEMENTS.md
 comandos.txt
 .github/copilot-instructions.md
 
+# Documentação Acadêmica (Exercícios FATEC)
+RESUMO_EXERCICIOS_GRUPO2.md
+QUADRO_2C_CASOS_DE_TESTE.md
+INSTRUCOES_USO_DIAGRAMAS.txt
+GRAFO_FLUXO_CONTROLE_E_QUADRO2A.md
+GRAFO_ESTADOS_E_QUADRO2B.md
+DIAGRAMA_TRANSICAO_ESTADOS_TASK.md
+DIAGRAMA_ATIVIDADES_CRIAR_TAREFA.md
+CASO_DE_USO_CRIAR_TAREFA.xlsx
+CASO_DE_USO_CRIAR_TAREFA.txt
+gerar_caso_uso_excel.py
+
+# Documentação de Backend (Especificações)
+BACKEND_SPEC.md
+ENDPOINTS_AUTH.md
+ENDPOINTS_COMPLETE.md
+JSON_EXAMPLES.md
+COMUNICACAO_FRONTEND_BACKEND.md
+
+# JSON Server (Mock Backend)
+db.json
+package.json
+
 # Claude Code
 .claude/

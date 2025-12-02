@@ -22,4 +22,11 @@ interface DocumentRepository {
     fun addVersion(version: DocumentVersion)
     fun addApproval(approval: DocumentApproval)
     fun updateApproval(approval: DocumentApproval)
+
+    /**
+     * Baixa arquivo do documento
+     * @param id ID do documento
+     * @return ByteArray com conteúdo do arquivo
+     */
+    suspend fun downloadDocument(id: String): ByteArray
 }

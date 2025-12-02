@@ -59,6 +59,11 @@ class EmployeesViewModel(
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true) }
 
+            // Carrega dados do backend se repositório suportar
+            if (repository is com.project.taskmanagercivil.data.repository.EmployeeRepositoryImpl) {
+                repository.loadEmployees()
+            }
+
             repository.getAllEmployees().collect { employees ->
                 _uiState.update { currentState ->
                     currentState.copy(

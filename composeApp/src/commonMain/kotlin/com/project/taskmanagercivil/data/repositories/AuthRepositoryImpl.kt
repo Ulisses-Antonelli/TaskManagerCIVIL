@@ -1,98 +1,125 @@
 package com.project.taskmanagercivil.data.repositories
 
+import com.project.taskmanagercivil.data.remote.ApiClient
+import com.project.taskmanagercivil.data.remote.api.AuthApiService
 import com.project.taskmanagercivil.domain.models.Role
 import com.project.taskmanagercivil.domain.models.User
 import com.project.taskmanagercivil.domain.repositories.AuthRepository
-import kotlinx.coroutines.delay
 
 /**
- * Implementação mock do AuthRepository para desenvolvimento
+ * Implementação do AuthRepository usando backend real via AuthApiService
+ *
+ * Integração com Spring Boot backend:
+ * - POST /api/auth/login - Login com username/password
+ * - POST /api/auth/refresh - Renovar token JWT
+ * - POST /api/auth/logout - Fazer logout
+ *
+ * Armazena token JWT no ApiClient para requisições autenticadas
  */
-class AuthRepositoryImpl : AuthRepository {
+class AuthRepositoryImpl(
+    private val authApiService: AuthApiService = AuthApiService()
+) : AuthRepository {
     private var currentUser: User? = null
+    private var refreshToken: String? = null
 
-    // Usuários de teste
-    private val mockUsers = listOf(
-        User(
-            id = "1",
-            name = "Admin Sistema",
-            email = "admin@taskmanager.com",
-            roles = listOf(Role.ADMIN),
-            avatarUrl = null,
-            isActive = true
-        ),
-        User(
-            id = "2",
-            name = "João Silva",
-            email = "joao.silva@taskmanager.com",
-            roles = listOf(Role.GESTOR_OBRAS),
-            avatarUrl = null,
-            isActive = true
-        ),
-        User(
-            id = "3",
-            name = "Maria Santos",
-            email = "maria.santos@taskmanager.com",
-            roles = listOf(Role.LIDER_EQUIPE),
-            avatarUrl = null,
-            isActive = true
-        )
-    )
-
-    // Mock de senhas (em produção, isso seria verificado no backend)
-    private val mockPasswords = mapOf(
-        "admin@taskmanager.com" to "admin123",
-        "joao.silva@taskmanager.com" to "senha123",
-        "maria.santos@taskmanager.com" to "senha123"
-    )
-
+    /**
+     * Realiza login usando backend Spring Boot
+     * Converte username/email para username (backend usa username, não email)
+     */
     override suspend fun login(email: String, password: String): Result<User> {
-        // Simula latência de rede
-        delay(500)
+        return try {
+            // Backend usa username, não email
+            // Se usuário digitar email, extrair parte antes do @
+            val username = if (email.contains("@")) {
+                email.substringBefore("@")
+            } else {
+                email
+            }
 
-        val user = mockUsers.find { it.email.equals(email, ignoreCase = true) }
-        val storedPassword = mockPasswords[email.lowercase()]
+            // Chama API de login
+            val loginResponse = authApiService.login(username, password)
 
-        return if (user != null && storedPassword == password) {
+            // Armazena refresh token para renovação futura
+            refreshToken = loginResponse.refreshToken
+
+            // Converte UserDto para User domain model
+            val user = User(
+                id = loginResponse.user.id,
+                name = loginResponse.user.fullName,
+                email = loginResponse.user.email,
+                username = loginResponse.user.username,
+                roles = loginResponse.user.roles.map { roleString ->
+                    when (roleString) {
+                        "ROLE_ADMIN" -> Role.ADMIN
+                        "ROLE_MANAGER" -> Role.GESTOR_OBRAS
+                        "ROLE_USER" -> Role.LIDER_EQUIPE
+                        else -> Role.LIDER_EQUIPE // Default
+                    }
+                },
+                avatarUrl = null,
+                isActive = true
+            )
+
             currentUser = user
             Result.success(user)
-        } else {
+        } catch (e: Exception) {
             Result.failure(Exception("Email ou senha incorretos"))
         }
     }
 
+    /**
+     * Faz logout removendo token e dados do usuário
+     */
     override suspend fun logout() {
-        delay(200)
-        currentUser = null
+        try {
+            authApiService.logout()
+        } catch (e: Exception) {
+            // Mesmo se falhar, limpa localmente
+        } finally {
+            currentUser = null
+            refreshToken = null
+        }
     }
 
+    /**
+     * Verifica se há usuário autenticado
+     * TODO: Verificar se token JWT ainda é válido
+     */
     override suspend fun isAuthenticated(): Boolean {
-        return currentUser != null
+        return currentUser != null && ApiClient.getAuthToken() != null
     }
 
+    /**
+     * Obtém usuário atual
+     */
     override suspend fun getCurrentUser(): User? {
         return currentUser
     }
 
+    /**
+     * Envia email de recuperação de senha
+     * TODO: Implementar endpoint no backend
+     */
     override suspend fun sendPasswordResetEmail(email: String): Result<Unit> {
-        // Simula latência de rede
-        delay(800)
-
-        val user = mockUsers.find { it.email.equals(email, ignoreCase = true) }
-        return if (user != null) {
-            // Em produção, aqui seria enviado um email real
+        return try {
+            // TODO: Chamar endpoint /api/auth/forgot-password quando estiver pronto
             println("Email de recuperação enviado para: $email")
             Result.success(Unit)
-        } else {
-            Result.failure(Exception("Email não encontrado"))
+        } catch (e: Exception) {
+            Result.failure(Exception("Erro ao enviar email de recuperação"))
         }
     }
 
+    /**
+     * Reseta senha com token
+     * TODO: Implementar endpoint no backend
+     */
     override suspend fun resetPassword(token: String, newPassword: String): Result<Unit> {
-        // Simula latência de rede
-        delay(500)
-
-        // Em produção, verificaria o token e atualizaria a senha no backend
-        return Result.success(Unit)
+        return try {
+            // TODO: Chamar endpoint /api/auth/reset-password quando estiver pronto
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(Exception("Erro ao resetar senha"))
+        }
     }
 }

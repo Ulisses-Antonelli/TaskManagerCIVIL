@@ -1,5 +1,7 @@
 package com.project.taskmanagercivil.domain.models
 
+import kotlinx.datetime.Instant
+
 /**
  * Usuário do sistema
  * @param roles Lista de papéis - um usuário pode ter múltiplos papéis
@@ -9,9 +11,12 @@ data class User(
     val id: String,
     val name: String,
     val email: String,
+    val username: String,
     val roles: List<Role> = listOf(Role.FUNCIONARIO), // Papéis do usuário
     val avatarUrl: String? = null,
-    val isActive: Boolean = true
+    val isActive: Boolean = true,
+    val createdAt: Instant? = null,
+    val lastLogin: Instant? = null
 ) {
     /**
      * Verifica se o usuário tem um papel específico

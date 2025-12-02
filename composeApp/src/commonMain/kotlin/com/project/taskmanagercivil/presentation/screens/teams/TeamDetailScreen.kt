@@ -5,11 +5,15 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -49,22 +53,16 @@ fun TeamDetailScreen(
                 TopAppBar(
                     title = { Text("DETALHES") },
                     actions = {
-                        if (uiState.team != null) {
-                            IconButton(onClick = { onEdit(uiState.team!!.id) }) {
-                                Icon(Icons.Default.Edit, contentDescription = "Editar")
-                            }
-                            IconButton(onClick = {
-                                onDelete(uiState.team!!.id)
-                                onBack()
-                            }) {
-                                Icon(
-                                    Icons.Default.Delete,
-                                    contentDescription = "Deletar",
-                                    tint = MaterialTheme.colorScheme.error
-                                )
-                            }
+                        IconButton(onClick = { viewModel.refreshTeam() }) {
+                            Icon(
+                                imageVector = Icons.Default.Refresh,
+                                contentDescription = "Atualizar"
+                            )
                         }
-                    }
+                    },
+                    colors = TopAppBarDefaults.topAppBarColors(
+                        containerColor = MaterialTheme.colorScheme.background
+                    )
                 )
                 DynamicBreadcrumbs(
                     navController = navController,
@@ -102,6 +100,8 @@ fun TeamDetailScreen(
                 }
 
                 uiState.team != null -> {
+                    var showGeneralInfoModal by remember { mutableStateOf(false) }
+
                     TeamDetailContent(
                         team = uiState.team!!,
                         leader = uiState.leader,
@@ -110,8 +110,23 @@ fun TeamDetailScreen(
                         tasks = uiState.tasks,
                         onEmployeeClick = onEmployeeClick,
                         onProjectClick = onProjectClick,
-                        onTaskClick = onTaskClick
+                        onTaskClick = onTaskClick,
+                        onEditGeneralInfo = { showGeneralInfoModal = true }
                     )
+
+                    // Modal de edição de informações gerais
+                    if (showGeneralInfoModal) {
+                        EditGeneralInfoModal(
+                            team = uiState.team!!,
+                            availableEmployees = uiState.members, // Passando membros atuais como base
+                            allEmployees = uiState.members, // TODO: Buscar todos colaboradores ativos
+                            onDismiss = { showGeneralInfoModal = false },
+                            onSave = { description, leaderId, memberIds ->
+                                viewModel.updateTeamGeneralInfo(description, leaderId, memberIds)
+                                showGeneralInfoModal = false
+                            }
+                        )
+                    }
                 }
             }
         }
@@ -127,7 +142,8 @@ private fun TeamDetailContent(
     tasks: List<Task>,
     onEmployeeClick: (String) -> Unit,
     onProjectClick: (String) -> Unit,
-    onTaskClick: (String) -> Unit
+    onTaskClick: (String) -> Unit,
+    onEditGeneralInfo: () -> Unit
 ) {
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
@@ -141,7 +157,13 @@ private fun TeamDetailContent(
 
         // Informações Gerais
         item {
-            GeneralInfoCard(team = team, membersCount = members.size, leader = leader, tasks = tasks)
+            GeneralInfoCard(
+                team = team,
+                membersCount = members.size,
+                leader = leader,
+                tasks = tasks,
+                onEdit = onEditGeneralInfo
+            )
         }
 
         // Quadro de Membros do Time
@@ -271,12 +293,6 @@ private fun TeamHeader(team: Team, leader: Employee?) {
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Text(
-                    text = team.department.displayName,
-                    style = MaterialTheme.typography.titleMedium,
-                    color = MaterialTheme.colorScheme.primary
-                )
-
                 if (!team.isActive) {
                     Surface(
                         color = MaterialTheme.colorScheme.errorContainer,
@@ -305,7 +321,15 @@ private fun TeamHeader(team: Team, leader: Employee?) {
 
 // Card de Informações Gerais
 @Composable
-private fun GeneralInfoCard(team: Team, membersCount: Int, leader: Employee?, tasks: List<Task>) {
+private fun GeneralInfoCard(
+    team: Team,
+    membersCount: Int,
+    leader: Employee?,
+    tasks: List<Task>,
+    onEdit: () -> Unit = {}
+) {
+    var showMenu by remember { mutableStateOf(false) }
+
     // Calcular progresso do time como média ponderada das tarefas
     val teamProgress = if (tasks.isNotEmpty()) {
         tasks.sumOf { it.progress.toDouble() }.toInt() / tasks.size
@@ -323,11 +347,48 @@ private fun GeneralInfoCard(team: Team, membersCount: Int, leader: Employee?, ta
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            Text(
-                text = "Informações Gerais",
-                style = MaterialTheme.typography.titleLarge,
-                fontWeight = FontWeight.Bold
-            )
+            // Título com botão de 3 pontos
+            Row(
+                modifier = Modifier.fillMaxWidth().height(40.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "Informações Gerais",
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.Bold
+                )
+                Box(modifier = Modifier.size(40.dp)) {
+                    IconButton(
+                        onClick = { showMenu = true },
+                        modifier = Modifier.size(40.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.MoreVert,
+                            contentDescription = "Mais opções",
+                            modifier = Modifier.size(24.dp)
+                        )
+                    }
+                    DropdownMenu(
+                        expanded = showMenu,
+                        onDismissRequest = { showMenu = false }
+                    ) {
+                        DropdownMenuItem(
+                            text = { Text("Editar") },
+                            onClick = {
+                                showMenu = false
+                                onEdit()
+                            },
+                            leadingIcon = {
+                                Icon(
+                                    Icons.Default.Edit,
+                                    contentDescription = null
+                                )
+                            }
+                        )
+                    }
+                }
+            }
 
             // Escopo de Trabalho / Descrição
             if (team.description.isNotEmpty()) {
@@ -862,4 +923,137 @@ private fun getDepartmentInitials(department: TeamDepartment): String {
         TeamDepartment.QUALITY -> "QU"
         TeamDepartment.PLANNING -> "PL"
     }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun EditGeneralInfoModal(
+    team: Team,
+    availableEmployees: List<Employee>,
+    allEmployees: List<Employee>,
+    onDismiss: () -> Unit,
+    onSave: (description: String, leaderId: String?, memberIds: List<String>) -> Unit
+) {
+    var description by remember { mutableStateOf(team.description) }
+    var selectedLeaderId by remember { mutableStateOf(team.leaderId ?: "") }
+    var selectedMemberIds by remember { mutableStateOf(team.memberIds.toSet()) }
+    var expanded by remember { mutableStateOf(false) }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Editar Informações Gerais") },
+        text = {
+            Column(
+                modifier = Modifier.fillMaxWidth().verticalScroll(rememberScrollState()),
+                verticalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                // Descrição / Escopo de Trabalho
+                OutlinedTextField(
+                    value = description,
+                    onValueChange = { description = it },
+                    label = { Text("Descrição / Escopo de Trabalho") },
+                    modifier = Modifier.fillMaxWidth(),
+                    minLines = 3,
+                    maxLines = 5
+                )
+
+                // Líder (Dropdown)
+                ExposedDropdownMenuBox(
+                    expanded = expanded,
+                    onExpandedChange = { expanded = !expanded }
+                ) {
+                    OutlinedTextField(
+                        value = allEmployees.find { it.id == selectedLeaderId }?.fullName ?: "Sem líder",
+                        onValueChange = {},
+                        readOnly = true,
+                        label = { Text("Líder") },
+                        trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
+                        modifier = Modifier.fillMaxWidth().menuAnchor()
+                    )
+                    ExposedDropdownMenu(
+                        expanded = expanded,
+                        onDismissRequest = { expanded = false }
+                    ) {
+                        DropdownMenuItem(
+                            text = { Text("Sem líder") },
+                            onClick = {
+                                selectedLeaderId = ""
+                                expanded = false
+                            }
+                        )
+                        allEmployees.forEach { employee ->
+                            DropdownMenuItem(
+                                text = { Text(employee.fullName) },
+                                onClick = {
+                                    selectedLeaderId = employee.id
+                                    expanded = false
+                                }
+                            )
+                        }
+                    }
+                }
+
+                // Membros (Lista com checkboxes)
+                Text(
+                    text = "Membros do Time",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold
+                )
+
+                Column(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    allEmployees.forEach { employee ->
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable {
+                                    selectedMemberIds = if (selectedMemberIds.contains(employee.id)) {
+                                        selectedMemberIds - employee.id
+                                    } else {
+                                        selectedMemberIds + employee.id
+                                    }
+                                },
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Checkbox(
+                                checked = selectedMemberIds.contains(employee.id),
+                                onCheckedChange = { checked ->
+                                    selectedMemberIds = if (checked) {
+                                        selectedMemberIds + employee.id
+                                    } else {
+                                        selectedMemberIds - employee.id
+                                    }
+                                }
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(
+                                text = employee.fullName,
+                                style = MaterialTheme.typography.bodyMedium
+                            )
+                        }
+                    }
+                }
+            }
+        },
+        confirmButton = {
+            Button(
+                onClick = {
+                    onSave(
+                        description,
+                        selectedLeaderId.ifBlank { null },
+                        selectedMemberIds.toList()
+                    )
+                }
+            ) {
+                Text("Salvar")
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text("Cancelar")
+            }
+        }
+    )
 }

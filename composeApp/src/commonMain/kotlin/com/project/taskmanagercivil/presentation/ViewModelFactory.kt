@@ -9,6 +9,7 @@ import com.project.taskmanagercivil.data.repository.ProjectRepositoryImpl
 import com.project.taskmanagercivil.data.repository.TaskRepositoryImpl
 import com.project.taskmanagercivil.data.repository.TeamRepositoryImpl
 import com.project.taskmanagercivil.data.repository.ThemeRepositoryImpl
+import com.project.taskmanagercivil.data.repository.UserRepositoryImpl
 import com.project.taskmanagercivil.domain.repositories.AuthRepository
 import com.project.taskmanagercivil.domain.repository.DashboardRepository
 import com.project.taskmanagercivil.domain.repository.DocumentRepository
@@ -18,6 +19,7 @@ import com.project.taskmanagercivil.domain.repository.ProjectRepository
 import com.project.taskmanagercivil.domain.repository.TaskRepository
 import com.project.taskmanagercivil.domain.repository.TeamRepository
 import com.project.taskmanagercivil.domain.repository.ThemeRepository
+import com.project.taskmanagercivil.domain.repository.UserRepository
 import com.project.taskmanagercivil.presentation.screens.auth.AuthViewModel
 import com.project.taskmanagercivil.presentation.screens.dashboard.DashboardViewModel
 import com.project.taskmanagercivil.presentation.screens.documents.DocumentDetailViewModel
@@ -50,6 +52,7 @@ object ViewModelFactory {
     private val teamRepository: TeamRepository = TeamRepositoryImpl()
     private val documentRepository: DocumentRepository = DocumentRepositoryImpl()
     private val financialRepository: FinancialRepository = FinancialRepositoryImpl()
+    private val userRepository: UserRepository = UserRepositoryImpl()
     private val themeRepository: ThemeRepository = ThemeRepositoryImpl()
 
     // Instância singleton do AuthViewModel (compartilhada globalmente)
@@ -90,7 +93,7 @@ object ViewModelFactory {
     }
 
     fun createProjectDetailViewModel(projectId: String): ProjectDetailViewModel {
-        return ProjectDetailViewModel(projectRepository, projectId)
+        return ProjectDetailViewModel(projectRepository, employeeRepository, teamRepository, projectId)
     }
 
     fun createProjectFormViewModel(projectId: String? = null): ProjectFormViewModel {
@@ -133,8 +136,8 @@ object ViewModelFactory {
         return DocumentFormViewModel(documentId, documentRepository, projectRepository, employeeRepository)
     }
 
-    fun createUserManagementViewModel(): UserManagementViewModel {
-        return UserManagementViewModel(employeeRepository)
+    fun createUserManagementViewModel(viewModelScope: kotlinx.coroutines.CoroutineScope): UserManagementViewModel {
+        return UserManagementViewModel(userRepository, employeeRepository, viewModelScope)
     }
 
     fun createFinancialViewModel(): FinancialViewModel {

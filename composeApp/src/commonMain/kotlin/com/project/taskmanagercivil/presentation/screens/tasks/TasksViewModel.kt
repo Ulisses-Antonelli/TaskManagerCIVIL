@@ -1,6 +1,5 @@
 package com.project.taskmanagercivil.presentation.screens.tasks
 
-import com.project.taskmanagercivil.data.MockData
 import com.project.taskmanagercivil.domain.models.Employee
 import com.project.taskmanagercivil.domain.models.Project
 import com.project.taskmanagercivil.domain.models.Role
@@ -47,7 +46,6 @@ class TasksViewModel(
     private val employeeRepository: EmployeeRepository
 ) {
     private val viewModelScope = CoroutineScope(SupervisorJob())
-    private val mockData = MockData()
 
     private val _uiState = MutableStateFlow(TasksUiState())
     val uiState: StateFlow<TasksUiState> = _uiState.asStateFlow()
@@ -93,6 +91,7 @@ class TasksViewModel(
                 id = employee.id,
                 name = employee.fullName,
                 email = employee.email,
+                username = employee.email.substringBefore("@"),
                 roles = listOf(Role.FUNCIONARIO), // Por padrão, funcionário
                 avatarUrl = employee.avatarUrl,
                 isActive = employee.isActive

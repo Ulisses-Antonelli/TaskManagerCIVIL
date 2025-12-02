@@ -4,8 +4,10 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
@@ -43,32 +45,16 @@ fun EmployeeDetailScreen(
                 TopAppBar(
                     title = { Text("DETALHES") },
                     actions = {
-                        if (uiState.employee != null) {
-                            IconButton(onClick = { onEdit(uiState.employee!!.id) }) {
-                                Icon(
-                                    imageVector = Icons.Default.Edit,
-                                    contentDescription = "Editar"
-                                )
-                            }
-                        }
-
-                        if (uiState.employee != null) {
-                            IconButton(onClick = { showDeleteDialog = true }) {
-                                Icon(
-                                    imageVector = Icons.Default.Delete,
-                                    contentDescription = "Deletar",
-                                    tint = MaterialTheme.colorScheme.error
-                                )
-                            }
-                        }
-
                         IconButton(onClick = { viewModel.refreshEmployee() }) {
                             Icon(
                                 imageVector = Icons.Default.Refresh,
                                 contentDescription = "Atualizar"
                             )
                         }
-                    }
+                    },
+                    colors = TopAppBarDefaults.topAppBarColors(
+                        containerColor = MaterialTheme.colorScheme.background
+                    )
                 )
                 DynamicBreadcrumbs(
                     navController = navController,
@@ -111,15 +97,30 @@ fun EmployeeDetailScreen(
             }
 
             uiState.employee != null -> {
+                var showGeneralInfoModal by remember { mutableStateOf(false) }
+
                 EmployeeDetailContent(
                     employee = uiState.employee!!,
                     tasks = uiState.tasks,
                     onTaskClick = onTaskClick,
                     onProjectClick = onProjectClick,
+                    onEditGeneralInfo = { showGeneralInfoModal = true },
                     modifier = Modifier
                         .fillMaxSize()
                         .padding(paddingValues)
                 )
+
+                // Modal de edição de informações gerais
+                if (showGeneralInfoModal) {
+                    EditGeneralInfoModal(
+                        employee = uiState.employee!!,
+                        onDismiss = { showGeneralInfoModal = false },
+                        onSave = { fullName, role, email, phone, cpf ->
+                            viewModel.updateEmployeeGeneralInfo(fullName, role, email, phone, cpf)
+                            showGeneralInfoModal = false
+                        }
+                    )
+                }
             }
         }
 
@@ -167,6 +168,7 @@ private fun EmployeeDetailContent(
     tasks: List<Task>,
     onTaskClick: (String) -> Unit,
     onProjectClick: (String) -> Unit,
+    onEditGeneralInfo: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     LazyColumn(
@@ -181,7 +183,11 @@ private fun EmployeeDetailContent(
 
         // Informações Gerais
         item {
-            GeneralInfoCard(employee = employee, totalTasks = tasks.size)
+            GeneralInfoCard(
+                employee = employee,
+                totalTasks = tasks.size,
+                onEdit = onEditGeneralInfo
+            )
         }
 
         // Estatísticas de Tarefas
@@ -291,8 +297,11 @@ private fun EmployeeHeader(employee: Employee) {
 @Composable
 private fun GeneralInfoCard(
     employee: Employee,
-    totalTasks: Int
+    totalTasks: Int,
+    onEdit: () -> Unit = {}
 ) {
+    var showMenu by remember { mutableStateOf(false) }
+
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(8.dp)
@@ -303,11 +312,48 @@ private fun GeneralInfoCard(
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            Text(
-                text = "Informações Gerais",
-                style = MaterialTheme.typography.titleLarge,
-                fontWeight = FontWeight.Bold
-            )
+            // Título com botão de 3 pontos
+            Row(
+                modifier = Modifier.fillMaxWidth().height(40.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "Informações Gerais",
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.Bold
+                )
+                Box(modifier = Modifier.size(40.dp)) {
+                    IconButton(
+                        onClick = { showMenu = true },
+                        modifier = Modifier.size(40.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.MoreVert,
+                            contentDescription = "Mais opções",
+                            modifier = Modifier.size(24.dp)
+                        )
+                    }
+                    DropdownMenu(
+                        expanded = showMenu,
+                        onDismissRequest = { showMenu = false }
+                    ) {
+                        DropdownMenuItem(
+                            text = { Text("Editar") },
+                            onClick = {
+                                showMenu = false
+                                onEdit()
+                            },
+                            leadingIcon = {
+                                Icon(
+                                    Icons.Default.Edit,
+                                    contentDescription = null
+                                )
+                            }
+                        )
+                    }
+                }
+            }
 
             // Nome Completo
             StampRow(
@@ -708,4 +754,91 @@ private fun TaskHistoryRow(
             textAlign = TextAlign.Center
         )
     }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun EditGeneralInfoModal(
+    employee: Employee,
+    onDismiss: () -> Unit,
+    onSave: (fullName: String, role: String, email: String, phone: String?, cpf: String?) -> Unit
+) {
+    var fullName by remember { mutableStateOf(employee.fullName) }
+    var role by remember { mutableStateOf(employee.role) }
+    var email by remember { mutableStateOf(employee.email) }
+    var phone by remember { mutableStateOf(employee.phone ?: "") }
+    var cpf by remember { mutableStateOf(employee.cpf ?: "") }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Editar Informações Gerais") },
+        text = {
+            Column(
+                modifier = Modifier.fillMaxWidth().verticalScroll(rememberScrollState()),
+                verticalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                OutlinedTextField(
+                    value = fullName,
+                    onValueChange = { fullName = it },
+                    label = { Text("Nome Completo") },
+                    modifier = Modifier.fillMaxWidth(),
+                    singleLine = true
+                )
+
+                OutlinedTextField(
+                    value = role,
+                    onValueChange = { role = it },
+                    label = { Text("Cargo") },
+                    modifier = Modifier.fillMaxWidth(),
+                    singleLine = true
+                )
+
+                OutlinedTextField(
+                    value = email,
+                    onValueChange = { email = it },
+                    label = { Text("Email") },
+                    modifier = Modifier.fillMaxWidth(),
+                    singleLine = true
+                )
+
+                OutlinedTextField(
+                    value = phone,
+                    onValueChange = { phone = it },
+                    label = { Text("Telefone (opcional)") },
+                    placeholder = { Text("(00) 00000-0000") },
+                    modifier = Modifier.fillMaxWidth(),
+                    singleLine = true
+                )
+
+                OutlinedTextField(
+                    value = cpf,
+                    onValueChange = { cpf = it },
+                    label = { Text("CPF (opcional)") },
+                    placeholder = { Text("000.000.000-00") },
+                    modifier = Modifier.fillMaxWidth(),
+                    singleLine = true
+                )
+            }
+        },
+        confirmButton = {
+            Button(
+                onClick = {
+                    onSave(
+                        fullName,
+                        role,
+                        email,
+                        phone.ifBlank { null },
+                        cpf.ifBlank { null }
+                    )
+                }
+            ) {
+                Text("Salvar")
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text("Cancelar")
+            }
+        }
+    )
 }
